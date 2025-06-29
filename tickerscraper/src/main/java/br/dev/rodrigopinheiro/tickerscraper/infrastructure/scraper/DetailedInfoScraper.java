@@ -16,9 +16,7 @@ import static java.util.stream.Collectors.toMap;
 @Component
 public class DetailedInfoScraper {
 
-    // O seu record InfoDetailed permanece o mesmo
-
-    public static InfoDetailed scrapeAndParseDetailedInfo(Document doc) {
+    public InfoDetailed scrapeAndParseDetailedInfo(Document doc) {
         Map<String, String> detailsMap = Optional.ofNullable(doc.selectFirst("div#info_about div.content"))
                 .map(container -> container.select("div.cell").stream()
                         .map(cell -> {
