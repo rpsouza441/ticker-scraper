@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: tickerscraper
+  server:
+    port: ${SERVER_PORT:8080}
+
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/tickerscraper}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: ${HIBERNATE_DDL:none} # Em produção use 'validate' ou 'none'
+    show-sql: ${HIBERNATE_SHOW_SQL:true}
+    properties:
+      hibernate:
+        format_sql: ${HIBERNATE_FORMAT_SQL:true}
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+logging:
+  level:
+    org.hibernate.SQL: ${LOG_SQL_LEVEL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_BIND_LEVEL:TRACE}
