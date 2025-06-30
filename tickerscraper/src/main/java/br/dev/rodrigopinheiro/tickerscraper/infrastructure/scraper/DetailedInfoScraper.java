@@ -1,6 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.InfoDetailed;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,9 +23,11 @@ public class DetailedInfoScraper {
                         .map(cell -> {
                             String title = Optional.ofNullable(cell.selectFirst("span.title"))
                                     .map(Element::text).orElse("");
-                            String value = Optional.ofNullable(cell.selectFirst("div.detail-value, span.value"))
-                                    .map(Element::text).orElse("");
-                            return new SimpleEntry<>(title, value);
+                            String value = Optional.ofNullable(cell.selectFirst("div.detail-value"))
+                                    .or(() -> Optional.ofNullable(cell.selectFirst("span.value")))
+                                    .map(Element::text)
+                                    .orElse("");
+                            return new SimpleEntry<>(title, IndicadorParser.limparTextoIndicador(value));
                         })
                         .filter(entry -> !entry.getKey().isEmpty() && !entry.getValue().isEmpty())
                         .collect(toMap(
