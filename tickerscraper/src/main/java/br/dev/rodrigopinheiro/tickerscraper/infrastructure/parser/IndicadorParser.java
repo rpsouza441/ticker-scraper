@@ -1,35 +1,37 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser;
 
-import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.util.Locale;
 
 public class IndicadorParser {
 
-    private static final Locale LOCALE_BR = new Locale("pt", "BR");
-    private static final NumberFormat FORMATADOR = NumberFormat.getNumberInstance(LOCALE_BR);
-
-    public static BigDecimal parseValorMonetario(String raw) {
-        if (raw == null || raw.isBlank()) return BigDecimal.ZERO;
-        try {
-            String limpo = raw.replace("R$", "").replace("%", "").trim();
-            Number numero = FORMATADOR.parse(limpo);
-            return new BigDecimal(numero.toString());
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Erro ao converter valor: " + raw, e);
+    /**
+     * Limpa uma string de indicadores, removendo R$, %, e espaços nas extremidades.
+     * O resultado é retornado como uma String limpa.
+     *
+     * @param raw A string bruta extraída do HTML (ex: "  R$ 15,30  ", "25,00 % ").
+     * @return Uma string limpa (ex: "15,30", "25,00") ou uma string vazia se a entrada for nula/vazia.
+     */
+    public static String limparTextoIndicador(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return ""; // Retorna uma string vazia como padrão para dados ausentes
         }
+        // Remove os símbolos e espaços. A ordem não importa.
+        return raw.replace("R$", "")
+                .replace("%", "")
+                .trim(); // .trim() remove espaços no início e no fim
     }
 
-    public static double parseDoublePercentual(String raw) {
-        return parseValorMonetario(raw).doubleValue();
-    }
-
-    public static BigDecimal parseOrNull(String raw) {
-        try {
-            return parseValorMonetario(raw);
-        } catch (Exception e) {
-            return null;
+    /**
+     * Versão mais avançada que também padroniza separadores numéricos.
+     * Transforma "1.234,56" em "1234.56".
+     */
+    public static String limparTextoNumerico(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
         }
+        return raw.replace("R$", "")
+                .replace(".", "")      // Remove o separador de milhar
+                .replace(",", ".")      // Substitui a vírgula decimal por ponto
+                .replace("%", "")
+                .trim();
     }
 }
