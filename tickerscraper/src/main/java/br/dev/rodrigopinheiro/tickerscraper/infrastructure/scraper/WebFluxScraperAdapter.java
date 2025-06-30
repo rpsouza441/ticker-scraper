@@ -4,6 +4,8 @@ import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataSc
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -12,8 +14,11 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 
-@Component
+@Component("webFluxScraper")
 public class WebFluxScraperAdapter implements TickerDataScrapperPort {
+
+    private static final Logger logger = LoggerFactory.getLogger(WebFluxScraperAdapter.class);
+
 
     private final WebClient webClient;
     private final HeaderScraper headerScraper;
@@ -21,23 +26,51 @@ public class WebFluxScraperAdapter implements TickerDataScrapperPort {
     private final DetailedInfoScraper detailedInfoScraper;
     private final IndicatorsScraper indicatorsScraper;
 
-    public WebFluxScraperAdapter(WebClient.Builder webClientBuilder, HeaderScraper headerScraper, CardsScraper cardsScraper, DetailedInfoScraper detailedInfoScraper, IndicatorsScraper indicatorsScraper) {
-        this.webClient = webClientBuilder.baseUrl("https://investidor10.com.br/acoes/").build();
+    public WebFluxScraperAdapter(WebClient webClient, HeaderScraper headerScraper, CardsScraper cardsScraper, DetailedInfoScraper detailedInfoScraper, IndicatorsScraper indicatorsScraper) {
+        this.webClient = webClient;
         this.headerScraper = headerScraper;
         this.cardsScraper = cardsScraper;
         this.detailedInfoScraper = detailedInfoScraper;
         this.indicatorsScraper = indicatorsScraper;
     }
 
+    public static final String URL = "https://investidor10.com.br/acoes/";
 
     @Override
     public Mono<DadosFinanceiros> scrape(String ticker) throws IOException {
+        String urlCompleta = URL + ticker;
+        logger.info("Iniciando requisição reativa para a url {}", urlCompleta);
         // 1. FAZ A CHAMADA DE REDE NÃO-BLOQUEANTE
         return webClient.get()
-                .uri(ticker) // A URL base já foi configurada
+                .uri(urlCompleta)
+                .headers(headers -> {
+                    headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+                    headers.set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+                    headers.set("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7");
+                    headers.set("Accept-Encoding", "gzip, deflate, br");
+                    headers.set("Connection", "keep-alive");
+                })// A URL base já foi configurada
                 .retrieve()
                 .bodyToMono(String.class) // Retorna um Mono<String> com o HTML
+
+                // --- LOG PARA SUCESSO ---
+                .doOnNext(html -> {
+                    // Este bloco só é executado se a requisição for bem-sucedida e o corpo (HTML) for recebido.
+                    // 'html' é a String contendo toda a página.
+                    logger.info("WebClient obteve uma resposta para {}. Tamanho do HTML: {} caracteres.", urlCompleta, html.length());
+
+                    // CUIDADO: Não logue o HTML inteiro em produção! Pode ter megabytes e poluir seus logs.
+                    // Para depuração, logar os primeiros caracteres é uma ótima ideia.
+                    logger.debug("Início do HTML recebido: {}", html.substring(0, Math.min(html.length(), 500)));
+                })
+
+                // --- LOG PARA ERRO ---
+                .doOnError(error -> {
+                    // Este bloco só é executado se a requisição do WebClient falhar ANTES do flatMap.
+                    logger.error("Erro na chamada do WebClient para a URL {}: {}", urlCompleta, error.getMessage());
+                })
                 .flatMap(html -> Mono.fromCallable(() -> { // 2. Processa o resultado quando ele chegar
+                    logger.debug("Iniciando parse do Jsoup na thread do Scheduler.");
 
                     // 3. O PARSE DO JSOUP ACONTECE AQUI!
                     // Como Jsoup.parse é uma operação que pode consumir CPU,
@@ -49,6 +82,7 @@ public class WebFluxScraperAdapter implements TickerDataScrapperPort {
                     InfoCards cards = cardsScraper.scrapeCardsInfo(doc);
                     InfoDetailed detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
                     IndicadoresFundamentalistas indicators = indicatorsScraper.scrape(doc, ticker);
+                    logger.info("Parse com Jsoup concluído com sucesso para {}.", ticker);
 
                     return new DadosFinanceiros(header, detailed, cards, indicators);
 
