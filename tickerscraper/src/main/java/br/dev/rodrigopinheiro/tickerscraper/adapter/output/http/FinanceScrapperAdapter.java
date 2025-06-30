@@ -1,4 +1,4 @@
-package br.dev.rodrigopinheiro.tickerscraper.adapter.output;
+package br.dev.rodrigopinheiro.tickerscraper.adapter.output.http;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FinanceScraperPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
