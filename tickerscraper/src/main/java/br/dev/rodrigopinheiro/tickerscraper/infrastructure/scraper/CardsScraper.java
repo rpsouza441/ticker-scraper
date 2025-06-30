@@ -1,6 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.InfoCards;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,10 @@ public class CardsScraper {
                 .map(c -> c.selectFirst("div._card.pl div._card-body span"))
                 .map(Element::text)
                 .orElse("N/A");
-        return new InfoCards(cotacao, variacao12M);
+
+        return new InfoCards(
+                IndicadorParser.limparTextoIndicador(cotacao),
+                IndicadorParser.limparTextoIndicador(variacao12M)
+        );
     }
 }
