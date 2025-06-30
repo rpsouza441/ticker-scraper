@@ -6,14 +6,14 @@ spring:
 
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/tickerscraper}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASS:postgres}
+    url: ${DB_URL:jdbc:postgresql://192.168.22.245:5432/tickerscraper}
+    username: ${DB_USER:postgresql}
+    password: ${DB_PASS:2Tyz5@5ykD7}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: ${HIBERNATE_DDL:none} # Em produção use 'validate' ou 'none'
+      ddl-auto: ${HIBERNATE_DDL:none}
     show-sql: ${HIBERNATE_SHOW_SQL:true}
     properties:
       hibernate:
