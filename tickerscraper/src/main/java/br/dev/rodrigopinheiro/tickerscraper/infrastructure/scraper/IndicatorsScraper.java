@@ -3,6 +3,7 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.IndicadorFundamentalista;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.IndicadoresFundamentalistas;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -29,7 +30,7 @@ public class IndicatorsScraper {
                                     .orElse("");
                             Map<String, String> dataMap = new LinkedHashMap<>();
                             Optional.ofNullable(cell.selectFirst("div.value > span"))
-                                    .map(Element::text).ifPresent(v-> dataMap.put("valor", v));
+                                    .map(Element::text).ifPresent(v-> dataMap.put("valor", IndicadorParser.limparTextoIndicador(v)));
 
                             List<String> definicoes = scrapeIndicatorDescription(cell);
                             if (!definicoes.isEmpty()) {
@@ -39,11 +40,11 @@ public class IndicatorsScraper {
                                 }
                             }
                             Optional.ofNullable(cell.selectFirst(".sector .destaque"))
-                                    .map(Element::text).ifPresent(v -> dataMap.put("Setor", v));
+                                    .map(Element::text).ifPresent(v -> dataMap.put("Setor", IndicadorParser.limparTextoIndicador(v)));
                             Optional.ofNullable(cell.selectFirst(".subsector .destaque"))
-                                    .map(Element::text).ifPresent(v -> dataMap.put("Subsetor", v));
+                                    .map(Element::text).ifPresent(v -> dataMap.put("Subsetor", IndicadorParser.limparTextoIndicador(v)));
                             Optional.ofNullable(cell.selectFirst(".segment .destaque"))
-                                    .map(Element::text).ifPresent(v -> dataMap.put("Segmento", v));
+                                    .map(Element::text).ifPresent(v -> dataMap.put("Segmento", IndicadorParser.limparTextoIndicador(v)));
 
                             return new AbstractMap.SimpleEntry<>(titulo, dataMap);
                         })
