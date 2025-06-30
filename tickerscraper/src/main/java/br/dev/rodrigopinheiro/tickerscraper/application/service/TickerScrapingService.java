@@ -2,6 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.DadosFinanceiros;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -13,7 +14,7 @@ import java.time.Duration;
 public class TickerScrapingService {
     private final TickerDataScrapperPort scraper;
 
-    public TickerScrapingService(TickerDataScrapperPort scraper) {
+    public TickerScrapingService(@Qualifier("seleniumScraper")TickerDataScrapperPort scraper) {
         this.scraper = scraper;
     }
 
