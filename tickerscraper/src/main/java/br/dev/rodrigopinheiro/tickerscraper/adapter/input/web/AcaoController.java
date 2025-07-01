@@ -1,5 +1,8 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web;
 
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AcaoResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.AcaoPersistenceMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.service.TickerScrapingService;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.DadosFinanceiros;
 import org.slf4j.Logger;
@@ -7,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 
@@ -15,15 +19,26 @@ import java.io.IOException;
 public class AcaoController {
     private static final Logger logger = LoggerFactory.getLogger(AcaoController.class);
     private final TickerScrapingService tickerScrapingService;
+    private final AcaoApiMapper acaoApiMapper;
 
-    public AcaoController(TickerScrapingService tickerScrapingService) {
+    public AcaoController(TickerScrapingService tickerScrapingService, AcaoApiMapper acaoApiMapper) {
         this.tickerScrapingService = tickerScrapingService;
+        this.acaoApiMapper = acaoApiMapper;
     }
 
     @GetMapping("/get-{ticker}")
-    public ResponseEntity<DadosFinanceiros> get(@PathVariable String ticker) throws IOException {
+    public Mono<ResponseEntity<AcaoResponseDTO>> get(@PathVariable String ticker) {
         logger.info("Getting ticker: {}", ticker);
-        DadosFinanceiros tickerData = tickerScrapingService.getTickerData(ticker);
-        return ResponseEntity.status(HttpStatus.OK).body(tickerData);
+        // 1. O serviço é chamado e retorna o Mono<AcaoEntity>
+        return tickerScrapingService.getTickerData(ticker)
+                // 2. Usamos .map() para transformar o resultado (quando ele chegar)
+                .map(acaoEntity -> {
+                    // O mapper converte a entidade para o DTO de resposta
+                    AcaoResponseDTO responseDto = acaoApiMapper.toResponseDto(acaoEntity);
+                    // Retornamos um ResponseEntity com o DTO
+                    return ResponseEntity.ok(responseDto);
+                })
+                // 3. Se o fluxo terminar vazio (ex: erro tratado), retorna um 404 Not Found
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
