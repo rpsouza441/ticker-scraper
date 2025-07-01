@@ -10,7 +10,7 @@ public class Acao {
     private String segmento;
     private String segmentoListagem;
     private String precoAtual;
-    private double variacao12M;
+    private BigDecimal variacao12M;
     private BigDecimal valorMercado;
     private BigDecimal valorFirma;
     private BigDecimal patrimonioLiquido;
@@ -20,44 +20,44 @@ public class Acao {
     private BigDecimal dividaBruta;
     private BigDecimal dividaLiquida;
     private BigDecimal disponibilidade;
-    private double freeFloat;
-    private double tagAlong;
+    private BigDecimal freeFloat;
+    private BigDecimal tagAlong;
     private BigDecimal liquidezMediaDiaria;
-    private double pL;
-    private double psr;
-    private double pVp;
-    private double dividendYeld;
-    private double payout;
-    private double margemLiquida;
-    private double margemBruta;
-    private double margemEbit;
-    private double margemEbitda;
-    private double evEbitda;
-    private double evEbit;
-    private double pEbitda;
-    private double pAtivo;
-    private double pCapitaldeGiro;
-    private double pAtivoCirculanteLiquido;
-    private double vpa;
-    private double lpa;
-    private double giroAtivos;
-    private double roe;
-    private double roic;
-    private double roa;
-    private double dividaLiquidaPatrimonio;
-    private double dividaLiquidaEbitda;
-    private double dividaLiquidaEbit;
-    private double dividaBrutaPatrimonio;
-    private double patrimonioAtivos;
-    private double passivosAtivos;
-    private double liquidezCorrente;
-    private double cagrReceitasCincoAnos;
-    private double cagrLucrosCincoAnos;
+    private BigDecimal pL;
+    private BigDecimal psr;
+    private BigDecimal pVp;
+    private BigDecimal dividendYeld;
+    private BigDecimal payout;
+    private BigDecimal margemLiquida;
+    private BigDecimal margemBruta;
+    private BigDecimal margemEbit;
+    private BigDecimal margemEbitda;
+    private BigDecimal evEbitda;
+    private BigDecimal evEbit;
+    private BigDecimal pEbitda;
+    private BigDecimal pAtivo;
+    private BigDecimal pCapitaldeGiro;
+    private BigDecimal pAtivoCirculanteLiquido;
+    private BigDecimal vpa;
+    private BigDecimal lpa;
+    private BigDecimal giroAtivos;
+    private BigDecimal roe;
+    private BigDecimal roic;
+    private BigDecimal roa;
+    private BigDecimal dividaLiquidaPatrimonio;
+    private BigDecimal dividaLiquidaEbitda;
+    private BigDecimal dividaLiquidaEbit;
+    private BigDecimal dividaBrutaPatrimonio;
+    private BigDecimal patrimonioAtivos;
+    private BigDecimal passivosAtivos;
+    private BigDecimal liquidezCorrente;
+    private BigDecimal cagrReceitasCincoAnos;
+    private BigDecimal cagrLucrosCincoAnos;
 
     public Acao() {
     }
 
-    public Acao(String ticker, String nomeEmpresa, String setor, String segmento, String segmentoListagem, String precoAtual, double variacao12M, BigDecimal valorMercado, BigDecimal valorFirma, BigDecimal patrimonioLiquido, BigDecimal numeroTotalPapeis, BigDecimal ativos, BigDecimal ativoCirculantes, BigDecimal dividaBruta, BigDecimal dividaLiquida, BigDecimal disponibilidade, double freeFloat, double tagAlong, BigDecimal liquidezMediaDiaria, double pL, double psr, double pVp, double dividendYeld, double payout, double margemLiquida, double margemBruta, double margemEbit, double margemEbitda, double evEbitda, double evEbit, double pEbitda, double pAtivo, double pCapitaldeGiro, double pAtivoCirculanteLiquido, double vpa, double lpa, double giroAtivos, double roe, double roic, double roa, double dividaLiquidaPatrimonio, double dividaLiquidaEbitda, double dividaLiquidaEbit, double dividaBrutaPatrimonio, double patrimonioAtivos, double passivosAtivos, double liquidezCorrente, double cagrReceitasCincoAnos, double cagrLucrosCincoAnos) {
+    public Acao(String ticker, String nomeEmpresa, String setor, String segmento, String segmentoListagem, String precoAtual, BigDecimal variacao12M, BigDecimal valorMercado, BigDecimal valorFirma, BigDecimal patrimonioLiquido, BigDecimal numeroTotalPapeis, BigDecimal ativos, BigDecimal ativoCirculantes, BigDecimal dividaBruta, BigDecimal dividaLiquida, BigDecimal disponibilidade, BigDecimal freeFloat, BigDecimal tagAlong, BigDecimal liquidezMediaDiaria, BigDecimal pL, BigDecimal psr, BigDecimal pVp, BigDecimal dividendYeld, BigDecimal payout, BigDecimal margemLiquida, BigDecimal margemBruta, BigDecimal margemEbit, BigDecimal margemEbitda, BigDecimal evEbitda, BigDecimal evEbit, BigDecimal pEbitda, BigDecimal pAtivo, BigDecimal pCapitaldeGiro, BigDecimal pAtivoCirculanteLiquido, BigDecimal vpa, BigDecimal lpa, BigDecimal giroAtivos, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal dividaLiquidaPatrimonio, BigDecimal dividaLiquidaEbitda, BigDecimal dividaLiquidaEbit, BigDecimal dividaBrutaPatrimonio, BigDecimal patrimonioAtivos, BigDecimal passivosAtivos, BigDecimal liquidezCorrente, BigDecimal cagrReceitasCincoAnos, BigDecimal cagrLucrosCincoAnos) {
         this.ticker = ticker;
         this.nomeEmpresa = nomeEmpresa;
         this.setor = setor;
@@ -157,11 +157,11 @@ public class Acao {
         this.precoAtual = precoAtual;
     }
 
-    public double getVariacao12M() {
+    public BigDecimal getVariacao12M() {
         return variacao12M;
     }
 
-    public void setVariacao12M(double variacao12M) {
+    public void setVariacao12M(BigDecimal variacao12M) {
         this.variacao12M = variacao12M;
     }
 
@@ -237,19 +237,19 @@ public class Acao {
         this.disponibilidade = disponibilidade;
     }
 
-    public double getFreeFloat() {
+    public BigDecimal getFreeFloat() {
         return freeFloat;
     }
 
-    public void setFreeFloat(double freeFloat) {
+    public void setFreeFloat(BigDecimal freeFloat) {
         this.freeFloat = freeFloat;
     }
 
-    public double getTagAlong() {
+    public BigDecimal getTagAlong() {
         return tagAlong;
     }
 
-    public void setTagAlong(double tagAlong) {
+    public void setTagAlong(BigDecimal tagAlong) {
         this.tagAlong = tagAlong;
     }
 
@@ -261,243 +261,243 @@ public class Acao {
         this.liquidezMediaDiaria = liquidezMediaDiaria;
     }
 
-    public double getpL() {
+    public BigDecimal getpL() {
         return pL;
     }
 
-    public void setpL(double pL) {
+    public void setpL(BigDecimal pL) {
         this.pL = pL;
     }
 
-    public double getPsr() {
+    public BigDecimal getPsr() {
         return psr;
     }
 
-    public void setPsr(double psr) {
+    public void setPsr(BigDecimal psr) {
         this.psr = psr;
     }
 
-    public double getpVp() {
+    public BigDecimal getpVp() {
         return pVp;
     }
 
-    public void setpVp(double pVp) {
+    public void setpVp(BigDecimal pVp) {
         this.pVp = pVp;
     }
 
-    public double getDividendYeld() {
+    public BigDecimal getDividendYeld() {
         return dividendYeld;
     }
 
-    public void setDividendYeld(double dividendYeld) {
+    public void setDividendYeld(BigDecimal dividendYeld) {
         this.dividendYeld = dividendYeld;
     }
 
-    public double getPayout() {
+    public BigDecimal getPayout() {
         return payout;
     }
 
-    public void setPayout(double payout) {
+    public void setPayout(BigDecimal payout) {
         this.payout = payout;
     }
 
-    public double getMargemLiquida() {
+    public BigDecimal getMargemLiquida() {
         return margemLiquida;
     }
 
-    public void setMargemLiquida(double margemLiquida) {
+    public void setMargemLiquida(BigDecimal margemLiquida) {
         this.margemLiquida = margemLiquida;
     }
 
-    public double getMargemBruta() {
+    public BigDecimal getMargemBruta() {
         return margemBruta;
     }
 
-    public void setMargemBruta(double margemBruta) {
+    public void setMargemBruta(BigDecimal margemBruta) {
         this.margemBruta = margemBruta;
     }
 
-    public double getMargemEbit() {
+    public BigDecimal getMargemEbit() {
         return margemEbit;
     }
 
-    public void setMargemEbit(double margemEbit) {
+    public void setMargemEbit(BigDecimal margemEbit) {
         this.margemEbit = margemEbit;
     }
 
-    public double getMargemEbitda() {
+    public BigDecimal getMargemEbitda() {
         return margemEbitda;
     }
 
-    public void setMargemEbitda(double margemEbitda) {
+    public void setMargemEbitda(BigDecimal margemEbitda) {
         this.margemEbitda = margemEbitda;
     }
 
-    public double getEvEbitda() {
+    public BigDecimal getEvEbitda() {
         return evEbitda;
     }
 
-    public void setEvEbitda(double evEbitda) {
+    public void setEvEbitda(BigDecimal evEbitda) {
         this.evEbitda = evEbitda;
     }
 
-    public double getEvEbit() {
+    public BigDecimal getEvEbit() {
         return evEbit;
     }
 
-    public void setEvEbit(double evEbit) {
+    public void setEvEbit(BigDecimal evEbit) {
         this.evEbit = evEbit;
     }
 
-    public double getpEbitda() {
+    public BigDecimal getpEbitda() {
         return pEbitda;
     }
 
-    public void setpEbitda(double pEbitda) {
+    public void setpEbitda(BigDecimal pEbitda) {
         this.pEbitda = pEbitda;
     }
 
-    public double getpAtivo() {
+    public BigDecimal getpAtivo() {
         return pAtivo;
     }
 
-    public void setpAtivo(double pAtivo) {
+    public void setpAtivo(BigDecimal pAtivo) {
         this.pAtivo = pAtivo;
     }
 
-    public double getpCapitaldeGiro() {
+    public BigDecimal getpCapitaldeGiro() {
         return pCapitaldeGiro;
     }
 
-    public void setpCapitaldeGiro(double pCapitaldeGiro) {
+    public void setpCapitaldeGiro(BigDecimal pCapitaldeGiro) {
         this.pCapitaldeGiro = pCapitaldeGiro;
     }
 
-    public double getpAtivoCirculanteLiquido() {
+    public BigDecimal getpAtivoCirculanteLiquido() {
         return pAtivoCirculanteLiquido;
     }
 
-    public void setpAtivoCirculanteLiquido(double pAtivoCirculanteLiquido) {
+    public void setpAtivoCirculanteLiquido(BigDecimal pAtivoCirculanteLiquido) {
         this.pAtivoCirculanteLiquido = pAtivoCirculanteLiquido;
     }
 
-    public double getVpa() {
+    public BigDecimal getVpa() {
         return vpa;
     }
 
-    public void setVpa(double vpa) {
+    public void setVpa(BigDecimal vpa) {
         this.vpa = vpa;
     }
 
-    public double getLpa() {
+    public BigDecimal getLpa() {
         return lpa;
     }
 
-    public void setLpa(double lpa) {
+    public void setLpa(BigDecimal lpa) {
         this.lpa = lpa;
     }
 
-    public double getGiroAtivos() {
+    public BigDecimal getGiroAtivos() {
         return giroAtivos;
     }
 
-    public void setGiroAtivos(double giroAtivos) {
+    public void setGiroAtivos(BigDecimal giroAtivos) {
         this.giroAtivos = giroAtivos;
     }
 
-    public double getRoe() {
+    public BigDecimal getRoe() {
         return roe;
     }
 
-    public void setRoe(double roe) {
+    public void setRoe(BigDecimal roe) {
         this.roe = roe;
     }
 
-    public double getRoic() {
+    public BigDecimal getRoic() {
         return roic;
     }
 
-    public void setRoic(double roic) {
+    public void setRoic(BigDecimal roic) {
         this.roic = roic;
     }
 
-    public double getRoa() {
+    public BigDecimal getRoa() {
         return roa;
     }
 
-    public void setRoa(double roa) {
+    public void setRoa(BigDecimal roa) {
         this.roa = roa;
     }
 
-    public double getDividaLiquidaPatrimonio() {
+    public BigDecimal getDividaLiquidaPatrimonio() {
         return dividaLiquidaPatrimonio;
     }
 
-    public void setDividaLiquidaPatrimonio(double dividaLiquidaPatrimonio) {
+    public void setDividaLiquidaPatrimonio(BigDecimal dividaLiquidaPatrimonio) {
         this.dividaLiquidaPatrimonio = dividaLiquidaPatrimonio;
     }
 
-    public double getDividaLiquidaEbitda() {
+    public BigDecimal getDividaLiquidaEbitda() {
         return dividaLiquidaEbitda;
     }
 
-    public void setDividaLiquidaEbitda(double dividaLiquidaEbitda) {
+    public void setDividaLiquidaEbitda(BigDecimal dividaLiquidaEbitda) {
         this.dividaLiquidaEbitda = dividaLiquidaEbitda;
     }
 
-    public double getDividaLiquidaEbit() {
+    public BigDecimal getDividaLiquidaEbit() {
         return dividaLiquidaEbit;
     }
 
-    public void setDividaLiquidaEbit(double dividaLiquidaEbit) {
+    public void setDividaLiquidaEbit(BigDecimal dividaLiquidaEbit) {
         this.dividaLiquidaEbit = dividaLiquidaEbit;
     }
 
-    public double getDividaBrutaPatrimonio() {
+    public BigDecimal getDividaBrutaPatrimonio() {
         return dividaBrutaPatrimonio;
     }
 
-    public void setDividaBrutaPatrimonio(double dividaBrutaPatrimonio) {
+    public void setDividaBrutaPatrimonio(BigDecimal dividaBrutaPatrimonio) {
         this.dividaBrutaPatrimonio = dividaBrutaPatrimonio;
     }
 
-    public double getPatrimonioAtivos() {
+    public BigDecimal getPatrimonioAtivos() {
         return patrimonioAtivos;
     }
 
-    public void setPatrimonioAtivos(double patrimonioAtivos) {
+    public void setPatrimonioAtivos(BigDecimal patrimonioAtivos) {
         this.patrimonioAtivos = patrimonioAtivos;
     }
 
-    public double getPassivosAtivos() {
+    public BigDecimal getPassivosAtivos() {
         return passivosAtivos;
     }
 
-    public void setPassivosAtivos(double passivosAtivos) {
+    public void setPassivosAtivos(BigDecimal passivosAtivos) {
         this.passivosAtivos = passivosAtivos;
     }
 
-    public double getLiquidezCorrente() {
+    public BigDecimal getLiquidezCorrente() {
         return liquidezCorrente;
     }
 
-    public void setLiquidezCorrente(double liquidezCorrente) {
+    public void setLiquidezCorrente(BigDecimal liquidezCorrente) {
         this.liquidezCorrente = liquidezCorrente;
     }
 
-    public double getCagrReceitasCincoAnos() {
+    public BigDecimal getCagrReceitasCincoAnos() {
         return cagrReceitasCincoAnos;
     }
 
-    public void setCagrReceitasCincoAnos(double cagrReceitasCincoAnos) {
+    public void setCagrReceitasCincoAnos(BigDecimal cagrReceitasCincoAnos) {
         this.cagrReceitasCincoAnos = cagrReceitasCincoAnos;
     }
 
-    public double getCagrLucrosCincoAnos() {
+    public BigDecimal getCagrLucrosCincoAnos() {
         return cagrLucrosCincoAnos;
     }
 
-    public void setCagrLucrosCincoAnos(double cagrLucrosCincoAnos) {
+    public void setCagrLucrosCincoAnos(BigDecimal cagrLucrosCincoAnos) {
         this.cagrLucrosCincoAnos = cagrLucrosCincoAnos;
     }
 }
