@@ -27,7 +27,7 @@ public class DetailedInfoScraper {
                                     .or(() -> Optional.ofNullable(cell.selectFirst("span.value")))
                                     .map(Element::text)
                                     .orElse("");
-                            return new SimpleEntry<>(title, IndicadorParser.limparTextoIndicador(value));
+                            return new SimpleEntry<>(title, value);
                         })
                         .filter(entry -> !entry.getKey().isEmpty() && !entry.getValue().isEmpty())
                         .collect(toMap(
