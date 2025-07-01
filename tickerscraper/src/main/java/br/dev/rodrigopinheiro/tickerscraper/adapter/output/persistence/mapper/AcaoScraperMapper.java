@@ -19,8 +19,8 @@ public interface AcaoScraperMapper {
             @Mapping(source = "infoHeader.nomeEmpresa", target ="nomeEmpresa"),
 
             //Mapeando InfoCards
-            @Mapping(source = "infoCards.cotacao", target="precoAtual"),
-            @Mapping(source = "infoCards.variacao12M", target = "variacao12M"),
+            @Mapping(source = "infoCards.cotacao", target = "precoAtual", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoCards.variacao12M", target = "variacao12M", qualifiedByName = "paraBigDecimal"),
 
             //Mapeando infoDetailed
             @Mapping(source = "infoDetailed.valorMercado", target = "valorMercado"),
