@@ -11,8 +11,10 @@ import java.util.Optional;
 
 public interface AcaoRepositoryPort {
 
-    Acao save(Acao acao);
+    AcaoEntity save(AcaoEntity acaoEntity);
     Optional<Acao> findById(Long id);
     PagedResult<Acao> findAll(PageQuery query);
+
+    Optional<AcaoEntity> findByTicker(String ticker);
 }
 
