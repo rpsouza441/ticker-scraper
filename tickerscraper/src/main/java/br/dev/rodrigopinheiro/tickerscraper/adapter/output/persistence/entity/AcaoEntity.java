@@ -2,9 +2,11 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -37,10 +39,10 @@ public class AcaoEntity {
     private String segmentoListagem;
 
     @Column(name = "preco_atual")
-    private String precoAtual;
+    private BigDecimal precoAtual;
 
     @Column(name = "variacao_12m")
-    private double variacao12M;
+    private BigDecimal variacao12M;
 
     @Column(name = "valor_mercado")
     private BigDecimal valorMercado;
@@ -70,103 +72,110 @@ public class AcaoEntity {
     private BigDecimal disponibilidade;
 
     @Column(name = "free_float")
-    private double freeFloat;
+    private BigDecimal freeFloat;
 
     @Column(name = "tag_along")
-    private double tagAlong;
+    private BigDecimal tagAlong;
 
     @Column(name = "liquidez_media_diaria")
     private BigDecimal liquidezMediaDiaria;
 
     @Column(name = "p_l")
-    private double pL;
+    private BigDecimal pL;
 
     @Column(name = "psr")
-    private double psr;
+    private BigDecimal psr;
 
     @Column(name = "p_vp")
-    private double pVp;
+    private BigDecimal pVp;
 
     @Column(name = "dividend_yeld")
-    private double dividendYeld;
+    private BigDecimal dividendYeld;
 
     @Column(name = "payout")
-    private double payout;
+    private BigDecimal payout;
 
     @Column(name = "margem_liquida")
-    private double margemLiquida;
+    private BigDecimal margemLiquida;
 
     @Column(name = "margem_bruta")
-    private double margemBruta;
+    private BigDecimal margemBruta;
 
     @Column(name = "margem_ebit")
-    private double margemEbit;
+    private BigDecimal margemEbit;
 
     @Column(name = "margem_ebitda")
-    private double margemEbitda;
+    private BigDecimal margemEbitda;
 
     @Column(name = "ev_ebitda")
-    private double evEbitda;
+    private BigDecimal evEbitda;
 
     @Column(name = "ev_ebit")
-    private double evEbit;
+    private BigDecimal evEbit;
 
     @Column(name = "p_ebitda")
-    private double pEbitda;
+    private BigDecimal pEbitda;
 
     @Column(name = "p_ativo")
-    private double pAtivo;
+    private BigDecimal pAtivo;
 
     @Column(name = "p_capital_de_giro")
-    private double pCapitaldeGiro;
+    private BigDecimal pCapitaldeGiro;
 
     @Column(name = "p_ativo_circulante_liquido")
-    private double pAtivoCirculanteLiquido;
+    private BigDecimal pAtivoCirculanteLiquido;
 
     @Column(name = "vpa")
-    private double vpa;
+    private BigDecimal vpa;
 
     @Column(name = "lpa")
-    private double lpa;
+    private BigDecimal lpa;
 
     @Column(name = "giro_ativos")
-    private double giroAtivos;
+    private BigDecimal giroAtivos;
 
     @Column(name = "roe")
-    private double roe;
+    private BigDecimal roe;
 
     @Column(name = "roic")
-    private double roic;
+    private BigDecimal roic;
 
     @Column(name = "roa")
-    private double roa;
+    private BigDecimal roa;
 
     @Column(name = "divida_liquida_patrimonio")
-    private double dividaLiquidaPatrimonio;
+    private BigDecimal dividaLiquidaPatrimonio;
 
     @Column(name = "divida_liquida_ebitda")
-    private double dividaLiquidaEbitda;
+    private BigDecimal dividaLiquidaEbitda;
 
     @Column(name = "divida_liquida_ebit")
-    private double dividaLiquidaEbit;
+    private BigDecimal dividaLiquidaEbit;
 
     @Column(name = "divida_bruta_patrimonio")
-    private double dividaBrutaPatrimonio;
+    private BigDecimal dividaBrutaPatrimonio;
 
     @Column(name = "patrimonio_ativos")
-    private double patrimonioAtivos;
+    private BigDecimal patrimonioAtivos;
 
     @Column(name = "passivos_ativos")
-    private double passivosAtivos;
+    private BigDecimal passivosAtivos;
 
     @Column(name = "liquidez_corrente")
-    private double liquidezCorrente;
+    private BigDecimal liquidezCorrente;
 
     @Column(name = "cagr_receitas_cinco_anos")
-    private double cagrReceitasCincoAnos;
+    private BigDecimal cagrReceitasCincoAnos;
 
     @Column(name = "cagr_lucros_cinco_anos")
-    private double cagrLucrosCincoAnos;
+    private BigDecimal cagrLucrosCincoAnos;
+
+    @Column(name = "dados_brutos_json", columnDefinition = "JSONB")
+    private String dadosBrutosJson;
+
+    @UpdateTimestamp
+    @Column(name = "data_atualizacao")
+    private LocalDateTime dataAtualizacao;
 
     @Override
     public final boolean equals(Object o) {
