@@ -2,16 +2,14 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser;
 
 
 import org.mapstruct.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.util.Locale;
+import java.util.Optional;
 
 public class IndicadorParser {
-    // Define o formato numérico para o Brasil (entende "1.000,50")
-    private static final Locale LOCALE_BR = new Locale("pt", "BR");
-    private static final NumberFormat FORMATADOR = NumberFormat.getInstance(LOCALE_BR);
+    private static final Logger logger = LoggerFactory.getLogger(IndicadorParser.class);
 
     /**
      * Limpa uma string de indicadores, removendo R$, %, e espaços nas extremidades.
@@ -40,7 +38,8 @@ public class IndicadorParser {
         if (raw == null || raw.isBlank()) {
             return "";
         }
-        return raw.replace("R$", "")
+        return raw
+                .replace("R$", "")
                 .replace(".", "")      // Remove o separador de milhar
                 .replace(",", ".")      // Substitui a vírgula decimal por ponto
                 .replace("%", "")
@@ -57,16 +56,19 @@ public class IndicadorParser {
      */
     @Named("paraBigDecimal")
     public static BigDecimal parseBigdecimal(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return BigDecimal.ZERO;
-        }
-
-        try {
-            String limpo = limparTextoNumerico(raw); // "1.234,56" → "1234.56"
-            return new BigDecimal(limpo);
-        } catch (NumberFormatException e) {
-            System.err.println("Alerta: Erro ao converter valor para BigDecimal: '" + raw + "'. Retornando 0. Erro: " + e.getMessage());
-            return BigDecimal.ZERO;
-        }
+        return Optional.ofNullable(raw)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(IndicadorParser::limparTextoNumerico)
+                .filter(s -> s.matches("-?\\d+(\\.\\d+)?"))
+                .map(s -> {
+                    try {
+                        return new BigDecimal(s);
+                    } catch (NumberFormatException e) {
+                        logger.error(e.getMessage());
+                        return BigDecimal.ZERO;
+                    }
+                })
+                .orElse(BigDecimal.ZERO);
     }
 }
