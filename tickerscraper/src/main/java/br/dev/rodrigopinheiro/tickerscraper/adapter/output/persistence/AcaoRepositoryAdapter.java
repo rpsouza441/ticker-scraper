@@ -26,10 +26,8 @@ public class AcaoRepositoryAdapter implements AcaoRepositoryPort {
     }
 
     @Override
-    public Acao save(Acao acao) {
-        AcaoEntity entity = mapper.toEntity(acao);
-        AcaoEntity saved = repository.save(entity);
-        return mapper.toDomain(saved);
+    public AcaoEntity save(AcaoEntity acaoEntity) {
+        return  repository.save(acaoEntity);
     }
 
     @Override
@@ -52,5 +50,10 @@ public class AcaoRepositoryAdapter implements AcaoRepositoryPort {
                 pageOfEntities.getTotalPages(),
                 pageOfEntities.getNumber()
         );
+    }
+
+    @Override
+    public Optional<AcaoEntity> findByTicker(String ticker) {
+        return repository.findByTicker(ticker);
     }
 }
