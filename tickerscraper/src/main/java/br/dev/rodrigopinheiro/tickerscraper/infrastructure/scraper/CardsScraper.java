@@ -23,9 +23,6 @@ public class CardsScraper {
                 .map(Element::text)
                 .orElse("N/A");
 
-        return new InfoCards(
-                IndicadorParser.limparTextoIndicador(cotacao),
-                IndicadorParser.limparTextoIndicador(variacao12M)
-        );
+        return new InfoCards(cotacao, variacao12M);
     }
 }
