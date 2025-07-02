@@ -18,7 +18,7 @@ public class IndicadorParser {
      * @param raw A string bruta extraída do HTML (ex: "  R$ 15,30  ", "25,00 % ").
      * @return Uma string limpa (ex: "15,30", "25,00") ou uma string vazia se a entrada for nula/vazia.
      */
-    @Named("limpezaSimples")
+    @Named("limparTextoIndicador")
     public static String limparTextoIndicador(String raw) {
         if (raw == null || raw.isBlank()) {
             return ""; // Retorna uma string vazia como padrão para dados ausentes
@@ -44,6 +44,11 @@ public class IndicadorParser {
                 .replace(",", ".")      // Substitui a vírgula decimal por ponto
                 .replace("%", "")
                 .trim();
+    }
+
+    @Named("limpezaComUpperCase")
+    public static String toUpperTrim(String str) {
+        return str == null ? null : str.toUpperCase().trim();
     }
 
 

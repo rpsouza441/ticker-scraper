@@ -1,6 +1,55 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto;
 
-public record AcaoResponseDTO(
+import java.math.BigDecimal;
 
-) {
-}
+public record AcaoResponseDTO(
+        String ticker,
+        String nomeEmpresa,
+        String setor,
+        String segmento,
+        String segmentoListagem,
+        BigDecimal precoAtual,
+        BigDecimal variacao12M,
+        BigDecimal valorMercado,
+        BigDecimal valorFirma,
+        BigDecimal patrimonioLiquido,
+        BigDecimal numeroTotalPapeis,
+        BigDecimal ativos,
+        BigDecimal ativoCirculantes,
+        BigDecimal dividaBruta,
+        BigDecimal dividaLiquida,
+        String disponibilidade,
+        BigDecimal freeFloat,
+        BigDecimal tagAlong,
+        BigDecimal liquidezMediaDiaria,
+        BigDecimal pL,
+        BigDecimal psr,
+        BigDecimal pVp,
+        BigDecimal dividendYeld,
+        BigDecimal payout,
+        BigDecimal margemLiquida,
+        BigDecimal margemBruta,
+        BigDecimal margemEbit,
+        BigDecimal margemEbitda,
+        BigDecimal evEbitda,
+        BigDecimal evEbit,
+        BigDecimal pEbitda,
+        BigDecimal pAtivo,
+        BigDecimal pCapitaldeGiro,
+        BigDecimal pAtivoCirculanteLiquido,
+        BigDecimal vpa,
+        BigDecimal lpa,
+        BigDecimal giroAtivos,
+        BigDecimal roe,
+        BigDecimal roic,
+        BigDecimal roa,
+        BigDecimal dividaLiquidaPatrimonio,
+        BigDecimal dividaLiquidaEbitda,
+        BigDecimal dividaLiquidaEbit,
+        BigDecimal dividaBrutaPatrimonio,
+        BigDecimal patrimonioAtivos,
+        BigDecimal passivosAtivos,
+        BigDecimal liquidezCorrente,
+        BigDecimal cagrReceitasCincoAnos,
+        BigDecimal cagrLucrosCincoAnos
+) {}

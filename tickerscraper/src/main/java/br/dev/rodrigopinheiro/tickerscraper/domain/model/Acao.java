@@ -19,7 +19,7 @@ public class Acao {
     private BigDecimal ativoCirculantes;
     private BigDecimal dividaBruta;
     private BigDecimal dividaLiquida;
-    private BigDecimal disponibilidade;
+    private String disponibilidade;
     private BigDecimal freeFloat;
     private BigDecimal tagAlong;
     private BigDecimal liquidezMediaDiaria;
@@ -57,7 +57,7 @@ public class Acao {
     public Acao() {
     }
 
-    public Acao(String ticker, String nomeEmpresa, String setor, String segmento, String segmentoListagem, String precoAtual, BigDecimal variacao12M, BigDecimal valorMercado, BigDecimal valorFirma, BigDecimal patrimonioLiquido, BigDecimal numeroTotalPapeis, BigDecimal ativos, BigDecimal ativoCirculantes, BigDecimal dividaBruta, BigDecimal dividaLiquida, BigDecimal disponibilidade, BigDecimal freeFloat, BigDecimal tagAlong, BigDecimal liquidezMediaDiaria, BigDecimal pL, BigDecimal psr, BigDecimal pVp, BigDecimal dividendYeld, BigDecimal payout, BigDecimal margemLiquida, BigDecimal margemBruta, BigDecimal margemEbit, BigDecimal margemEbitda, BigDecimal evEbitda, BigDecimal evEbit, BigDecimal pEbitda, BigDecimal pAtivo, BigDecimal pCapitaldeGiro, BigDecimal pAtivoCirculanteLiquido, BigDecimal vpa, BigDecimal lpa, BigDecimal giroAtivos, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal dividaLiquidaPatrimonio, BigDecimal dividaLiquidaEbitda, BigDecimal dividaLiquidaEbit, BigDecimal dividaBrutaPatrimonio, BigDecimal patrimonioAtivos, BigDecimal passivosAtivos, BigDecimal liquidezCorrente, BigDecimal cagrReceitasCincoAnos, BigDecimal cagrLucrosCincoAnos) {
+    public Acao(String ticker, String nomeEmpresa, String setor, String segmento, String segmentoListagem, String precoAtual, BigDecimal variacao12M, BigDecimal valorMercado, BigDecimal valorFirma, BigDecimal patrimonioLiquido, BigDecimal numeroTotalPapeis, BigDecimal ativos, BigDecimal ativoCirculantes, BigDecimal dividaBruta, BigDecimal dividaLiquida, String disponibilidade, BigDecimal freeFloat, BigDecimal tagAlong, BigDecimal liquidezMediaDiaria, BigDecimal pL, BigDecimal psr, BigDecimal pVp, BigDecimal dividendYeld, BigDecimal payout, BigDecimal margemLiquida, BigDecimal margemBruta, BigDecimal margemEbit, BigDecimal margemEbitda, BigDecimal evEbitda, BigDecimal evEbit, BigDecimal pEbitda, BigDecimal pAtivo, BigDecimal pCapitaldeGiro, BigDecimal pAtivoCirculanteLiquido, BigDecimal vpa, BigDecimal lpa, BigDecimal giroAtivos, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal dividaLiquidaPatrimonio, BigDecimal dividaLiquidaEbitda, BigDecimal dividaLiquidaEbit, BigDecimal dividaBrutaPatrimonio, BigDecimal patrimonioAtivos, BigDecimal passivosAtivos, BigDecimal liquidezCorrente, BigDecimal cagrReceitasCincoAnos, BigDecimal cagrLucrosCincoAnos) {
         this.ticker = ticker;
         this.nomeEmpresa = nomeEmpresa;
         this.setor = setor;
@@ -229,11 +229,11 @@ public class Acao {
         this.dividaLiquida = dividaLiquida;
     }
 
-    public BigDecimal getDisponibilidade() {
+    public String getDisponibilidade() {
         return disponibilidade;
     }
 
-    public void setDisponibilidade(BigDecimal disponibilidade) {
+    public void setDisponibilidade(String disponibilidade) {
         this.disponibilidade = disponibilidade;
     }
 

@@ -15,7 +15,7 @@ CREATE TABLE acao (
                       ativo_circulantes DECIMAL(20,2),
                       divida_bruta DECIMAL(20,2),
                       divida_liquida DECIMAL(20,2),
-                      disponibilidade DECIMAL(20,2),
+                      disponibilidade VARCHAR(100),
                       free_float DECIMAL,
                       tag_along DECIMAL,
                       liquidez_media_diaria DECIMAL(20,2),

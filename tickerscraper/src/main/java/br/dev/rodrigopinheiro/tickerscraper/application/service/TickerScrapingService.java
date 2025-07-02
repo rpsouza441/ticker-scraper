@@ -6,6 +6,7 @@ import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.Ac
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.DadosFinanceiros;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -48,8 +49,9 @@ public class TickerScrapingService {
      * @return Um Mono contendo a entidade AcaoEntity final.
      */
     public Mono<AcaoEntity> getTickerData(String ticker) {
+        final String tickerNormalizado = ticker.toUpperCase().trim();
         // 1. Tenta buscar no banco de forma não-bloqueante
-        return Mono.fromCallable(() -> acaoRepository.findByTicker(ticker))
+        return Mono.fromCallable(() -> acaoRepository.findByTicker(tickerNormalizado))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optionalAcao -> {
                     // 2. Se encontrou, verifica se o cache é válido
@@ -57,6 +59,7 @@ public class TickerScrapingService {
                         AcaoEntity acaoExistente = optionalAcao.get();
                         if (isCacheValid(acaoExistente)) {
                             logger.info("Cache para {} é válido. Retornando do banco de dados.", ticker);
+                            logger.info("Acao Existente toString {}",acaoExistente.toString());
                             return Mono.just(acaoExistente); // Retorna a entidade do cache
                         }
                     }
@@ -64,6 +67,45 @@ public class TickerScrapingService {
                     logger.info("Cache para {} inválido ou inexistente. Iniciando scraping.", ticker);
                     try {
                         return doScrapeAndSave(ticker, optionalAcao);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+
+    /**
+     * Busca os dados brutos e completos de uma ação, usando o cache se possível.
+     * Esta é uma operação de "leitura". Ela não salva/atualiza os dados no banco.
+     *
+     * @param ticker O ticker da ação.
+     * @return Um Mono contendo o objeto DadosFinanceiros completo.
+     */
+    public Mono<DadosFinanceiros> getRawTickerData(String ticker) {
+        final String tickerNormalizado = ticker.toUpperCase().trim();
+
+        logger.info("Buscando dados brutos para {}", tickerNormalizado);
+
+        // 1. Tenta buscar no banco de forma não-bloqueante
+        return Mono.fromCallable(() -> acaoRepository.findByTicker(tickerNormalizado))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optionalAcao -> {
+                    // 2. Se encontrou E o cache é válido...
+                    if (optionalAcao.isPresent() && isCacheValid(optionalAcao.get())) {
+                        logger.info("Cache de DADOS BRUTOS para {} é válido. Deserializando JSON do banco.", tickerNormalizado);
+
+                        // 3. ...nós deserializamos o JSON guardado de volta para o objeto DadosFinanceiros.
+                        // Como a deserialização pode ser uma operação de I/O (mesmo que pequena),
+                        // a envolvemos em um fromCallable para segurança.
+                        return Mono.fromCallable(() ->
+                                jsonMapper.readValue(optionalAcao.get().getDadosBrutosJson(), DadosFinanceiros.class)
+                        ).subscribeOn(Schedulers.boundedElastic());
+                    }
+
+                    // 4. Se não encontrou ou o cache está velho, simplesmente dispara o scraping
+                    logger.info("Cache de DADOS BRUTOS para {} inválido ou inexistente. Fazendo scraping ao vivo.", tickerNormalizado);
+                    try {
+                        return scraper.scrape(tickerNormalizado);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

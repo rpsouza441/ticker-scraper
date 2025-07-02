@@ -1,0 +1,1 @@
+ALTER TABLE acao ADD CONSTRAINT uk_acao_ticker UNIQUE (ticker);

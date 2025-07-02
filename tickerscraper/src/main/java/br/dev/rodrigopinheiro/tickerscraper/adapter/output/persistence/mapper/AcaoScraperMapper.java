@@ -7,15 +7,19 @@ import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParse
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 
 @Mapper(componentModel = "spring", uses={IndicadorParser.class})
 public interface AcaoScraperMapper {
+    Logger logger = LoggerFactory.getLogger(AcaoScraperMapper.class);
+
 
     @Mappings({
             //Mapeando InfoHeader
-            @Mapping(source = "infoHeader.ticker", target = "ticker"),
+            @Mapping(source = "infoHeader.ticker", target = "ticker", qualifiedByName = "limpezaComUpperCase"),
             @Mapping(source = "infoHeader.nomeEmpresa", target ="nomeEmpresa"),
 
             //Mapeando InfoCards
@@ -23,20 +27,22 @@ public interface AcaoScraperMapper {
             @Mapping(source = "infoCards.variacao12M", target = "variacao12M", qualifiedByName = "paraBigDecimal"),
 
             //Mapeando infoDetailed
-            @Mapping(source = "infoDetailed.valorMercado", target = "valorMercado"),
-            @Mapping(source = "infoDetailed.valorFirma", target = "valorFirma"),
-            @Mapping(source = "infoDetailed.patrimonioLiquido", target = "patrimonioLiquido"),
-            @Mapping(source = "infoDetailed.numeroTotalPapeis", target = "numeroTotalPapeis"),
-            @Mapping(source = "infoDetailed.ativos", target = "ativos"),
-            @Mapping(source = "infoDetailed.ativoCirculante", target = "ativoCirculantes"),
-            @Mapping(source = "infoDetailed.dividaBruta", target = "dividaBruta"),
-            @Mapping(source = "infoDetailed.dividaLiquida", target = "dividaLiquida"),
+            @Mapping(source = "infoDetailed.valorMercado", target = "valorMercado", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.valorFirma", target = "valorFirma", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.patrimonioLiquido", target = "patrimonioLiquido", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.numeroTotalPapeis", target = "numeroTotalPapeis", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.ativos", target = "ativos", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.ativoCirculante", target = "ativoCirculantes", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.dividaBruta", target = "dividaBruta", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.dividaLiquida", target = "dividaLiquida", qualifiedByName = "paraBigDecimal"),
             @Mapping(source = "infoDetailed.segmentoListagem", target = "segmentoListagem"),
-            @Mapping(source = "infoDetailed.freeFloat", target = "freeFloat"),
-            @Mapping(source = "infoDetailed.tagAlong", target = "tagAlong"),
-            @Mapping(source = "infoDetailed.liquidezMediaDiaria", target = "liquidezMediaDiaria"),
+            @Mapping(source = "infoDetailed.freeFloat", target = "freeFloat", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.tagAlong", target = "tagAlong", qualifiedByName = "paraBigDecimal"),
+            @Mapping(source = "infoDetailed.liquidezMediaDiaria", target = "liquidezMediaDiaria", qualifiedByName = "paraBigDecimal"),
             @Mapping(source = "infoDetailed.setor", target = "setor"),
             @Mapping(source = "infoDetailed.segmento", target = "segmento"),
+            @Mapping(source = "infoDetailed.disponibilidade", target = "disponibilidade", qualifiedByName = "limparTextoIndicador"),
+
 
             //Mapeando IndicadoresFuncamentalistas
             // Indicadores principais
@@ -74,19 +80,23 @@ public interface AcaoScraperMapper {
     })
     Acao toDomain(DadosFinanceiros dados);
 
-    /**
-     * RESPONSABILIDADE DO MAPPER: Navegar na estrutura do DadosFinanceiros para ACHAR o valor.
-     */
+
     default BigDecimal getIndicatorValueAsBigDecimal(DadosFinanceiros dados, String nomeIndicador) {
         if (dados == null || dados.fundamentalIndicators() == null || dados.fundamentalIndicators().indicadores() == null) {
             return BigDecimal.ZERO;
         }
         IndicadorFundamentalista indicador = dados.fundamentalIndicators().indicadores().get(nomeIndicador);
-        if (indicador == null || indicador.valor() == null) {
+
+        // VERIFICAÇÃO E LOG
+        if (indicador == null) {
+            logger.warn("Indicador com a chave '{}' não foi encontrado nos dados raspados.", nomeIndicador);
+            return BigDecimal.ZERO;
+        }
+        if (indicador.valor() == null) {
+            logger.warn("Indicador '{}' foi encontrado, mas seu valor é nulo.", nomeIndicador);
             return BigDecimal.ZERO;
         }
 
-        // Entrega o texto bruto para o especialista em conversão
         return IndicadorParser.parseBigdecimal(indicador.valor());
     }
 

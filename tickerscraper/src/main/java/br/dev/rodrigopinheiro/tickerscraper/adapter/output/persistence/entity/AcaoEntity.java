@@ -2,8 +2,10 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,7 +25,7 @@ public class AcaoEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ticker")
+    @Column(name = "ticker", unique = true, nullable = false)
     private String ticker;
 
     @Column(name = "nome_empresa")
@@ -69,7 +71,7 @@ public class AcaoEntity {
     private BigDecimal dividaLiquida;
 
     @Column(name = "disponibilidade")
-    private BigDecimal disponibilidade;
+    private String disponibilidade;
 
     @Column(name = "free_float")
     private BigDecimal freeFloat;
@@ -170,6 +172,7 @@ public class AcaoEntity {
     @Column(name = "cagr_lucros_cinco_anos")
     private BigDecimal cagrLucrosCincoAnos;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "dados_brutos_json", columnDefinition = "JSONB")
     private String dadosBrutosJson;
 
