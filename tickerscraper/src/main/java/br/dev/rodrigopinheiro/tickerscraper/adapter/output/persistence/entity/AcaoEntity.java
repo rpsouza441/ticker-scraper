@@ -83,16 +83,16 @@ public class AcaoEntity {
     private BigDecimal liquidezMediaDiaria;
 
     @Column(name = "p_l")
-    private BigDecimal pL;
+    private BigDecimal pl;
 
     @Column(name = "psr")
     private BigDecimal psr;
 
     @Column(name = "p_vp")
-    private BigDecimal pVp;
+    private BigDecimal pvp;
 
-    @Column(name = "dividend_yeld")
-    private BigDecimal dividendYeld;
+    @Column(name = "dividend_yield")
+    private BigDecimal dividendYield;
 
     @Column(name = "payout")
     private BigDecimal payout;
@@ -116,16 +116,16 @@ public class AcaoEntity {
     private BigDecimal evEbit;
 
     @Column(name = "p_ebitda")
-    private BigDecimal pEbitda;
+    private BigDecimal pebitda;
 
     @Column(name = "p_ativo")
-    private BigDecimal pAtivo;
+    private BigDecimal pativo;
 
     @Column(name = "p_capital_de_giro")
-    private BigDecimal pCapitaldeGiro;
+    private BigDecimal pcapitaldeGiro;
 
     @Column(name = "p_ativo_circulante_liquido")
-    private BigDecimal pAtivoCirculanteLiquido;
+    private BigDecimal pativoCirculanteLiquido;
 
     @Column(name = "vpa")
     private BigDecimal vpa;

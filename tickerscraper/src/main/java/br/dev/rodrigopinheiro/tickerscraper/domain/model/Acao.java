@@ -23,10 +23,10 @@ public class Acao {
     private BigDecimal freeFloat;
     private BigDecimal tagAlong;
     private BigDecimal liquidezMediaDiaria;
-    private BigDecimal pL;
+    private BigDecimal pl;
     private BigDecimal psr;
-    private BigDecimal pVp;
-    private BigDecimal dividendYeld;
+    private BigDecimal pvp;
+    private BigDecimal dividendYield;
     private BigDecimal payout;
     private BigDecimal margemLiquida;
     private BigDecimal margemBruta;
@@ -34,10 +34,10 @@ public class Acao {
     private BigDecimal margemEbitda;
     private BigDecimal evEbitda;
     private BigDecimal evEbit;
-    private BigDecimal pEbitda;
-    private BigDecimal pAtivo;
-    private BigDecimal pCapitaldeGiro;
-    private BigDecimal pAtivoCirculanteLiquido;
+    private BigDecimal pebitda;
+    private BigDecimal pativo;
+    private BigDecimal pcapitaldeGiro;
+    private BigDecimal pativoCirculanteLiquido;
     private BigDecimal vpa;
     private BigDecimal lpa;
     private BigDecimal giroAtivos;
@@ -57,7 +57,7 @@ public class Acao {
     public Acao() {
     }
 
-    public Acao(String ticker, String nomeEmpresa, String setor, String segmento, String segmentoListagem, String precoAtual, BigDecimal variacao12M, BigDecimal valorMercado, BigDecimal valorFirma, BigDecimal patrimonioLiquido, BigDecimal numeroTotalPapeis, BigDecimal ativos, BigDecimal ativoCirculantes, BigDecimal dividaBruta, BigDecimal dividaLiquida, String disponibilidade, BigDecimal freeFloat, BigDecimal tagAlong, BigDecimal liquidezMediaDiaria, BigDecimal pL, BigDecimal psr, BigDecimal pVp, BigDecimal dividendYeld, BigDecimal payout, BigDecimal margemLiquida, BigDecimal margemBruta, BigDecimal margemEbit, BigDecimal margemEbitda, BigDecimal evEbitda, BigDecimal evEbit, BigDecimal pEbitda, BigDecimal pAtivo, BigDecimal pCapitaldeGiro, BigDecimal pAtivoCirculanteLiquido, BigDecimal vpa, BigDecimal lpa, BigDecimal giroAtivos, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal dividaLiquidaPatrimonio, BigDecimal dividaLiquidaEbitda, BigDecimal dividaLiquidaEbit, BigDecimal dividaBrutaPatrimonio, BigDecimal patrimonioAtivos, BigDecimal passivosAtivos, BigDecimal liquidezCorrente, BigDecimal cagrReceitasCincoAnos, BigDecimal cagrLucrosCincoAnos) {
+    public Acao(String ticker, String nomeEmpresa, String setor, String segmento, String segmentoListagem, String precoAtual, BigDecimal variacao12M, BigDecimal valorMercado, BigDecimal valorFirma, BigDecimal patrimonioLiquido, BigDecimal numeroTotalPapeis, BigDecimal ativos, BigDecimal ativoCirculantes, BigDecimal dividaBruta, BigDecimal dividaLiquida, String disponibilidade, BigDecimal freeFloat, BigDecimal tagAlong, BigDecimal liquidezMediaDiaria, BigDecimal pl, BigDecimal psr, BigDecimal pvp, BigDecimal dividendYield, BigDecimal payout, BigDecimal margemLiquida, BigDecimal margemBruta, BigDecimal margemEbit, BigDecimal margemEbitda, BigDecimal evEbitda, BigDecimal evEbit, BigDecimal pebitda, BigDecimal pativo, BigDecimal pcapitaldeGiro, BigDecimal pativoCirculanteLiquido, BigDecimal vpa, BigDecimal lpa, BigDecimal giroAtivos, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal dividaLiquidaPatrimonio, BigDecimal dividaLiquidaEbitda, BigDecimal dividaLiquidaEbit, BigDecimal dividaBrutaPatrimonio, BigDecimal patrimonioAtivos, BigDecimal passivosAtivos, BigDecimal liquidezCorrente, BigDecimal cagrReceitasCincoAnos, BigDecimal cagrLucrosCincoAnos) {
         this.ticker = ticker;
         this.nomeEmpresa = nomeEmpresa;
         this.setor = setor;
@@ -77,10 +77,10 @@ public class Acao {
         this.freeFloat = freeFloat;
         this.tagAlong = tagAlong;
         this.liquidezMediaDiaria = liquidezMediaDiaria;
-        this.pL = pL;
+        this.pl = pl;
         this.psr = psr;
-        this.pVp = pVp;
-        this.dividendYeld = dividendYeld;
+        this.pvp = pvp;
+        this.dividendYield = dividendYield;
         this.payout = payout;
         this.margemLiquida = margemLiquida;
         this.margemBruta = margemBruta;
@@ -88,10 +88,10 @@ public class Acao {
         this.margemEbitda = margemEbitda;
         this.evEbitda = evEbitda;
         this.evEbit = evEbit;
-        this.pEbitda = pEbitda;
-        this.pAtivo = pAtivo;
-        this.pCapitaldeGiro = pCapitaldeGiro;
-        this.pAtivoCirculanteLiquido = pAtivoCirculanteLiquido;
+        this.pebitda = pebitda;
+        this.pativo = pativo;
+        this.pcapitaldeGiro = pcapitaldeGiro;
+        this.pativoCirculanteLiquido = pativoCirculanteLiquido;
         this.vpa = vpa;
         this.lpa = lpa;
         this.giroAtivos = giroAtivos;
@@ -261,12 +261,12 @@ public class Acao {
         this.liquidezMediaDiaria = liquidezMediaDiaria;
     }
 
-    public BigDecimal getpL() {
-        return pL;
+    public BigDecimal getPl() {
+        return pl;
     }
 
-    public void setpL(BigDecimal pL) {
-        this.pL = pL;
+    public void setPl(BigDecimal pl) {
+        this.pl = pl;
     }
 
     public BigDecimal getPsr() {
@@ -277,20 +277,20 @@ public class Acao {
         this.psr = psr;
     }
 
-    public BigDecimal getpVp() {
-        return pVp;
+    public BigDecimal getPvp() {
+        return pvp;
     }
 
-    public void setpVp(BigDecimal pVp) {
-        this.pVp = pVp;
+    public void setPvp(BigDecimal pvp) {
+        this.pvp = pvp;
     }
 
-    public BigDecimal getDividendYeld() {
-        return dividendYeld;
+    public BigDecimal getDividendYield() {
+        return dividendYield;
     }
 
-    public void setDividendYeld(BigDecimal dividendYeld) {
-        this.dividendYeld = dividendYeld;
+    public void setDividendYield(BigDecimal dividendYield) {
+        this.dividendYield = dividendYield;
     }
 
     public BigDecimal getPayout() {
@@ -349,36 +349,36 @@ public class Acao {
         this.evEbit = evEbit;
     }
 
-    public BigDecimal getpEbitda() {
-        return pEbitda;
+    public BigDecimal getPebitda() {
+        return pebitda;
     }
 
-    public void setpEbitda(BigDecimal pEbitda) {
-        this.pEbitda = pEbitda;
+    public void setPebitda(BigDecimal pebitda) {
+        this.pebitda = pebitda;
     }
 
-    public BigDecimal getpAtivo() {
-        return pAtivo;
+    public BigDecimal getPativo() {
+        return pativo;
     }
 
-    public void setpAtivo(BigDecimal pAtivo) {
-        this.pAtivo = pAtivo;
+    public void setPativo(BigDecimal pativo) {
+        this.pativo = pativo;
     }
 
-    public BigDecimal getpCapitaldeGiro() {
-        return pCapitaldeGiro;
+    public BigDecimal getPcapitaldeGiro() {
+        return pcapitaldeGiro;
     }
 
-    public void setpCapitaldeGiro(BigDecimal pCapitaldeGiro) {
-        this.pCapitaldeGiro = pCapitaldeGiro;
+    public void setPcapitaldeGiro(BigDecimal pcapitaldeGiro) {
+        this.pcapitaldeGiro = pcapitaldeGiro;
     }
 
-    public BigDecimal getpAtivoCirculanteLiquido() {
-        return pAtivoCirculanteLiquido;
+    public BigDecimal getPativoCirculanteLiquido() {
+        return pativoCirculanteLiquido;
     }
 
-    public void setpAtivoCirculanteLiquido(BigDecimal pAtivoCirculanteLiquido) {
-        this.pAtivoCirculanteLiquido = pAtivoCirculanteLiquido;
+    public void setPativoCirculanteLiquido(BigDecimal pativoCirculanteLiquido) {
+        this.pativoCirculanteLiquido = pativoCirculanteLiquido;
     }
 
     public BigDecimal getVpa() {

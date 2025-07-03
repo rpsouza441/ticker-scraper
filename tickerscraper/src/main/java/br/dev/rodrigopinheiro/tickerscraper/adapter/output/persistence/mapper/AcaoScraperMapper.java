@@ -46,10 +46,10 @@ public interface AcaoScraperMapper {
 
             //Mapeando IndicadoresFuncamentalistas
             // Indicadores principais
-            @Mapping(target = "pL", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/L\"))"),
+            @Mapping(target = "pl", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/L\"))"),
             @Mapping(target = "psr", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/RECEITA (PSR)\"))"),
-            @Mapping(target = "pVp", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/VP\"))"),
-            @Mapping(target = "dividendYeld", expression = "java(getIndicatorValueAsBigDecimal(dados, \"DIVIDEND YIELD\"))"),
+            @Mapping(target = "pvp", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/VP\"))"),
+            @Mapping(target = "dividendYield", expression = "java(getIndicatorValueAsBigDecimal(dados, \"DIVIDEND YIELD\"))"),
             @Mapping(target = "payout", expression = "java(getIndicatorValueAsBigDecimal(dados, \"PAYOUT\"))"),
             @Mapping(target = "margemLiquida", expression = "java(getIndicatorValueAsBigDecimal(dados, \"MARGEM LÍQUIDA\"))"),
             @Mapping(target = "margemBruta", expression = "java(getIndicatorValueAsBigDecimal(dados, \"MARGEM BRUTA\"))"),
@@ -57,10 +57,10 @@ public interface AcaoScraperMapper {
             @Mapping(target = "margemEbitda", expression = "java(getIndicatorValueAsBigDecimal(dados, \"MARGEM EBITDA\"))"),
             @Mapping(target = "evEbitda", expression = "java(getIndicatorValueAsBigDecimal(dados, \"EV/EBITDA\"))"),
             @Mapping(target = "evEbit", expression = "java(getIndicatorValueAsBigDecimal(dados, \"EV/EBIT\"))"),
-            @Mapping(target = "pEbitda", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/EBITDA\"))"),
-            @Mapping(target = "pAtivo", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/ATIVO\"))"),
-            @Mapping(target = "pCapitaldeGiro", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/CAP.GIRO\"))"),
-            @Mapping(target = "pAtivoCirculanteLiquido", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/ATIVO CIRC LIQ\"))"),
+            @Mapping(target = "pebitda", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/EBITDA\"))"),
+            @Mapping(target = "pativo", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/ATIVO\"))"),
+            @Mapping(target = "pcapitaldeGiro", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/CAP.GIRO\"))"),
+            @Mapping(target = "pativoCirculanteLiquido", expression = "java(getIndicatorValueAsBigDecimal(dados, \"P/ATIVO CIRC LIQ\"))"),
             @Mapping(target = "vpa", expression = "java(getIndicatorValueAsBigDecimal(dados, \"VPA\"))"),
             @Mapping(target = "lpa", expression = "java(getIndicatorValueAsBigDecimal(dados, \"LPA\"))"),
             @Mapping(target = "giroAtivos", expression = "java(getIndicatorValueAsBigDecimal(dados, \"GIRO ATIVOS\"))"),
