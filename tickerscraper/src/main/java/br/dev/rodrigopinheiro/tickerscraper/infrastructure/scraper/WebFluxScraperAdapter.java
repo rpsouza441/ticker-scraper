@@ -4,7 +4,6 @@ import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataSc
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.*;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoCardsScraper;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoDetailedInfoScraper;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoHeaderScraper;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoIndicatorsScraper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -25,13 +24,13 @@ public class WebFluxScraperAdapter implements TickerDataScrapperPort {
 
 
     private final WebClient webClient;
-    private final AcaoHeaderScraper headerScraper;
+    private final HeaderScraper headerScraper;
     private final AcaoCardsScraper cardsScraper;
     private final AcaoDetailedInfoScraper detailedInfoScraper;
     private final AcaoIndicatorsScraper indicatorsScraper;
 
     public WebFluxScraperAdapter(WebClient webClient,
-                                 AcaoHeaderScraper headerScraper,
+                                 HeaderScraper headerScraper,
                                  AcaoCardsScraper cardsScraper,
                                  AcaoDetailedInfoScraper detailedInfoScraper,
                                  AcaoIndicatorsScraper indicatorsScraper) {
@@ -86,7 +85,7 @@ public class WebFluxScraperAdapter implements TickerDataScrapperPort {
                     Document doc = Jsoup.parse(html);
 
                     // 4. A orquestração dos seus scrapers existentes continua a mesma
-                    AcaoInfoHeader header = headerScraper.scrapeInfoHeader(doc);
+                    InfoHeader header = headerScraper.scrapeInfoHeader(doc);
                     AcaoInfoCards cards = cardsScraper.scrapeCardsInfo(doc);
                     AcaoInfoDetailed detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
                     AcaoIndicadoresFundamentalistas indicators = indicatorsScraper.scrape(doc, ticker);
