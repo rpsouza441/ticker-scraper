@@ -1,14 +1,12 @@
-package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.IndicadorFundamentalista;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.IndicadoresFundamentalistas;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoIndicadorFundamentalista;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoIndicadoresFundamentalistas;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -16,10 +14,10 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.stream.Collectors;
 
 @Component
-public class IndicatorsScraper {
+public class AcaoIndicatorsScraper {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    public IndicadoresFundamentalistas scrape(Document doc, String ticker){
+    public AcaoIndicadoresFundamentalistas scrape(Document doc, String ticker){
         return Optional.ofNullable(doc.selectFirst("#table-indicators"))
                 .map(grid -> grid.select(".cell").stream()
                         .map(cell -> {
@@ -51,13 +49,13 @@ public class IndicatorsScraper {
                         .filter(entry -> !entry.getKey().isEmpty())
                         .collect(Collectors.toMap(
                                 SimpleEntry::getKey,
-                                entry -> MAPPER.convertValue(entry.getValue(), IndicadorFundamentalista.class),
+                                entry -> MAPPER.convertValue(entry.getValue(), AcaoIndicadorFundamentalista.class),
                                 (oldValue, newValue) -> newValue,
                                 LinkedHashMap::new
                         ))
                 )
-                .map(indicadoresMap -> new IndicadoresFundamentalistas(indicadoresMap))
-                .orElse(new IndicadoresFundamentalistas(new LinkedHashMap<>()));
+                .map(indicadoresMap -> new AcaoIndicadoresFundamentalistas(indicadoresMap))
+                .orElse(new AcaoIndicadoresFundamentalistas(new LinkedHashMap<>()));
     }
 
     /**

@@ -2,7 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record IndicadorFundamentalista(
+public record AcaoIndicadorFundamentalista(
         @JsonProperty("valor")
         String valor,
 

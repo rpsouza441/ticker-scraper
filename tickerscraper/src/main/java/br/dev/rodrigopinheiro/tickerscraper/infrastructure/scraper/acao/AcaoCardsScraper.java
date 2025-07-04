@@ -1,7 +1,6 @@
-package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.InfoCards;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoInfoCards;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
@@ -9,8 +8,8 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class CardsScraper {
-    public InfoCards scrapeCardsInfo(Document doc) {
+public class AcaoCardsScraper {
+    public AcaoInfoCards scrapeCardsInfo(Document doc) {
         Element container = doc.selectFirst("section#cards-ticker");
 
         String cotacao = Optional.ofNullable(container)
@@ -23,6 +22,6 @@ public class CardsScraper {
                 .map(Element::text)
                 .orElse("N/A");
 
-        return new InfoCards(cotacao, variacao12M);
+        return new AcaoInfoCards(cotacao, variacao12M);
     }
 }

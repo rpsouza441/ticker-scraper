@@ -2,6 +2,10 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.*;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoCardsScraper;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoDetailedInfoScraper;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoHeaderScraper;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoIndicatorsScraper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.WebDriver;
@@ -16,12 +20,15 @@ import reactor.core.scheduler.Schedulers;
 @Component("seleniumScraper")
 public class SeleniumScraperAdapter implements TickerDataScrapperPort {
     private static final Logger logger = LoggerFactory.getLogger(SeleniumScraperAdapter.class);
-    private final HeaderScraper headerScraper;
-    private final CardsScraper cardsScraper;
-    private final DetailedInfoScraper detailedInfoScraper;
-    private final IndicatorsScraper indicatorsScraper;
+    private final AcaoHeaderScraper headerScraper;
+    private final AcaoCardsScraper cardsScraper;
+    private final AcaoDetailedInfoScraper detailedInfoScraper;
+    private final AcaoIndicatorsScraper indicatorsScraper;
 
-    public SeleniumScraperAdapter(HeaderScraper headerScraper, CardsScraper cardsScraper, DetailedInfoScraper detailedInfoScraper, IndicatorsScraper indicatorsScraper) {
+    public SeleniumScraperAdapter(AcaoHeaderScraper headerScraper,
+                                  AcaoCardsScraper cardsScraper,
+                                  AcaoDetailedInfoScraper detailedInfoScraper,
+                                  AcaoIndicatorsScraper indicatorsScraper) {
         this.headerScraper = headerScraper;
         this.cardsScraper = cardsScraper;
         this.detailedInfoScraper = detailedInfoScraper;
@@ -29,7 +36,7 @@ public class SeleniumScraperAdapter implements TickerDataScrapperPort {
     }
 
     @Override
-    public Mono<DadosFinanceiros> scrape(String ticker) {
+    public Mono<AcaoDadosFinanceiros> scrape(String ticker) {
         String urlCompleta = "https://investidor10.com.br/acoes/" + ticker;
         logger.info("Iniciando scraping com Selenium para a url {}", urlCompleta);
 
@@ -62,12 +69,12 @@ public class SeleniumScraperAdapter implements TickerDataScrapperPort {
 
             // A partir daqui, o processo é o mesmo:
             Document doc = Jsoup.parse(html);
-            InfoHeader header = headerScraper.scrapeInfoHeader(doc);
-            InfoCards cards = cardsScraper.scrapeCardsInfo(doc);
-            InfoDetailed detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
-            IndicadoresFundamentalistas indicators = indicatorsScraper.scrape(doc, ticker);
+            AcaoInfoHeader header = headerScraper.scrapeInfoHeader(doc);
+            AcaoInfoCards cards = cardsScraper.scrapeCardsInfo(doc);
+            AcaoInfoDetailed detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
+            AcaoIndicadoresFundamentalistas indicators = indicatorsScraper.scrape(doc, ticker);
 
-            return new DadosFinanceiros(header, detailed, cards, indicators);
+            return new AcaoDadosFinanceiros(header, detailed, cards, indicators);
 
         }).subscribeOn(Schedulers.boundedElastic()); // Executa toda essa operação bloqueante em uma thread segura
     }

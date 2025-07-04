@@ -2,7 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record InfoHeader(
+public record AcaoInfoHeader(
         @JsonProperty("ticker")
         String ticker,
         @JsonProperty("nome_empresa")

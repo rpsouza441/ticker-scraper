@@ -1,8 +1,8 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.DadosFinanceiros;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.IndicadorFundamentalista;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoIndicadorFundamentalista;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -78,14 +78,14 @@ public interface AcaoScraperMapper {
             @Mapping(target = "cagrLucrosCincoAnos", expression = "java(getIndicatorValueAsBigDecimal(dados, \"CAGR LUCROS 5 ANOS\"))")
 
     })
-    Acao toDomain(DadosFinanceiros dados);
+    Acao toDomain(AcaoDadosFinanceiros dados);
 
 
-    default BigDecimal getIndicatorValueAsBigDecimal(DadosFinanceiros dados, String nomeIndicador) {
+    default BigDecimal getIndicatorValueAsBigDecimal(AcaoDadosFinanceiros dados, String nomeIndicador) {
         if (dados == null || dados.fundamentalIndicators() == null || dados.fundamentalIndicators().indicadores() == null) {
             return BigDecimal.ZERO;
         }
-        IndicadorFundamentalista indicador = dados.fundamentalIndicators().indicadores().get(nomeIndicador);
+        AcaoIndicadorFundamentalista indicador = dados.fundamentalIndicators().indicadores().get(nomeIndicador);
 
         // VERIFICAÇÃO E LOG
         if (indicador == null) {

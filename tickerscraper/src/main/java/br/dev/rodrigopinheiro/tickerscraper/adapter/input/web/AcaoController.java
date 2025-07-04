@@ -2,27 +2,23 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AcaoResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
-import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.AcaoPersistenceMapper;
-import br.dev.rodrigopinheiro.tickerscraper.application.service.TickerScrapingService;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.DadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.application.service.AcaoScrapingService;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoDadosFinanceiros;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/acao")
 public class AcaoController {
     private static final Logger logger = LoggerFactory.getLogger(AcaoController.class);
-    private final TickerScrapingService tickerScrapingService;
+    private final AcaoScrapingService acaoScrapingService;
     private final AcaoApiMapper acaoApiMapper;
 
-    public AcaoController(TickerScrapingService tickerScrapingService, AcaoApiMapper acaoApiMapper) {
-        this.tickerScrapingService = tickerScrapingService;
+    public AcaoController(AcaoScrapingService acaoScrapingService, AcaoApiMapper acaoApiMapper) {
+        this.acaoScrapingService = acaoScrapingService;
         this.acaoApiMapper = acaoApiMapper;
     }
 
@@ -30,7 +26,7 @@ public class AcaoController {
     public Mono<ResponseEntity<AcaoResponseDTO>> get(@PathVariable String ticker) {
         logger.info("Getting ticker: {}", ticker);
         // 1. O serviço é chamado e retorna o Mono<AcaoEntity>
-        return tickerScrapingService.getTickerData(ticker)
+        return acaoScrapingService.getTickerData(ticker)
                 // 2. Usamos .map() para transformar o resultado (quando ele chegar)
                 .map(acaoEntity -> {
                     // O mapper converte a entidade para o DTO de resposta
@@ -49,11 +45,11 @@ public class AcaoController {
      * Ideal para depuração ou consumidores que precisam de todos os campos.
      */
     @GetMapping("/get-{ticker}/raw")
-    public Mono<ResponseEntity<DadosFinanceiros>> getRawData(@PathVariable String ticker) {
+    public Mono<ResponseEntity<AcaoDadosFinanceiros>> getRawData(@PathVariable String ticker) {
         logger.info("Getting RAW data for ticker: {}", ticker);
 
         // 1. O serviço é chamado e retorna o Mono<DadosFinanceiros>
-        return tickerScrapingService.getRawTickerData(ticker)
+        return acaoScrapingService.getRawTickerData(ticker)
                 // 2. Usamos .map() para transformar o resultado (quando ele chegar) em uma resposta 200 OK
                 .map(dadosFinanceiros -> ResponseEntity.ok(dadosFinanceiros))
                 // 3. Se o fluxo terminar vazio (ex: erro não tratado), retorna um 404 Not Found

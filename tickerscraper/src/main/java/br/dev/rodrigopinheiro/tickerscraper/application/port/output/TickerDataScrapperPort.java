@@ -6,6 +6,6 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 
 public interface TickerDataScrapperPort {
-    Mono<DadosFinanceiros> scrape(String ticker) throws IOException;
+    Mono<AcaoDadosFinanceiros> scrape(String ticker) throws IOException;
 
 }

@@ -1,7 +1,6 @@
-package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.InfoDetailed;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoInfoDetailed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,9 +14,9 @@ import java.util.Optional;
 import static java.util.stream.Collectors.toMap;
 
 @Component
-public class DetailedInfoScraper {
+public class AcaoDetailedInfoScraper {
 
-    public InfoDetailed scrapeAndParseDetailedInfo(Document doc) {
+    public AcaoInfoDetailed scrapeAndParseDetailedInfo(Document doc) {
         Map<String, String> detailsMap = Optional.ofNullable(doc.selectFirst("div#info_about div.content"))
                 .map(container -> container.select("div.cell").stream()
                         .map(cell -> {
@@ -41,6 +40,6 @@ public class DetailedInfoScraper {
 
 
         final ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(detailsMap, InfoDetailed.class);
+        return mapper.convertValue(detailsMap, AcaoInfoDetailed.class);
     }
 }

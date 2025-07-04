@@ -2,7 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record InfoDetailed(
+public record AcaoInfoDetailed(
 
         @JsonProperty("Valor de mercado")
         String valorMercado,

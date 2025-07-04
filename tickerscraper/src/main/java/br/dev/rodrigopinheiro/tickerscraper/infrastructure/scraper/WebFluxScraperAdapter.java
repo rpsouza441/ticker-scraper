@@ -2,6 +2,10 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.*;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoCardsScraper;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoDetailedInfoScraper;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoHeaderScraper;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoIndicatorsScraper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -21,12 +25,16 @@ public class WebFluxScraperAdapter implements TickerDataScrapperPort {
 
 
     private final WebClient webClient;
-    private final HeaderScraper headerScraper;
-    private final CardsScraper cardsScraper;
-    private final DetailedInfoScraper detailedInfoScraper;
-    private final IndicatorsScraper indicatorsScraper;
+    private final AcaoHeaderScraper headerScraper;
+    private final AcaoCardsScraper cardsScraper;
+    private final AcaoDetailedInfoScraper detailedInfoScraper;
+    private final AcaoIndicatorsScraper indicatorsScraper;
 
-    public WebFluxScraperAdapter(WebClient webClient, HeaderScraper headerScraper, CardsScraper cardsScraper, DetailedInfoScraper detailedInfoScraper, IndicatorsScraper indicatorsScraper) {
+    public WebFluxScraperAdapter(WebClient webClient,
+                                 AcaoHeaderScraper headerScraper,
+                                 AcaoCardsScraper cardsScraper,
+                                 AcaoDetailedInfoScraper detailedInfoScraper,
+                                 AcaoIndicatorsScraper indicatorsScraper) {
         this.webClient = webClient;
         this.headerScraper = headerScraper;
         this.cardsScraper = cardsScraper;
@@ -37,7 +45,7 @@ public class WebFluxScraperAdapter implements TickerDataScrapperPort {
     public static final String URL = "https://investidor10.com.br/acoes/";
 
     @Override
-    public Mono<DadosFinanceiros> scrape(String ticker) throws IOException {
+    public Mono<AcaoDadosFinanceiros> scrape(String ticker) throws IOException {
         String urlCompleta = URL + ticker;
         logger.info("Iniciando requisição reativa para a url {}", urlCompleta);
         // 1. FAZ A CHAMADA DE REDE NÃO-BLOQUEANTE
@@ -78,13 +86,13 @@ public class WebFluxScraperAdapter implements TickerDataScrapperPort {
                     Document doc = Jsoup.parse(html);
 
                     // 4. A orquestração dos seus scrapers existentes continua a mesma
-                    InfoHeader header = headerScraper.scrapeInfoHeader(doc);
-                    InfoCards cards = cardsScraper.scrapeCardsInfo(doc);
-                    InfoDetailed detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
-                    IndicadoresFundamentalistas indicators = indicatorsScraper.scrape(doc, ticker);
+                    AcaoInfoHeader header = headerScraper.scrapeInfoHeader(doc);
+                    AcaoInfoCards cards = cardsScraper.scrapeCardsInfo(doc);
+                    AcaoInfoDetailed detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
+                    AcaoIndicadoresFundamentalistas indicators = indicatorsScraper.scrape(doc, ticker);
                     logger.info("Parse com Jsoup concluído com sucesso para {}.", ticker);
 
-                    return new DadosFinanceiros(header, detailed, cards, indicators);
+                    return new AcaoDadosFinanceiros(header, detailed, cards, indicators);
 
                 }).subscribeOn(Schedulers.boundedElastic())); // 5. Executa o parse em uma thread otimizada para tarefas bloqueantes/CPU
 

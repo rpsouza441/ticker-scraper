@@ -6,7 +6,7 @@ import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.Ac
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.DadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoDadosFinanceiros;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -23,8 +23,8 @@ import java.util.Optional;
 
 
 @Service
-public class TickerScrapingService {
-    private static final Logger logger = LoggerFactory.getLogger(TickerScrapingService.class);
+public class AcaoScrapingService {
+    private static final Logger logger = LoggerFactory.getLogger(AcaoScrapingService.class);
 
     private final TickerDataScrapperPort scraper;
     private final AcaoScraperMapper acaoScraperMapper;
@@ -32,10 +32,10 @@ public class TickerScrapingService {
     private final AcaoRepositoryPort acaoRepository;
     private final ObjectMapper jsonMapper = new ObjectMapper();
 
-    public TickerScrapingService(@Qualifier("seleniumScraper") TickerDataScrapperPort scraper,
-                                 AcaoScraperMapper acaoScraperMapper,
-                                 AcaoPersistenceMapper acaoPersistenceMapper,
-                                 AcaoRepositoryPort acaoRepository) {
+    public AcaoScrapingService(@Qualifier("seleniumScraper") TickerDataScrapperPort scraper,
+                               AcaoScraperMapper acaoScraperMapper,
+                               AcaoPersistenceMapper acaoPersistenceMapper,
+                               AcaoRepositoryPort acaoRepository) {
         this.scraper = scraper;
         this.acaoScraperMapper = acaoScraperMapper;
         this.acaoPersistenceMapper = acaoPersistenceMapper;
@@ -81,7 +81,7 @@ public class TickerScrapingService {
      * @param ticker O ticker da ação.
      * @return Um Mono contendo o objeto DadosFinanceiros completo.
      */
-    public Mono<DadosFinanceiros> getRawTickerData(String ticker) {
+    public Mono<AcaoDadosFinanceiros> getRawTickerData(String ticker) {
         final String tickerNormalizado = ticker.toUpperCase().trim();
 
         logger.info("Buscando dados brutos para {}", tickerNormalizado);
@@ -98,7 +98,7 @@ public class TickerScrapingService {
                         // Como a deserialização pode ser uma operação de I/O (mesmo que pequena),
                         // a envolvemos em um fromCallable para segurança.
                         return Mono.fromCallable(() ->
-                                jsonMapper.readValue(optionalAcao.get().getDadosBrutosJson(), DadosFinanceiros.class)
+                                jsonMapper.readValue(optionalAcao.get().getDadosBrutosJson(), AcaoDadosFinanceiros.class)
                         ).subscribeOn(Schedulers.boundedElastic());
                     }
 
