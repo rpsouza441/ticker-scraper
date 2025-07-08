@@ -6,7 +6,7 @@ import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePo
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.mapper.AcaoScraperMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,7 +82,7 @@ public class AcaoUseCaseService implements AcaoUseCasePort {
      * @param ticker O ticker da ação.
      * @return Um Mono contendo o objeto DadosFinanceiros completo.
      */
-    public Mono<AcaoDadosFinanceiros> getRawTickerData(String ticker) {
+    public Mono<AcaoDadosFinanceirosDTO> getRawTickerData(String ticker) {
         final String tickerNormalizado = ticker.toUpperCase().trim();
 
         logger.info("Buscando dados brutos para {}", tickerNormalizado);
@@ -99,7 +99,7 @@ public class AcaoUseCaseService implements AcaoUseCasePort {
                         // Como a deserialização pode ser uma operação de I/O (mesmo que pequena),
                         // a envolvemos em um fromCallable para segurança.
                         return Mono.fromCallable(() ->
-                                jsonMapper.readValue(optionalAcao.get().getDadosBrutosJson(), AcaoDadosFinanceiros.class)
+                                jsonMapper.readValue(optionalAcao.get().getDadosBrutosJson(), AcaoDadosFinanceirosDTO.class)
                         ).subscribeOn(Schedulers.boundedElastic());
                     }
 

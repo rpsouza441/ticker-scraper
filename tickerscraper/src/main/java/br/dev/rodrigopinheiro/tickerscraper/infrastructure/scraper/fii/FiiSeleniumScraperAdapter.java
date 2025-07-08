@@ -1,7 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiDataScrapperPort;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.devtools.DevTools;
@@ -25,7 +25,7 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
     // Dentro de FiiSeleniumScraperAdapter.java
 
     @Override
-    public Mono<FiiDadosFinanceiros> scrape(String ticker) {
+    public Mono<FiiDadosFinanceirosDTO> scrape(String ticker) {
         String urlCompleta = "https://investidor10.com.br/fiis/" + ticker;
         logger.info("Iniciando scraping com Selenium para a url {}", urlCompleta);
 
@@ -83,7 +83,7 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
             }
 
             // Por enquanto, ainda retornamos um objeto vazio
-            return new FiiDadosFinanceiros();
+            return new FiiDadosFinanceirosDTO();
         }).subscribeOn(Schedulers.boundedElastic());
     }
 }

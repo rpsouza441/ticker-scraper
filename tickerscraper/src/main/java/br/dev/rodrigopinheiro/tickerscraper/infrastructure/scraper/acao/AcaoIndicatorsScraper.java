@@ -1,8 +1,8 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
 
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadorFundamentalista;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadoresFundamentalistas;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadorFundamentalistaDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadoresFundamentalistasDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class AcaoIndicatorsScraper {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    public AcaoIndicadoresFundamentalistas scrape(Document doc, String ticker){
+    public AcaoIndicadoresFundamentalistasDTO scrape(Document doc, String ticker){
         return Optional.ofNullable(doc.selectFirst("#table-indicators"))
                 .map(grid -> grid.select(".cell").stream()
                         .map(cell -> {
@@ -49,13 +49,13 @@ public class AcaoIndicatorsScraper {
                         .filter(entry -> !entry.getKey().isEmpty())
                         .collect(Collectors.toMap(
                                 SimpleEntry::getKey,
-                                entry -> MAPPER.convertValue(entry.getValue(), AcaoIndicadorFundamentalista.class),
+                                entry -> MAPPER.convertValue(entry.getValue(), AcaoIndicadorFundamentalistaDTO.class),
                                 (oldValue, newValue) -> newValue,
                                 LinkedHashMap::new
                         ))
                 )
-                .map(indicadoresMap -> new AcaoIndicadoresFundamentalistas(indicadoresMap))
-                .orElse(new AcaoIndicadoresFundamentalistas(new LinkedHashMap<>()));
+                .map(indicadoresMap -> new AcaoIndicadoresFundamentalistasDTO(indicadoresMap))
+                .orElse(new AcaoIndicadoresFundamentalistasDTO(new LinkedHashMap<>()));
     }
 
     /**

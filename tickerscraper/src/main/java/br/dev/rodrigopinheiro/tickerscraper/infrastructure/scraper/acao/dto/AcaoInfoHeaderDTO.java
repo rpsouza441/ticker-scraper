@@ -2,7 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record AcaoInfoHeader(
+public record AcaoInfoHeaderDTO(
         @JsonProperty("ticker")
         String ticker,
         @JsonProperty("nome_empresa")

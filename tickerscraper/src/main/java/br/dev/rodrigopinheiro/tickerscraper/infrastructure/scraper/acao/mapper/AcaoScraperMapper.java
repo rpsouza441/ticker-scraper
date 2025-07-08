@@ -2,8 +2,8 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceiros;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadorFundamentalista;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadorFundamentalistaDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -78,14 +78,14 @@ public interface AcaoScraperMapper {
             @Mapping(target = "cagrLucrosCincoAnos", expression = "java(getIndicatorValueAsBigDecimal(dados, \"CAGR LUCROS 5 ANOS\"))")
 
     })
-    Acao toDomain(AcaoDadosFinanceiros dados);
+    Acao toDomain(AcaoDadosFinanceirosDTO dados);
 
 
-    default BigDecimal getIndicatorValueAsBigDecimal(AcaoDadosFinanceiros dados, String nomeIndicador) {
+    default BigDecimal getIndicatorValueAsBigDecimal(AcaoDadosFinanceirosDTO dados, String nomeIndicador) {
         if (dados == null || dados.fundamentalIndicators() == null || dados.fundamentalIndicators().indicadores() == null) {
             return BigDecimal.ZERO;
         }
-        AcaoIndicadorFundamentalista indicador = dados.fundamentalIndicators().indicadores().get(nomeIndicador);
+        AcaoIndicadorFundamentalistaDTO indicador = dados.fundamentalIndicators().indicadores().get(nomeIndicador);
 
         // VERIFICAÇÃO E LOG
         if (indicador == null) {

@@ -2,7 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record AcaoInfoDetailed(
+public record AcaoInfoDetailedDTO(
 
         @JsonProperty("Valor de mercado")
         String valorMercado,

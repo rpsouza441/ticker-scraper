@@ -1,5 +1,6 @@
-package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
 
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiInfoCardsDTO;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
@@ -8,7 +9,7 @@ import java.util.Optional;
 
 @Component
 public class FiiCardsScraper {
-    public FiiInfoCards scrapeCardsInfo(Document doc) {
+    public FiiInfoCardsDTO scrapeCardsInfo(Document doc) {
         Element container = doc.selectFirst("section#cards-ticker");
 
         String cotacao = Optional.ofNullable(container)
@@ -21,6 +22,6 @@ public class FiiCardsScraper {
                 .map(Element::text)
                 .orElse("N/A");
 
-        return new FiiInfoCards(cotacao, variacao12M);
+        return new FiiInfoCardsDTO(cotacao, variacao12M);
     }
 }

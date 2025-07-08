@@ -4,7 +4,7 @@ import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AcaoResponseDT
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.service.AcaoUseCaseService;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +46,7 @@ public class AcaoController {
      * Ideal para depuração ou consumidores que precisam de todos os campos.
      */
     @GetMapping("/get-{ticker}/raw")
-    public Mono<ResponseEntity<AcaoDadosFinanceiros>> getRawData(@PathVariable String ticker) {
+    public Mono<ResponseEntity<AcaoDadosFinanceirosDTO>> getRawData(@PathVariable String ticker) {
         logger.info("Getting RAW data for ticker: {}", ticker);
 
         // 1. O serviço é chamado e retorna o Mono<DadosFinanceiros>

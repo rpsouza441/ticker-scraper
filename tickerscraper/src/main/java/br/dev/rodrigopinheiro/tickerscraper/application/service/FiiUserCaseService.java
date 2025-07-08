@@ -3,7 +3,7 @@ package br.dev.rodrigopinheiro.tickerscraper.application.service;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.AcaoEntity;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.FiiUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiDataScrapperPort;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,7 +24,7 @@ public class FiiUserCaseService implements FiiUseCasePort {
 
     // Este é o métod que seu controller /raw vai chamar.
     @Override
-    public Mono<FiiDadosFinanceiros> getRawTickerData(String ticker) {
+    public Mono<FiiDadosFinanceirosDTO> getRawTickerData(String ticker) {
         try {
             // Simplesmente repassa a chamada para o scraper
             return fiiDataScrapperPort.scrape(ticker);

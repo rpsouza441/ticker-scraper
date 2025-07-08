@@ -3,7 +3,7 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AcaoResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.FiiResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.FiiUseCasePort;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +32,7 @@ public class FiiController {
 
     // Este é o endpoint que você quer testar!
     @GetMapping("/get-{ticker}/raw")
-    public Mono<ResponseEntity<FiiDadosFinanceiros>> getRawData(@PathVariable String ticker) {
+    public Mono<ResponseEntity<FiiDadosFinanceirosDTO>> getRawData(@PathVariable String ticker) {
         logger.info("Getting RAW FII data for ticker: {}", ticker);
         return service.getRawTickerData(ticker)
                 .map(ResponseEntity::ok)

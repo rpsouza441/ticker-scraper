@@ -32,7 +32,7 @@ public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
     }
 
     @Override
-    public Mono<AcaoDadosFinanceiros> scrape(String ticker) {
+    public Mono<AcaoDadosFinanceirosDTO> scrape(String ticker) {
         String urlCompleta = "https://investidor10.com.br/acoes/" + ticker;
         logger.info("Iniciando scraping com Selenium para a url {}", urlCompleta);
 
@@ -65,11 +65,11 @@ public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
 
             // A partir daqui, o processo é o mesmo:
             Document doc = Jsoup.parse(html);
-            AcaoInfoHeader header = acaoHeaderScraper.scrapeInfoHeader(doc);
-            AcaoInfoCards cards = cardsScraper.scrapeCardsInfo(doc);
-            AcaoInfoDetailed detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
-            AcaoIndicadoresFundamentalistas indicators = indicatorsScraper.scrape(doc, ticker);
-            AcaoDadosFinanceiros dadosFinanceiros = new AcaoDadosFinanceiros(header, detailed, cards, indicators);
+            AcaoInfoHeaderDTO header = acaoHeaderScraper.scrapeInfoHeader(doc);
+            AcaoInfoCardsDTO cards = cardsScraper.scrapeCardsInfo(doc);
+            AcaoInfoDetailedDTO detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
+            AcaoIndicadoresFundamentalistasDTO indicators = indicatorsScraper.scrape(doc, ticker);
+            AcaoDadosFinanceirosDTO dadosFinanceiros = new AcaoDadosFinanceirosDTO(header, detailed, cards, indicators);
             logger.info("Dados financeiros de Acao {}", dadosFinanceiros.toString());
             return dadosFinanceiros;
 
