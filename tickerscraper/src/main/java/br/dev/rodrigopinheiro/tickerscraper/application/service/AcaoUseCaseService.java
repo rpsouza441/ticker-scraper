@@ -2,11 +2,12 @@ package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.AcaoEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.AcaoPersistenceMapper;
-import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.AcaoScraperMapper;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
-import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataScrapperPort;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.mapper.AcaoScraperMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -23,19 +24,19 @@ import java.util.Optional;
 
 
 @Service
-public class AcaoScrapingService {
-    private static final Logger logger = LoggerFactory.getLogger(AcaoScrapingService.class);
+public class AcaoUseCaseService implements AcaoUseCasePort {
+    private static final Logger logger = LoggerFactory.getLogger(AcaoUseCaseService.class);
 
-    private final TickerDataScrapperPort scraper;
+    private final AcaoDataScrapperPort scraper;
     private final AcaoScraperMapper acaoScraperMapper;
     private final AcaoPersistenceMapper acaoPersistenceMapper;
     private final AcaoRepositoryPort acaoRepository;
     private final ObjectMapper jsonMapper = new ObjectMapper();
 
-    public AcaoScrapingService(@Qualifier("seleniumScraper") TickerDataScrapperPort scraper,
-                               AcaoScraperMapper acaoScraperMapper,
-                               AcaoPersistenceMapper acaoPersistenceMapper,
-                               AcaoRepositoryPort acaoRepository) {
+    public AcaoUseCaseService(@Qualifier("acaoSeleniumScraper") AcaoDataScrapperPort scraper,
+                              AcaoScraperMapper acaoScraperMapper,
+                              AcaoPersistenceMapper acaoPersistenceMapper,
+                              AcaoRepositoryPort acaoRepository) {
         this.scraper = scraper;
         this.acaoScraperMapper = acaoScraperMapper;
         this.acaoPersistenceMapper = acaoPersistenceMapper;

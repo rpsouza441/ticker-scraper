@@ -1,6 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoInfoDetailed;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoInfoDetailed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

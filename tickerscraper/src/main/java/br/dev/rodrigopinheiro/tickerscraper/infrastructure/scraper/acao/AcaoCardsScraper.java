@@ -1,6 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoInfoCards;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoInfoCards;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;

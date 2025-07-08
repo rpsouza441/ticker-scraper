@@ -1,4 +1,4 @@
-package br.dev.rodrigopinheiro.tickerscraper.domain.model;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;

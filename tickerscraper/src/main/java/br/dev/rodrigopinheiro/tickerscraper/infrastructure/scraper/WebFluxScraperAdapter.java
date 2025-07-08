@@ -1,10 +1,11 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
 
-import br.dev.rodrigopinheiro.tickerscraper.application.port.output.TickerDataScrapperPort;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.*;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoCardsScraper;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoDetailedInfoScraper;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoHeaderScraper;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.AcaoIndicatorsScraper;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -18,24 +19,24 @@ import reactor.core.scheduler.Schedulers;
 import java.io.IOException;
 
 @Component("webFluxScraper")
-public class WebFluxScraperAdapter implements TickerDataScrapperPort {
+public class WebFluxScraperAdapter implements AcaoDataScrapperPort {
 
     private static final Logger logger = LoggerFactory.getLogger(WebFluxScraperAdapter.class);
 
 
     private final WebClient webClient;
-    private final HeaderScraper headerScraper;
+    private final AcaoHeaderScraper acaoHeaderScraper;
     private final AcaoCardsScraper cardsScraper;
     private final AcaoDetailedInfoScraper detailedInfoScraper;
     private final AcaoIndicatorsScraper indicatorsScraper;
 
     public WebFluxScraperAdapter(WebClient webClient,
-                                 HeaderScraper headerScraper,
+                                 AcaoHeaderScraper acaoHeaderScraper,
                                  AcaoCardsScraper cardsScraper,
                                  AcaoDetailedInfoScraper detailedInfoScraper,
                                  AcaoIndicatorsScraper indicatorsScraper) {
         this.webClient = webClient;
-        this.headerScraper = headerScraper;
+        this.acaoHeaderScraper = acaoHeaderScraper;
         this.cardsScraper = cardsScraper;
         this.detailedInfoScraper = detailedInfoScraper;
         this.indicatorsScraper = indicatorsScraper;
@@ -85,7 +86,7 @@ public class WebFluxScraperAdapter implements TickerDataScrapperPort {
                     Document doc = Jsoup.parse(html);
 
                     // 4. A orquestração dos seus scrapers existentes continua a mesma
-                    InfoHeader header = headerScraper.scrapeInfoHeader(doc);
+                    AcaoInfoHeader header = acaoHeaderScraper.scrapeInfoHeader(doc);
                     AcaoInfoCards cards = cardsScraper.scrapeCardsInfo(doc);
                     AcaoInfoDetailed detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
                     AcaoIndicadoresFundamentalistas indicators = indicatorsScraper.scrape(doc, ticker);

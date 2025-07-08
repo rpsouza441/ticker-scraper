@@ -1,8 +1,8 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoIndicadorFundamentalista;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoIndicadoresFundamentalistas;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadorFundamentalista;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadoresFundamentalistas;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

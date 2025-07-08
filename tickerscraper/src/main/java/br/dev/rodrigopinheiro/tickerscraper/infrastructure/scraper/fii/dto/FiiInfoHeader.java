@@ -1,8 +1,8 @@
-package br.dev.rodrigopinheiro.tickerscraper.domain.model;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record InfoHeader(
+public record FiiInfoHeader(
         @JsonProperty("ticker")
         String ticker,
         @JsonProperty("nome_empresa")

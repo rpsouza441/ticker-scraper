@@ -2,8 +2,9 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AcaoResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
-import br.dev.rodrigopinheiro.tickerscraper.application.service.AcaoScrapingService;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
+import br.dev.rodrigopinheiro.tickerscraper.application.service.AcaoUseCaseService;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceiros;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +15,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/acao")
 public class AcaoController {
     private static final Logger logger = LoggerFactory.getLogger(AcaoController.class);
-    private final AcaoScrapingService acaoScrapingService;
+    private final AcaoUseCasePort service;
     private final AcaoApiMapper acaoApiMapper;
 
-    public AcaoController(AcaoScrapingService acaoScrapingService, AcaoApiMapper acaoApiMapper) {
-        this.acaoScrapingService = acaoScrapingService;
+    public AcaoController(AcaoUseCaseService service, AcaoApiMapper acaoApiMapper) {
+        this.service = service;
         this.acaoApiMapper = acaoApiMapper;
     }
 
@@ -26,7 +27,7 @@ public class AcaoController {
     public Mono<ResponseEntity<AcaoResponseDTO>> get(@PathVariable String ticker) {
         logger.info("Getting ticker: {}", ticker);
         // 1. O serviço é chamado e retorna o Mono<AcaoEntity>
-        return acaoScrapingService.getTickerData(ticker)
+        return service.getTickerData(ticker)
                 // 2. Usamos .map() para transformar o resultado (quando ele chegar)
                 .map(acaoEntity -> {
                     // O mapper converte a entidade para o DTO de resposta
@@ -49,7 +50,7 @@ public class AcaoController {
         logger.info("Getting RAW data for ticker: {}", ticker);
 
         // 1. O serviço é chamado e retorna o Mono<DadosFinanceiros>
-        return acaoScrapingService.getRawTickerData(ticker)
+        return service.getRawTickerData(ticker)
                 // 2. Usamos .map() para transformar o resultado (quando ele chegar) em uma resposta 200 OK
                 .map(dadosFinanceiros -> ResponseEntity.ok(dadosFinanceiros))
                 // 3. Se o fluxo terminar vazio (ex: erro não tratado), retorna um 404 Not Found

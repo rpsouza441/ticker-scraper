@@ -1,6 +1,5 @@
-package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.FiiInfoCards;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;

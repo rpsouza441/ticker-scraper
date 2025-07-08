@@ -1,9 +1,9 @@
-package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoDadosFinanceiros;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.AcaoIndicadorFundamentalista;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceiros;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadorFundamentalista;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
