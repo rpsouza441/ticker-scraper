@@ -30,7 +30,6 @@ public class FiiDividendoEntity {
     @Column(name = "valor_pago", precision = 12, scale = 4)
     private BigDecimal valorPago;
 
-    // --- Relacionamento Muitos-para-Um ---
     // Muitos dividendos pertencem a Um fundo imobiliário.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fundo_imobiliario_id", nullable = false)
