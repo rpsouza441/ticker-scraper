@@ -4,8 +4,6 @@ import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.Ac
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PagedResult;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
