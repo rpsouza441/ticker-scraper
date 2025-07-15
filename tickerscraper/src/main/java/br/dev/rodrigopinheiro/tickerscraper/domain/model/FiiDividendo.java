@@ -1,11 +1,11 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.YearMonth;
 
 public class FiiDividendo {
 
-    private LocalDateTime mes;
+    private YearMonth mes;
     private BigDecimal valor;
 
 }

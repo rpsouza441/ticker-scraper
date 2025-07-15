@@ -29,7 +29,7 @@ public class FundoImobiliario {
     private BigDecimal valorPatrimonial;
     private BigDecimal valorPatrimonialPorCota;
     private BigDecimal vacancia;
-    private BigDecimal numeroDeCotitas;
+    private BigDecimal numeroDeCotistas;
     private BigDecimal cotasEmitidas;
 
 
