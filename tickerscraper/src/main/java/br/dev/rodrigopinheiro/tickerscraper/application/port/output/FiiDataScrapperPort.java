@@ -5,6 +5,6 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 
 public interface FiiDataScrapperPort {
-    Mono<FiiDadosFinanceirosDTO> scrape(String ticker) throws IOException;
+    Mono<FiiDadosFinanceirosDTO> scrape(String ticker);
 
 }

@@ -25,12 +25,10 @@ public class FiiUserCaseService implements FiiUseCasePort {
     // Este é o métod que seu controller /raw vai chamar.
     @Override
     public Mono<FiiDadosFinanceirosDTO> getRawTickerData(String ticker) {
-        try {
-            // Simplesmente repassa a chamada para o scraper
-            return fiiDataScrapperPort.scrape(ticker);
-        } catch (IOException e) {
-            return Mono.error(new RuntimeException(e));
-        }
+
+        // Simplesmente repassa a chamada para o scraper
+        return fiiDataScrapperPort.scrape(ticker);
+
     }
 
     @Override

@@ -23,22 +23,32 @@ public class FiiController {
         this.service = service;
     }
 
+
     @GetMapping("/get-{ticker}")
     public Mono<ResponseEntity<FiiResponseDTO>> get(@PathVariable String ticker) {
+        logger.info("Getting FII data for ticker: {}", ticker);
         return service.getTickerData(ticker)
-                .map(fiiEntity -> ResponseEntity.ok(new FiiResponseDTO()))
+                .map(fiiEntity -> {
+                    // No futuro, você usará um mapper aqui:
+                    // FiiResponseDTO responseDto = fiiApiMapper.toResponseDto(fiiEntity);
+                    FiiResponseDTO responseDto = new FiiResponseDTO(); // Placeholder
+                    return ResponseEntity.ok(responseDto);
+                })
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    // Este é o endpoint que você quer testar!
+
+    /**
+     * Endpoint para retornar os dados brutos e completos raspados para um FII.
+     * Ideal para depuração e para visualizar o progresso do scraper.
+     */
     @GetMapping("/get-{ticker}/raw")
     public Mono<ResponseEntity<FiiDadosFinanceirosDTO>> getRawData(@PathVariable String ticker) {
         logger.info("Getting RAW FII data for ticker: {}", ticker);
         return service.getRawTickerData(ticker)
-                .map(ResponseEntity::ok)
+                .map(dadosBrutos -> ResponseEntity.ok(dadosBrutos))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
-
 
 
 

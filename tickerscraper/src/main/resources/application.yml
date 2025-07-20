@@ -5,7 +5,7 @@ spring:
     port: ${SERVER_PORT:8080}
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://100.80.244.65:5432/tickerscraper}
+    url: ${DB_URL:jdbc:postgresql://192.168.22.245:5432/tickerscraper}
     username: ${DB_USER:postgresql}
     password: ${DB_PASS:2Tyz5@5ykD7}
     driver-class-name: org.postgresql.Driver
