@@ -56,7 +56,7 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
             options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
 
             ChromeDriver driver = new ChromeDriver(options);
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+            //WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
             DevTools devTools = driver.getDevTools();
             devTools.createSession();
 
@@ -76,22 +76,24 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
             });
             FiiDadosFinanceirosDTO resultadoFinal;
             try {
-                // --- Interação "Humana" com a Página ---
+                // --- Execução Simplificada ---
+                // 1. Navega para a URL com o listener já ativo.
                 driver.get(urlCompleta);
-                Thread.sleep(3000); // Espera simples para a página carregar
 
-                // Pega o HTML final
+                // 2. Espera um tempo fixo para garantir que todas as chamadas de rede iniciais sejam capturadas.
+                Thread.sleep(5000); // 5 segundos é um tempo seguro.
+
+                // 3. Pega o HTML para os scrapers de página.
                 String html = driver.getPageSource();
                 Document doc = Jsoup.parse(html);
 
-                //  CHAMA O ESPECIALISTA EM CABEÇALHO
+                // 4. Orquestra os scrapers que leem o HTML.
                 FiiInfoHeaderDTO infoHeader = fiiHeaderScraper.scrape(doc);
                 logger.info("Cabeçalho raspado com sucesso: {}", infoHeader);
 
-                // Espera INTELIGENTE: Espera até que um elemento principal esteja visível.
-                // Isso é mais confiável do que um sleep fixo.
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("dividends")));
-                logger.info("Página principal carregada. Iniciando rolagem...");
+                // TODO: Chamar aqui os outros scrapers de HTML (InfoSobre, Cards, etc.)
+
+
 
                 // Rolagem INTELIGENTE: Rola até elementos específicos para disparar o lazy loading.
                 JavascriptExecutor js = (JavascriptExecutor) driver;
