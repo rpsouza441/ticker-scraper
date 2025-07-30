@@ -23,6 +23,7 @@ public class FiiUserCaseService implements FiiUseCasePort {
     }
 
     // Este é o métod que seu controller /raw vai chamar.
+    //TODO verifica se existe. Se nao chama o descobridor. Se existe e esta desatualiado chama o atualizador
     @Override
     public Mono<FiiDadosFinanceirosDTO> getRawTickerData(String ticker) {
 
