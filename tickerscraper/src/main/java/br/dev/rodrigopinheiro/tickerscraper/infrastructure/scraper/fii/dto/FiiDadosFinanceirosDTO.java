@@ -4,6 +4,7 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto;
 import java.util.List;
 
 public record FiiDadosFinanceirosDTO(
+        Long internalId,
         FiiInfoHeaderDTO infoHeader,
         FiiIndicadorHistoricoDTO infoHistorico,
         FiiInfoSobreDTO infoSobre,

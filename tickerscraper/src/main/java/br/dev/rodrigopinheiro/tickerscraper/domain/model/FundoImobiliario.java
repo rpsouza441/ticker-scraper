@@ -7,6 +7,8 @@ public class FundoImobiliario {
     private String ticker;
     private String nomeEmpresa;
 
+
+
     private String razaoSocial;
     private String cnpj;
     private String publicoAlvo;

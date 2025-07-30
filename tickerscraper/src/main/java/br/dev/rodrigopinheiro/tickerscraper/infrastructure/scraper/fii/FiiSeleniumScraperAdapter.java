@@ -81,7 +81,7 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                 driver.get(urlCompleta);
 
                 // 2. Espera um tempo fixo para garantir que todas as chamadas de rede iniciais sejam capturadas.
-                Thread.sleep(5000); // 5 segundos é um tempo seguro.
+                Thread.sleep(6000); // 6 segundos é um tempo seguro.
 
                 // 3. Pega o HTML para os scrapers de página.
                 String html = driver.getPageSource();
@@ -113,6 +113,7 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                 FiiInfoCardsDTO infoCards = new FiiInfoCardsDTO("", "");
                 // Por enquanto, criamos placeholders
                 resultadoFinal = new FiiDadosFinanceirosDTO(
+                        10l,
                         infoHeader,
                         infoHistorico,
                         infoSobre,

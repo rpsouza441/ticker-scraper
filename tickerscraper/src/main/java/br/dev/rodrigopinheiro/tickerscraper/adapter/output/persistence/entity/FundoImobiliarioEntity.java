@@ -27,6 +27,9 @@ public class FundoImobiliarioEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "internal_id", unique = true, nullable = false)
+    private Long internalId;
+
     @Column(name = "ticker", unique = true, nullable = false)
     private String ticker;
 
@@ -117,11 +120,11 @@ public class FundoImobiliarioEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FundoImobiliarioEntity that = (FundoImobiliarioEntity) o;
-        return Objects.equals(id, that.id) && Objects.equals(ticker, that.ticker) && Objects.equals(nomeEmpresa, that.nomeEmpresa) && Objects.equals(razaoSocial, that.razaoSocial) && Objects.equals(cnpj, that.cnpj) && Objects.equals(publicoAlvo, that.publicoAlvo) && Objects.equals(mandato, that.mandato) && Objects.equals(segmento, that.segmento) && Objects.equals(tipoDeFundo, that.tipoDeFundo) && Objects.equals(prazoDeDuracao, that.prazoDeDuracao) && Objects.equals(tipoDeGestao, that.tipoDeGestao) && Objects.equals(taxaDeAdministracao, that.taxaDeAdministracao) && Objects.equals(ultimoRendimento, that.ultimoRendimento) && Objects.equals(cotacao, that.cotacao) && Objects.equals(valorDeMercado, that.valorDeMercado) && Objects.equals(pvp, that.pvp) && Objects.equals(dividendYield, that.dividendYield) && Objects.equals(liquidezDiaria, that.liquidezDiaria) && Objects.equals(valorPatrimonial, that.valorPatrimonial) && Objects.equals(valorPatrimonialPorCota, that.valorPatrimonialPorCota) && Objects.equals(vacancia, that.vacancia) && Objects.equals(numeroDeCotistas, that.numeroDeCotistas) && Objects.equals(cotasEmitidas, that.cotasEmitidas) && Objects.equals(fiiDividendos, that.fiiDividendos) && Objects.equals(dadosBrutosJson, that.dadosBrutosJson) && Objects.equals(dataAtualizacao, that.dataAtualizacao);
+        return Objects.equals(id, that.id) && Objects.equals(internalId, that.internalId) && Objects.equals(ticker, that.ticker) && Objects.equals(nomeEmpresa, that.nomeEmpresa) && Objects.equals(razaoSocial, that.razaoSocial) && Objects.equals(cnpj, that.cnpj) && Objects.equals(publicoAlvo, that.publicoAlvo) && Objects.equals(mandato, that.mandato) && Objects.equals(segmento, that.segmento) && Objects.equals(tipoDeFundo, that.tipoDeFundo) && Objects.equals(prazoDeDuracao, that.prazoDeDuracao) && Objects.equals(tipoDeGestao, that.tipoDeGestao) && Objects.equals(taxaDeAdministracao, that.taxaDeAdministracao) && Objects.equals(ultimoRendimento, that.ultimoRendimento) && Objects.equals(cotacao, that.cotacao) && Objects.equals(valorDeMercado, that.valorDeMercado) && Objects.equals(pvp, that.pvp) && Objects.equals(dividendYield, that.dividendYield) && Objects.equals(liquidezDiaria, that.liquidezDiaria) && Objects.equals(valorPatrimonial, that.valorPatrimonial) && Objects.equals(valorPatrimonialPorCota, that.valorPatrimonialPorCota) && Objects.equals(vacancia, that.vacancia) && Objects.equals(numeroDeCotistas, that.numeroDeCotistas) && Objects.equals(cotasEmitidas, that.cotasEmitidas) && Objects.equals(fiiDividendos, that.fiiDividendos) && Objects.equals(dadosBrutosJson, that.dadosBrutosJson) && Objects.equals(dataAtualizacao, that.dataAtualizacao);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, ticker, nomeEmpresa, razaoSocial, cnpj, publicoAlvo, mandato, segmento, tipoDeFundo, prazoDeDuracao, tipoDeGestao, taxaDeAdministracao, ultimoRendimento, cotacao, valorDeMercado, pvp, dividendYield, liquidezDiaria, valorPatrimonial, valorPatrimonialPorCota, vacancia, numeroDeCotistas, cotasEmitidas, fiiDividendos, dadosBrutosJson, dataAtualizacao);
+        return Objects.hash(id, internalId, ticker, nomeEmpresa, razaoSocial, cnpj, publicoAlvo, mandato, segmento, tipoDeFundo, prazoDeDuracao, tipoDeGestao, taxaDeAdministracao, ultimoRendimento, cotacao, valorDeMercado, pvp, dividendYield, liquidezDiaria, valorPatrimonial, valorPatrimonialPorCota, vacancia, numeroDeCotistas, cotasEmitidas, fiiDividendos, dadosBrutosJson, dataAtualizacao);
     }
 }
