@@ -1,7 +1,7 @@
-# Compiled class file
+# Compiled class files
 *.class
 
-# Log file
+# Log files
 *.log
 
 # BlueJ files
@@ -19,6 +19,54 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# virtual machine crash logs
 hs_err_pid*
-replay_pid*
+
+# Maven / Gradle
+target/
+build/
+out/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code (caso use como editor alternativo)
+.vscode/
+
+# Spring Boot Devtools
+.spring-boot-devtools.properties
+.spring-boot-devtools.restart.*
+
+# Environment config
+.env
+*.env
+
+# Database / H2 / SQLite
+*.h2.db
+*.mv.db
+*.db
+*.sqlite
+*.sql
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs e temp folders
+logs/
+tmp/
+*.tmp
+
+# Backup files
+*.bak
+*.swp
+*~
+
+# Lombok generated
+lombok.config
+
+# Tests output
+test-output/
