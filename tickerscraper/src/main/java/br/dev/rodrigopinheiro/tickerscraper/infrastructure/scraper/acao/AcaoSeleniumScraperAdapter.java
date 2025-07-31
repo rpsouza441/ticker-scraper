@@ -36,43 +36,44 @@ public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
         String urlCompleta = "https://investidor10.com.br/acoes/" + ticker;
         logger.info("Iniciando scraping com Selenium para a url {}", urlCompleta);
 
-        // O Mono.fromCallable é a ponte perfeita entre o mundo bloqueante (Selenium)
-        // e o mundo reativo (WebFlux).
-        return Mono.fromCallable(() -> {
-            // --- A LÓGICA DO SELENIUM RODA AQUI ---
-
-            // Requer que o chromedriver.exe esteja no seu PATH ou configurado via System.setProperty
+        // 1. Criamos um Mono que representa a "missão" de ter um WebDriver pronto.
+        Mono<WebDriver> driverMono = Mono.fromCallable(() -> {
             ChromeOptions options = new ChromeOptions();
-
-            // Adicione o argumento para rodar em modo headless.
-            // "--headless=new" é o novo padrão recomendado pelo time do Chrome.
             options.addArguments("--headless=new");
-            options.addArguments("--window-size=1920,1080"); // Ajuda a simular um navegador real
+            options.addArguments("--window-size=1920,1080");
+            return new ChromeDriver(options);
+        });
 
-            // options.addArguments("--headless"); // Roda o navegador sem interface gráfica
-            WebDriver driver = new ChromeDriver(options);
+        return driverMono.flatMap(driver -> {
+                    // 2. flatMap: Quando o driver estiver pronto, execute a lógica de scraping.
+                    return Mono.fromCallable(() -> {
+                                // O código de scraping em si é o mesmo...
+                                driver.get(urlCompleta);
+                                String html = driver.getPageSource();
+                                logger.info("Selenium obteve HTML de {} caracteres.", html.length());
+                                Document doc = Jsoup.parse(html);
 
-            String html;
-            try {
-                driver.get(urlCompleta);
-                // Opcional: esperar um pouco para o JS carregar, se necessário
-                // Thread.sleep(2000);
-                html = driver.getPageSource(); // Pega o HTML FINAL, após a execução do JS
-                logger.info("Selenium obteve HTML de {} caracteres.", html.length());
-            } finally {
-                driver.quit(); // Sempre feche o navegador!
-            }
+                                AcaoInfoHeaderDTO header = acaoHeaderScraper.scrapeInfoHeader(doc);
+                                AcaoInfoCardsDTO cards = cardsScraper.scrapeCardsInfo(doc);
+                                AcaoInfoDetailedDTO detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
+                                AcaoIndicadoresFundamentalistasDTO indicators = indicatorsScraper.scrape(doc, ticker);
+                                AcaoDadosFinanceirosDTO dadosFinanceiros = new AcaoDadosFinanceirosDTO(header, detailed, cards, indicators);
+                                logger.info("Dados financeiros de Acao {}", dadosFinanceiros.toString());
+                                return dadosFinanceiros;
 
-            // A partir daqui, o processo é o mesmo:
-            Document doc = Jsoup.parse(html);
-            AcaoInfoHeaderDTO header = acaoHeaderScraper.scrapeInfoHeader(doc);
-            AcaoInfoCardsDTO cards = cardsScraper.scrapeCardsInfo(doc);
-            AcaoInfoDetailedDTO detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
-            AcaoIndicadoresFundamentalistasDTO indicators = indicatorsScraper.scrape(doc, ticker);
-            AcaoDadosFinanceirosDTO dadosFinanceiros = new AcaoDadosFinanceirosDTO(header, detailed, cards, indicators);
-            logger.info("Dados financeiros de Acao {}", dadosFinanceiros.toString());
-            return dadosFinanceiros;
+                            })// 3. doFinally: Garante que, aconteça o que acontecer (sucesso ou erro),
+                            // a limpeza será executada. É o equivalente reativo do `finally`.
+                            .doFinally(signalType -> {
+                                logger.info("Finalizando a sessão do Selenium para {}. Sinal: {}", ticker, signalType);
+                                driver.quit();
+                            });
+                })
+                // 4. doOnError: Adiciona um "espião" para logar qualquer erro que ocorra no fluxo.
+                .doOnError(error -> logger.error("O Mono do AcaoSeleniumScraperAdapter falhou para o ticker {}", ticker, error))
+                // 5. subscribeOn: Garante que TODA a operação (desde criar o driver até o final)
+                // rode em uma thread segura.
+                .subscribeOn(Schedulers.boundedElastic());
 
-        }).subscribeOn(Schedulers.boundedElastic());
+
     }
 }
