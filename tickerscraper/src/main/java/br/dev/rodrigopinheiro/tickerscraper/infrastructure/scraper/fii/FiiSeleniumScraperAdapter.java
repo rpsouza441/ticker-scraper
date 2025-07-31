@@ -33,9 +33,12 @@ import java.util.Optional;
 public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
     private static final Logger logger = LoggerFactory.getLogger(FiiSeleniumScraperAdapter.class);
 
+    private final FiiInternalIdScrapper fiiInternalIdScrapper;
     private final FiiHeaderScraper fiiHeaderScraper;
 
-    public FiiSeleniumScraperAdapter(FiiHeaderScraper fiiHeaderScraper) {
+
+    public FiiSeleniumScraperAdapter(FiiInternalIdScrapper fiiInternalIdScrapper, FiiHeaderScraper fiiHeaderScraper) {
+        this.fiiInternalIdScrapper = fiiInternalIdScrapper;
         this.fiiHeaderScraper = fiiHeaderScraper;
     }
 
@@ -62,7 +65,7 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
 
             //Preparacao do listener de Rede
             devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
-            final List<String> urlsCapturadas = new CopyOnWriteArrayList<>(); // Lista segura para múltiplas threads
+            final List<String> urlsCapturadas = new CopyOnWriteArrayList<>();
             final List<String> palavrasChave = List.of("dividendos/chart", "historico-indicadores", "cotacao/fii");
 
             devTools.addListener(Network.requestWillBeSent(), requestSent -> {
@@ -88,6 +91,8 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                 Document doc = Jsoup.parse(html);
 
                 // 4. Orquestra os scrapers que leem o HTML.
+
+                Integer internalId = fiiInternalIdScrapper.scrape(urlsCapturadas);
                 FiiInfoHeaderDTO infoHeader = fiiHeaderScraper.scrape(doc);
                 logger.info("Cabeçalho raspado com sucesso: {}", infoHeader);
 
@@ -113,7 +118,7 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                 FiiInfoCardsDTO infoCards = new FiiInfoCardsDTO("", "");
                 // Por enquanto, criamos placeholders
                 resultadoFinal = new FiiDadosFinanceirosDTO(
-                        10l,
+                        internalId,
                         infoHeader,
                         infoHistorico,
                         infoSobre,
