@@ -34,12 +34,16 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
     private final FiiHeaderScraper fiiHeaderScraper;
     private final FiiApiScraper fiiApiScraper;
     private final FiiInternalIdScrapper fiiInternalIdScrapper;
-    // TODO: Inject other scrapers like FiiInfoSobreScraper and FiiCardsScraper here
+    private final FiiInfoSobreScraper fiiInfoSobreScraper;
+    private final FiiCardsScraper fiiCardsScraper;
 
-    public FiiSeleniumScraperAdapter(FiiHeaderScraper fiiHeaderScraper, FiiApiScraper fiiApiScraper, FiiInternalIdScrapper fiiInternalIdScrapper) {
+    public FiiSeleniumScraperAdapter(FiiHeaderScraper fiiHeaderScraper, FiiApiScraper fiiApiScraper, FiiInternalIdScrapper fiiInternalIdScrapper, FiiInfoSobreScraper fiiInfoSobreScraper, FiiCardsScraper fiiCardsScraper) {
         this.fiiHeaderScraper = fiiHeaderScraper;
         this.fiiApiScraper = fiiApiScraper;
         this.fiiInternalIdScrapper = fiiInternalIdScrapper;
+        this.fiiInfoSobreScraper = fiiInfoSobreScraper;
+        this.fiiCardsScraper = fiiCardsScraper;
+
     }
 
     @Override
@@ -102,7 +106,8 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                     // Processar os dados síncronos do HTML
                     FiiInfoHeaderDTO infoHeader = fiiHeaderScraper.scrape(doc);
                     Integer internalId = fiiInternalIdScrapper.scrape(new ArrayList<>(result.urlsMapeadas().values()));
-                    // TODO: Call your other HTML scrapers here (FiiInfoSobreScraper, etc.)
+                    FiiInfoSobreDTO infoSobreDTO = fiiInfoSobreScraper.scrape(doc);
+                    FiiInfoCardsDTO infoCardsDTO = fiiCardsScraper.scrape(doc);
 
                     // Disparar as chamadas assíncronas da API
                     Mono<FiiCotacaoDTO> cotacaoMono = result.findUrl(COTACAO)
@@ -130,8 +135,8 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                                         internalId,
                                         infoHeader,
                                         historico,
-                                        new FiiInfoSobreDTO(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), // Placeholder
-                                        new FiiInfoCardsDTO(null, null), // Placeholder
+                                        infoSobreDTO,
+                                        infoCardsDTO,
                                         dividendos,
                                         cotacao
                                 );
