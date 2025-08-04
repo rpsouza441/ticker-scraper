@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.util.Optional;
 
 public class IndicadorParser {
@@ -75,5 +76,24 @@ public class IndicadorParser {
                     }
                 })
                 .orElse(BigDecimal.ZERO);
+    }
+
+    /**
+     * Normaliza uma string para um formato consistente: maiúsculas e sem acentos.
+     * Ex: "Razão Social" -> "RAZAO SOCIAL"
+     * Ex: "NÚMERO DE COTISTAS" -> "NUMERO DE COTISTAS"
+     * @param texto O texto bruto a ser normalizado.
+     * @return O texto normalizado.
+     */
+    public static String normalizar(String texto) {
+        if (texto == null) {
+            return "";
+        }
+        // Normaliza para decompor os caracteres acentuados (ex: 'á' -> 'a' + '´')
+        String textoSemAcentos = Normalizer.normalize(texto, Normalizer.Form.NFD);
+        // Remove os diacríticos (os acentos) usando uma expressão regular
+        textoSemAcentos = textoSemAcentos.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        // Converte para maiúsculas e remove espaços extras
+        return textoSemAcentos.toUpperCase().trim();
     }
 }
