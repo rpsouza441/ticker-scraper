@@ -3,13 +3,13 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record FiiInfoSobreDTO(
-        @JsonProperty("Razão Social")
+        @JsonProperty("RAZAO SOCIAL")
         String razaoSocial,
 
         @JsonProperty("CNPJ")
         String cnpj,
 
-        @JsonProperty("PÚBLICO-ALVO")
+        @JsonProperty("PUBLICO-ALVO")
         String publicoAlvo,
 
         @JsonProperty("MANDATO")
@@ -21,19 +21,19 @@ public record FiiInfoSobreDTO(
         @JsonProperty("TIPO DE FUNDO")
         String tipoDeFundo,
 
-        @JsonProperty("PRAZO DE DURAÇÃO")
+        @JsonProperty("PRAZO DE DURACAO")
         String prazoDeDuracao,
 
-        @JsonProperty("TIPO DE GESTÃO")
+        @JsonProperty("TIPO DE GESTAO")
         String tipoDeGestao,
 
-        @JsonProperty("TAXA DE ADMINISTRAÇÃO")
+        @JsonProperty("TAXA DE ADMINISTRACAO")
         String taxaDeAdministracao,
 
-        @JsonProperty("VACÂNCIA")
+        @JsonProperty("VACANCIA")
         String vacancia,
 
-        @JsonProperty("NÚMERO DE COTISTAS")
+        @JsonProperty("NUMERO DE COTISTAS")
         String numeroDeCotistas,
 
         @JsonProperty("COTAS EMITIDAS")
@@ -45,6 +45,6 @@ public record FiiInfoSobreDTO(
         @JsonProperty("VALOR PATRIMONIAL")
         String valorPatrimonial,
 
-        @JsonProperty("ÚLTIMO RENDIMENTO")
+        @JsonProperty("ULTIMO RENDIMENTO")
         String ultimoRendimento
 ) {}
