@@ -18,7 +18,7 @@ public class FiiUserCaseService implements FiiUseCasePort {
 
     private final FiiDataScrapperPort fiiDataScrapperPort;
 
-    public FiiUserCaseService(@Qualifier("fiiSeleniumScraper") FiiDataScrapperPort fiiDataScrapperPort) {
+    public FiiUserCaseService(@Qualifier("fiiPlaywrightDirectScraper") FiiDataScrapperPort fiiDataScrapperPort) {
         this.fiiDataScrapperPort = fiiDataScrapperPort;
     }
 
