@@ -18,7 +18,7 @@ public class AcaoController {
     private final AcaoUseCasePort service;
     private final AcaoApiMapper acaoApiMapper;
 
-    public AcaoController(AcaoUseCaseService service, AcaoApiMapper acaoApiMapper) {
+    public AcaoController(AcaoUseCasePort service, AcaoApiMapper acaoApiMapper) {
         this.service = service;
         this.acaoApiMapper = acaoApiMapper;
     }
