@@ -6,9 +6,6 @@ import java.util.List;
 public class FundoImobiliario {
     private String ticker;
     private String nomeEmpresa;
-
-
-
     private String razaoSocial;
     private String cnpj;
     private String publicoAlvo;
@@ -19,11 +16,8 @@ public class FundoImobiliario {
     private String tipoDeGestao;
     private BigDecimal taxaDeAdministracao;
     private BigDecimal ultimoRendimento;
-
-    private List<FiiDividendo> fiiDividendo;
-
+    private List<FiiDividendo> fiiDividendos;
     private BigDecimal cotacao;
-
     private BigDecimal valorDeMercado;
     private BigDecimal pvp;
     private BigDecimal dividendYield;
@@ -37,7 +31,7 @@ public class FundoImobiliario {
     public FundoImobiliario() {
     }
 
-    public FundoImobiliario(String ticker, String nomeEmpresa, String razaoSocial, String cnpj, String publicoAlvo, String mandato, String segmento, String tipoDeFundo, String prazoDeDuracao, String tipoDeGestao, BigDecimal taxaDeAdministracao, BigDecimal ultimoRendimento, List<FiiDividendo> fiiDividendo, BigDecimal cotacao, BigDecimal valorDeMercado, BigDecimal pvp, BigDecimal dividendYield, BigDecimal liquidezDiaria, BigDecimal valorPatrimonial, BigDecimal valorPatrimonialPorCota, BigDecimal vacancia, BigDecimal numeroDeCotistas, BigDecimal cotasEmitidas) {
+    public FundoImobiliario(String ticker, String nomeEmpresa, String razaoSocial, String cnpj, String publicoAlvo, String mandato, String segmento, String tipoDeFundo, String prazoDeDuracao, String tipoDeGestao, BigDecimal taxaDeAdministracao, BigDecimal ultimoRendimento, List<FiiDividendo> fiiDividendos, BigDecimal cotacao, BigDecimal valorDeMercado, BigDecimal pvp, BigDecimal dividendYield, BigDecimal liquidezDiaria, BigDecimal valorPatrimonial, BigDecimal valorPatrimonialPorCota, BigDecimal vacancia, BigDecimal numeroDeCotistas, BigDecimal cotasEmitidas) {
         this.ticker = ticker;
         this.nomeEmpresa = nomeEmpresa;
         this.razaoSocial = razaoSocial;
@@ -50,7 +44,7 @@ public class FundoImobiliario {
         this.tipoDeGestao = tipoDeGestao;
         this.taxaDeAdministracao = taxaDeAdministracao;
         this.ultimoRendimento = ultimoRendimento;
-        this.fiiDividendo = fiiDividendo;
+        this.fiiDividendos = fiiDividendos;
         this.cotacao = cotacao;
         this.valorDeMercado = valorDeMercado;
         this.pvp = pvp;
@@ -159,12 +153,12 @@ public class FundoImobiliario {
         this.ultimoRendimento = ultimoRendimento;
     }
 
-    public List<FiiDividendo> getFiiDividendo() {
-        return fiiDividendo;
+    public List<FiiDividendo> getFiiDividendos() {
+        return fiiDividendos;
     }
 
-    public void setFiiDividendo(List<FiiDividendo> fiiDividendo) {
-        this.fiiDividendo = fiiDividendo;
+    public void setFiiDividendos(List<FiiDividendo> fiiDividendos) {
+        this.fiiDividendos = fiiDividendos;
     }
 
     public BigDecimal getCotacao() {
