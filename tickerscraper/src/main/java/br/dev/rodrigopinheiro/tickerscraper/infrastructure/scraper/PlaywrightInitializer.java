@@ -1,4 +1,4 @@
-package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
+package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper;
 
 import com.microsoft.playwright.*;
 import jakarta.annotation.PostConstruct;
