@@ -1,6 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiDataScrapperPort;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.PlaywrightInitializer;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiCotacaoDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDividendoDTO;
@@ -26,11 +27,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.COTACAO;
-import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.DIVIDENDOS;
-import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.HISTORICO_INDICADORES;
-import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.TODAS_AS_CHAVES;
-
+import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.*;
 @Component("fiiPlaywrightDirectScraper")
 public class FiiPlaywrightDirectScraperAdapter implements FiiDataScrapperPort {
 
