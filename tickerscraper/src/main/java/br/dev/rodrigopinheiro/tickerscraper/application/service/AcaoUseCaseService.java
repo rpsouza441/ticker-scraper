@@ -33,7 +33,7 @@ public class AcaoUseCaseService implements AcaoUseCasePort {
     private final AcaoRepositoryPort acaoRepository;
     private final ObjectMapper jsonMapper = new ObjectMapper();
 
-    public AcaoUseCaseService(@Qualifier("acaoSeleniumScraper") AcaoDataScrapperPort scraper,
+    public AcaoUseCaseService(@Qualifier("acaoPlaywrightScraper") AcaoDataScrapperPort scraper,
                               AcaoScraperMapper acaoScraperMapper,
                               AcaoPersistenceMapper acaoPersistenceMapper,
                               AcaoRepositoryPort acaoRepository) {
