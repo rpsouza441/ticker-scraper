@@ -38,7 +38,6 @@ public interface FiiApiMapper {
             @Mapping(source = "vacancia",                target = "vacancia"),
             @Mapping(source = "numeroDeCotistas",        target = "numeroDeCotistas"),
             @Mapping(source = "cotasEmitidas",           target = "cotasEmitidas"),
-            @Mapping(source = "dataAtualizacao",         target = "dataAtualizacao"),
             @Mapping(source = "fiiDividendos",           target = "dividendos")
     })
     FiiResponseDTO toResponse(FundoImobiliario domain);
