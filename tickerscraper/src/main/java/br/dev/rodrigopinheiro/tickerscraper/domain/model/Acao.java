@@ -1,6 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class Acao {
 
@@ -9,7 +10,7 @@ public class Acao {
     private String setor;
     private String segmento;
     private String segmentoListagem;
-    private String precoAtual;
+    private BigDecimal precoAtual;
     private BigDecimal variacao12M;
     private BigDecimal valorMercado;
     private BigDecimal valorFirma;
@@ -53,11 +54,15 @@ public class Acao {
     private BigDecimal liquidezCorrente;
     private BigDecimal cagrReceitasCincoAnos;
     private BigDecimal cagrLucrosCincoAnos;
+    private LocalDateTime dataAtualizacao;
 
     public Acao() {
     }
 
-    public Acao(String ticker, String nomeEmpresa, String setor, String segmento, String segmentoListagem, String precoAtual, BigDecimal variacao12M, BigDecimal valorMercado, BigDecimal valorFirma, BigDecimal patrimonioLiquido, BigDecimal numeroTotalPapeis, BigDecimal ativos, BigDecimal ativoCirculantes, BigDecimal dividaBruta, BigDecimal dividaLiquida, String disponibilidade, BigDecimal freeFloat, BigDecimal tagAlong, BigDecimal liquidezMediaDiaria, BigDecimal pl, BigDecimal psr, BigDecimal pvp, BigDecimal dividendYield, BigDecimal payout, BigDecimal margemLiquida, BigDecimal margemBruta, BigDecimal margemEbit, BigDecimal margemEbitda, BigDecimal evEbitda, BigDecimal evEbit, BigDecimal pebitda, BigDecimal pativo, BigDecimal pcapitaldeGiro, BigDecimal pativoCirculanteLiquido, BigDecimal vpa, BigDecimal lpa, BigDecimal giroAtivos, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal dividaLiquidaPatrimonio, BigDecimal dividaLiquidaEbitda, BigDecimal dividaLiquidaEbit, BigDecimal dividaBrutaPatrimonio, BigDecimal patrimonioAtivos, BigDecimal passivosAtivos, BigDecimal liquidezCorrente, BigDecimal cagrReceitasCincoAnos, BigDecimal cagrLucrosCincoAnos) {
+    public Acao(String ticker,
+                String nomeEmpresa,
+                String setor,
+                String segmento, String segmentoListagem, BigDecimal precoAtual, BigDecimal variacao12M, BigDecimal valorMercado, BigDecimal valorFirma, BigDecimal patrimonioLiquido, BigDecimal numeroTotalPapeis, BigDecimal ativos, BigDecimal ativoCirculantes, BigDecimal dividaBruta, BigDecimal dividaLiquida, String disponibilidade, BigDecimal freeFloat, BigDecimal tagAlong, BigDecimal liquidezMediaDiaria, BigDecimal pl, BigDecimal psr, BigDecimal pvp, BigDecimal dividendYield, BigDecimal payout, BigDecimal margemLiquida, BigDecimal margemBruta, BigDecimal margemEbit, BigDecimal margemEbitda, BigDecimal evEbitda, BigDecimal evEbit, BigDecimal pebitda, BigDecimal pativo, BigDecimal pcapitaldeGiro, BigDecimal pativoCirculanteLiquido, BigDecimal vpa, BigDecimal lpa, BigDecimal giroAtivos, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal dividaLiquidaPatrimonio, BigDecimal dividaLiquidaEbitda, BigDecimal dividaLiquidaEbit, BigDecimal dividaBrutaPatrimonio, BigDecimal patrimonioAtivos, BigDecimal passivosAtivos, BigDecimal liquidezCorrente, BigDecimal cagrReceitasCincoAnos, BigDecimal cagrLucrosCincoAnos, LocalDateTime dataAtualizacao) {
         this.ticker = ticker;
         this.nomeEmpresa = nomeEmpresa;
         this.setor = setor;
@@ -107,6 +112,7 @@ public class Acao {
         this.liquidezCorrente = liquidezCorrente;
         this.cagrReceitasCincoAnos = cagrReceitasCincoAnos;
         this.cagrLucrosCincoAnos = cagrLucrosCincoAnos;
+        this.dataAtualizacao = dataAtualizacao;
     }
 
     public String getTicker() {
@@ -149,11 +155,11 @@ public class Acao {
         this.segmentoListagem = segmentoListagem;
     }
 
-    public String getPrecoAtual() {
+    public BigDecimal getPrecoAtual() {
         return precoAtual;
     }
 
-    public void setPrecoAtual(String precoAtual) {
+    public void setPrecoAtual(BigDecimal precoAtual) {
         this.precoAtual = precoAtual;
     }
 
@@ -499,5 +505,13 @@ public class Acao {
 
     public void setCagrLucrosCincoAnos(BigDecimal cagrLucrosCincoAnos) {
         this.cagrLucrosCincoAnos = cagrLucrosCincoAnos;
+    }
+
+    public LocalDateTime getDataAtualizacao() {
+        return dataAtualizacao;
+    }
+
+    public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
+        this.dataAtualizacao = dataAtualizacao;
     }
 }

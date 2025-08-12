@@ -1,6 +1,8 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +32,8 @@ public class FundoImobiliario {
     private Long numeroDeCotistas;
     private Long cotasEmitidas;
     private List<FiiDividendo> fiiDividendos = new ArrayList<>();
+    private LocalDateTime dataAtualizacao;
+
 
     public void setTicker(String ticker) {
         this.ticker = ticker == null ? null : ticker.trim().toUpperCase();
@@ -42,7 +46,7 @@ public class FundoImobiliario {
     public FundoImobiliario() {
     }
 
-    public FundoImobiliario(String ticker, String nomeEmpresa, String razaoSocial, String cnpj, String publicoAlvo, String mandato, String segmento, String tipoDeFundo, String prazoDeDuracao, String tipoDeGestao, BigDecimal taxaDeAdministracao, BigDecimal ultimoRendimento, BigDecimal cotacao, BigDecimal variacao12M, BigDecimal valorDeMercado, BigDecimal pvp, BigDecimal dividendYield, BigDecimal liquidezDiaria, BigDecimal valorPatrimonial, BigDecimal valorPatrimonialPorCota, BigDecimal vacancia, Long numeroDeCotistas, Long cotasEmitidas, List<FiiDividendo> fiiDividendos) {
+    public FundoImobiliario(String ticker, String nomeEmpresa, String razaoSocial, String cnpj, String publicoAlvo, String mandato, String segmento, String tipoDeFundo, String prazoDeDuracao, String tipoDeGestao, BigDecimal taxaDeAdministracao, BigDecimal ultimoRendimento, BigDecimal cotacao, BigDecimal variacao12M, BigDecimal valorDeMercado, BigDecimal pvp, BigDecimal dividendYield, BigDecimal liquidezDiaria, BigDecimal valorPatrimonial, BigDecimal valorPatrimonialPorCota, BigDecimal vacancia, Long numeroDeCotistas, Long cotasEmitidas, List<FiiDividendo> fiiDividendos, LocalDateTime dataAtualizacao) {
         this.ticker = ticker;
         this.nomeEmpresa = nomeEmpresa;
         this.razaoSocial = razaoSocial;
@@ -67,6 +71,7 @@ public class FundoImobiliario {
         this.numeroDeCotistas = numeroDeCotistas;
         this.cotasEmitidas = cotasEmitidas;
         this.fiiDividendos = fiiDividendos;
+        this.dataAtualizacao = dataAtualizacao;
     }
 
     public String getTicker() {
@@ -251,5 +256,13 @@ public class FundoImobiliario {
 
     public void setFiiDividendos(List<FiiDividendo> fiiDividendos) {
         this.fiiDividendos = fiiDividendos;
+    }
+
+    public LocalDateTime getDataAtualizacao() {
+        return dataAtualizacao;
+    }
+
+    public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
+        this.dataAtualizacao = dataAtualizacao;
     }
 }
