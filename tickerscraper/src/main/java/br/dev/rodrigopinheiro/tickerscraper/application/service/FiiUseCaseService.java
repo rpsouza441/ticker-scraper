@@ -24,84 +24,59 @@ import java.util.Optional;
 
 @Service
 public class FiiUseCaseService
-        extends AbstractTickerUseCaseService<FiiDadosFinanceirosDTO, FundoImobiliario, FundoImobiliarioEntity>
+        extends AbstractTickerUseCaseService<FiiDadosFinanceirosDTO, FundoImobiliario>
         implements FiiUseCasePort {
 
     private final FiiDataScrapperPort scraper;
     private final FiiRepositoryPort repo;
     private final FiiScraperMapper scraperMapper;
-    private final FiiPersistenceMapper persistenceMapper;
 
     public FiiUseCaseService(@Qualifier("fiiPlaywrightDirectScraper") FiiDataScrapperPort scraper,
                              FiiRepositoryPort repo,
                              FiiScraperMapper scraperMapper,
-                             FiiPersistenceMapper persistenceMapper,
                              ObjectMapper objectMapper) {
         super(objectMapper, Duration.ofDays(1), FiiDadosFinanceirosDTO.class);
         this.scraper = scraper;
         this.repo = repo;
         this.scraperMapper = scraperMapper;
-        this.persistenceMapper = persistenceMapper;
+    }
+    @Override protected String normalize(String t) { return t == null ? null : t.trim().toUpperCase(); }
+
+    @Override protected Mono<Optional<FundoImobiliario>> findByTicker(String t) {
+        // USE o método com dividendos (fetch join no adapter JPA)
+        return Mono.fromCallable(() -> repo.findByTickerWithDividendos(t))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
-    @Override
-    protected String normalize(String ticker) {
-        return ticker == null ? null : ticker.trim().toUpperCase();
+    @Override protected Mono<FiiDadosFinanceirosDTO> scrape(String t) { return scraper.scrape(t); }
+
+    @Override protected boolean isCacheValid(FundoImobiliario d, Duration maxAge) {
+        return d.getDataAtualizacao() != null &&
+                java.time.Duration.between(d.getDataAtualizacao(), java.time.LocalDateTime.now())
+                        .compareTo(maxAge) < 0;
     }
 
-    @Override
-    protected Mono<Optional<FundoImobiliarioEntity>> findByTicker(String t) {
-        return Mono.fromCallable(() -> repo.findByTicker(t)).subscribeOn(Schedulers.boundedElastic());
-    }
-
-    @Override
-    protected Mono<FiiDadosFinanceirosDTO> scrape(String t) {
-        return scraper.scrape(t);
-    }
-
-    @Override
-    protected boolean isCacheValid(FundoImobiliarioEntity e, Duration maxAge) {
-        return Duration.between(e.getDataAtualizacao(), LocalDateTime.now()).compareTo(maxAge) < 0;
-    }
-
-    @Override
-    protected FundoImobiliario toDomain(FiiDadosFinanceirosDTO raw) {
+    @Override protected FundoImobiliario toDomain(FiiDadosFinanceirosDTO raw) {
         return scraperMapper.toDomain(raw);
     }
 
     @Override
-    protected FundoImobiliarioEntity toEntity(FundoImobiliario domain) {
-        return persistenceMapper.toEntity(domain);
+    protected FundoImobiliario saveDomain(FundoImobiliario domain, FiiDadosFinanceirosDTO raw) {
+        if (raw.internalId() == null) {
+            throw new IllegalStateException("internalId ausente no RAW para " + domain.getTicker());
+        }
+        String audit = null;
+        try { audit = serialize(raw); } catch (Exception ignored) {}
+        return repo.saveReplacingDividends(domain, raw.internalId().longValue(), audit);
     }
 
-    @Override
-    protected void enrichEntity(FundoImobiliarioEntity entity, FiiDadosFinanceirosDTO raw) {
-        entity.setInternalId(raw.internalId().longValue());
-        serializeRawInto(entity, raw);
-    }
-
-    @Override
-    protected void mergeForUpdate(FundoImobiliarioEntity existente, FundoImobiliarioEntity mapped) {
-        mapped.setId(existente.getId());
-    }
-
-    @Override
-    protected FundoImobiliarioEntity save(FundoImobiliarioEntity e) {
-        return repo.save(e);
-    }
-
-    @Override
-    protected LocalDateTime entityUpdatedAt(FundoImobiliarioEntity e) {
-        return e.getDataAtualizacao();
-    }
-
-    @Override
-    protected String entityRawJson(FundoImobiliarioEntity e) {
-        return e.getDadosBrutosJson();
-    }
-
-    @Override
-    protected void setEntityRawJson(FundoImobiliarioEntity e, String json) {
-        e.setDadosBrutosJson(json);
+    @Override protected Mono<FiiDadosFinanceirosDTO> readRawFromStore(String ticker) {
+        // precisa de um método no port para pegar o JSON cru
+        return Mono.fromCallable(() -> repo.findRawJsonByTicker(ticker))
+                .flatMap(opt -> opt.map(json -> {
+                    try { return Mono.just(deserialize(json)); }
+                    catch (Exception e) { return Mono.<FiiDadosFinanceirosDTO>error(e); }
+                }).orElseGet(Mono::empty))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }
