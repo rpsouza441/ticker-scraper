@@ -6,15 +6,15 @@ import java.math.BigDecimal;
 
 public record FiiIndicadorHistoricoItemDTO(
         @JsonProperty("year")
-        String ano,
+        String year,
 
         @JsonProperty("key")
-        String chave,
+        String key,
 
         @JsonProperty("value")
-        BigDecimal valor,
+        BigDecimal value,
 
         @JsonProperty("type")
-        String tipo
+        String type
 ) {
 }
