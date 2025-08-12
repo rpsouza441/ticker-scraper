@@ -8,11 +8,11 @@ import java.time.YearMonth;
 
 public record FiiDividendoDTO(
         @JsonProperty("price")
-        BigDecimal valorPago,
+        BigDecimal price,
 
         // Jackson vai converter a String "MM/yyyy" para um objeto YearMonth
         @JsonProperty("created_at")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/yyyy")
-        YearMonth dataDeReferencia
+        YearMonth created_at
 ) {
 }
