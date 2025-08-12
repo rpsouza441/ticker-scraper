@@ -4,33 +4,35 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class FiiResponseDTO {
-    public String ticker;
-    public String nomeEmpresa;
-    public String razaoSocial;
-    public String cnpj;
-    public String publicoAlvo;
-    public String mandato;
-    public String segmento;
-    public String tipoDeFundo;
-    public String prazoDeDuracao;
-    public String tipoDeGestao;
+public record FiiResponseDTO(
+        String ticker,
+        String nomeEmpresa,
+        String razaoSocial,
+        String cnpj,
+        String publicoAlvo,
+        String mandato,
+        String segmento,
+        String tipoDeFundo,
+        String prazoDeDuracao,
+        String tipoDeGestao,
 
-    public BigDecimal taxaDeAdministracao;
-    public BigDecimal ultimoRendimento;
+        BigDecimal taxaDeAdministracao,
+        BigDecimal ultimoRendimento,
 
-    public BigDecimal cotacao;
-    public BigDecimal valorDeMercado;
-    public BigDecimal pvp;
-    public BigDecimal dividendYield;
-    public BigDecimal liquidezDiaria;
-    public BigDecimal valorPatrimonial;
-    public BigDecimal valorPatrimonialPorCota;
-    public BigDecimal vacancia;
-    public BigDecimal numeroDeCotistas;
-    public BigDecimal cotasEmitidas;
+        BigDecimal cotacao,
+        BigDecimal variacao12M,
 
-    public LocalDateTime dataAtualizacao;
+        BigDecimal valorDeMercado,
+        BigDecimal pvp,
+        BigDecimal dividendYield,
+        BigDecimal liquidezDiaria,
+        BigDecimal valorPatrimonial,
+        BigDecimal valorPatrimonialPorCota,
+        BigDecimal vacancia,
 
-    public List<FiiDividendoResponseDTO> dividendos;
-}
+        Long numeroDeCotistas,
+        Long cotasEmitidas,
+
+        LocalDateTime dataAtualizacao,
+        List<FiiDividendoResponseDTO> dividendos
+) {}
