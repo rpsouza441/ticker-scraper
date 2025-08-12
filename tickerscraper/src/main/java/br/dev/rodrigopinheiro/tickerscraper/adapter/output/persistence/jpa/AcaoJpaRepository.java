@@ -8,7 +8,7 @@ import java.util.Optional;
 
 
 @Repository
-public interface AcaoJpaReporitoty extends JpaRepository<AcaoEntity, Long> {
+public interface AcaoJpaRepository extends JpaRepository<AcaoEntity, Long> {
     Optional<AcaoEntity> findByTicker(String ticker);
 
 }
