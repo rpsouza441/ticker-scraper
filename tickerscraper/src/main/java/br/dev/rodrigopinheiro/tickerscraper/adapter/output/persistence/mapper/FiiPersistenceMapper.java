@@ -14,7 +14,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface FiiPersistenceMapper {
 
-    // -------- Entity -> Domain (READ) --------
+    // ------- Entity -> Domain -------
     @Mappings({
             @Mapping(source = "ticker",                  target = "ticker"),
             @Mapping(source = "nomeEmpresa",             target = "nomeEmpresa"),
@@ -39,17 +39,18 @@ public interface FiiPersistenceMapper {
             @Mapping(source = "vacancia",                target = "vacancia"),
             @Mapping(source = "numeroDeCotistas",        target = "numeroDeCotistas"),
             @Mapping(source = "cotasEmitidas",           target = "cotasEmitidas"),
+            @Mapping(source = "dataAtualizacao",         target = "dataAtualizacao"),
             @Mapping(source = "fiiDividendos",           target = "fiiDividendos")
     })
     FundoImobiliario toDomain(FundoImobiliarioEntity entity);
 
     @Mappings({
-            @Mapping(source = "mes",   target = "mes"),   // LocalDate -> YearMonth via conversor abaixo
+            @Mapping(source = "mes",   target = "mes"),   // LocalDate -> YearMonth via default map()
             @Mapping(source = "valor", target = "valor")
     })
-    FiiDividendo toDomain(FiiDividendoEntity e);
+    FiiDividendo toDomain(FiiDividendoEntity entity);
 
-    // -------- Domain -> Entity (CREATE) --------
+    // ------- Domain -> Entity (CREATE) -------
     @Mappings({
             @Mapping(target = "id",               ignore = true),
             @Mapping(target = "internalId",       ignore = true),
@@ -85,12 +86,12 @@ public interface FiiPersistenceMapper {
     @Mappings({
             @Mapping(target = "id",               ignore = true),
             @Mapping(target = "fundoImobiliario", ignore = true),
-            @Mapping(source = "mes",   target = "mes"),   // YearMonth -> LocalDate via conversor abaixo
+            @Mapping(source = "mes",   target = "mes"),   // YearMonth -> LocalDate via default map()
             @Mapping(source = "valor", target = "valor")
     })
-    FiiDividendoEntity toEntity(FiiDividendo d);
+    FiiDividendoEntity toEntity(FiiDividendo domain);
 
-    // -------- UPDATE escalar (IGNORA nulos) --------
+    // ------- UPDATE escalar (IGNORA nulos) -------
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mappings({
             @Mapping(target = "id",               ignore = true),
@@ -101,12 +102,12 @@ public interface FiiPersistenceMapper {
     })
     void updateEntity(FundoImobiliario source, @MappingTarget FundoImobiliarioEntity target);
 
-    // -------- Coleção: wipe & recreate (12 meses exatos) --------
+    // ------- Coleção: wipe & recreate (12 meses, FK garantida) -------
     default void replaceDividendos(FundoImobiliario source, @MappingTarget FundoImobiliarioEntity target) {
         if (target.getFiiDividendos() == null) {
             target.setFiiDividendos(new ArrayList<>());
         } else {
-            target.getFiiDividendos().clear(); // orphanRemoval=true -> DELETE
+            target.getFiiDividendos().clear(); // orphanRemoval=true no mapeamento JPA
         }
         if (source.getFiiDividendos() != null) {
             for (FiiDividendo d : source.getFiiDividendos()) {
@@ -117,14 +118,14 @@ public interface FiiPersistenceMapper {
         }
     }
 
-    // -------- Back-ref quando criar tudo de uma vez --------
+    // ------- Back-ref quando criar com lista preenchida -------
     @AfterMapping
     default void wireParent(@MappingTarget FundoImobiliarioEntity parent) {
         List<FiiDividendoEntity> lst = parent.getFiiDividendos();
         if (lst != null) for (FiiDividendoEntity child : lst) child.setFundoImobiliario(parent);
     }
 
-    // -------- Conversores (resolvem YearMonth ↔ LocalDate) --------
+    // ------- Conversores YearMonth <-> LocalDate -------
     default LocalDate map(YearMonth ym) { return ym == null ? null : ym.atDay(1); }
     default YearMonth map(LocalDate d)   { return d == null ? null : YearMonth.from(d); }
 }
