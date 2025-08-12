@@ -1,6 +1,5 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence;
 
-import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.AcaoEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.FundoImobiliarioEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.FiiJpaReporitoty;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.FiiPersistenceMapper;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 public class FiiRepositoryAdapter implements FiiRepositoryPort {
