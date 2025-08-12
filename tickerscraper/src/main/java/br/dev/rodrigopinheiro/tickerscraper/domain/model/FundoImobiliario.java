@@ -1,9 +1,11 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FundoImobiliario {
+
     private String ticker;
     private String nomeEmpresa;
     private String razaoSocial;
@@ -16,8 +18,8 @@ public class FundoImobiliario {
     private String tipoDeGestao;
     private BigDecimal taxaDeAdministracao;
     private BigDecimal ultimoRendimento;
-    private List<FiiDividendo> fiiDividendos;
     private BigDecimal cotacao;
+    private BigDecimal variacao12M;
     private BigDecimal valorDeMercado;
     private BigDecimal pvp;
     private BigDecimal dividendYield;
@@ -25,13 +27,22 @@ public class FundoImobiliario {
     private BigDecimal valorPatrimonial;
     private BigDecimal valorPatrimonialPorCota;
     private BigDecimal vacancia;
-    private BigDecimal numeroDeCotistas;
-    private BigDecimal cotasEmitidas;
+    private Long numeroDeCotistas;
+    private Long cotasEmitidas;
+    private List<FiiDividendo> fiiDividendos = new ArrayList<>();
+
+    public void setTicker(String ticker) {
+        this.ticker = ticker == null ? null : ticker.trim().toUpperCase();
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj == null ? null : cnpj.trim();
+    }
 
     public FundoImobiliario() {
     }
 
-    public FundoImobiliario(String ticker, String nomeEmpresa, String razaoSocial, String cnpj, String publicoAlvo, String mandato, String segmento, String tipoDeFundo, String prazoDeDuracao, String tipoDeGestao, BigDecimal taxaDeAdministracao, BigDecimal ultimoRendimento, List<FiiDividendo> fiiDividendos, BigDecimal cotacao, BigDecimal valorDeMercado, BigDecimal pvp, BigDecimal dividendYield, BigDecimal liquidezDiaria, BigDecimal valorPatrimonial, BigDecimal valorPatrimonialPorCota, BigDecimal vacancia, BigDecimal numeroDeCotistas, BigDecimal cotasEmitidas) {
+    public FundoImobiliario(String ticker, String nomeEmpresa, String razaoSocial, String cnpj, String publicoAlvo, String mandato, String segmento, String tipoDeFundo, String prazoDeDuracao, String tipoDeGestao, BigDecimal taxaDeAdministracao, BigDecimal ultimoRendimento, BigDecimal cotacao, BigDecimal variacao12M, BigDecimal valorDeMercado, BigDecimal pvp, BigDecimal dividendYield, BigDecimal liquidezDiaria, BigDecimal valorPatrimonial, BigDecimal valorPatrimonialPorCota, BigDecimal vacancia, Long numeroDeCotistas, Long cotasEmitidas, List<FiiDividendo> fiiDividendos) {
         this.ticker = ticker;
         this.nomeEmpresa = nomeEmpresa;
         this.razaoSocial = razaoSocial;
@@ -44,8 +55,8 @@ public class FundoImobiliario {
         this.tipoDeGestao = tipoDeGestao;
         this.taxaDeAdministracao = taxaDeAdministracao;
         this.ultimoRendimento = ultimoRendimento;
-        this.fiiDividendos = fiiDividendos;
         this.cotacao = cotacao;
+        this.variacao12M = variacao12M;
         this.valorDeMercado = valorDeMercado;
         this.pvp = pvp;
         this.dividendYield = dividendYield;
@@ -55,14 +66,11 @@ public class FundoImobiliario {
         this.vacancia = vacancia;
         this.numeroDeCotistas = numeroDeCotistas;
         this.cotasEmitidas = cotasEmitidas;
+        this.fiiDividendos = fiiDividendos;
     }
 
     public String getTicker() {
         return ticker;
-    }
-
-    public void setTicker(String ticker) {
-        this.ticker = ticker;
     }
 
     public String getNomeEmpresa() {
@@ -83,10 +91,6 @@ public class FundoImobiliario {
 
     public String getCnpj() {
         return cnpj;
-    }
-
-    public void setCnpj(String cnpj) {
-        this.cnpj = cnpj;
     }
 
     public String getPublicoAlvo() {
@@ -153,20 +157,20 @@ public class FundoImobiliario {
         this.ultimoRendimento = ultimoRendimento;
     }
 
-    public List<FiiDividendo> getFiiDividendos() {
-        return fiiDividendos;
-    }
-
-    public void setFiiDividendos(List<FiiDividendo> fiiDividendos) {
-        this.fiiDividendos = fiiDividendos;
-    }
-
     public BigDecimal getCotacao() {
         return cotacao;
     }
 
     public void setCotacao(BigDecimal cotacao) {
         this.cotacao = cotacao;
+    }
+
+    public BigDecimal getVariacao12M() {
+        return variacao12M;
+    }
+
+    public void setVariacao12M(BigDecimal variacao12M) {
+        this.variacao12M = variacao12M;
     }
 
     public BigDecimal getValorDeMercado() {
@@ -225,19 +229,27 @@ public class FundoImobiliario {
         this.vacancia = vacancia;
     }
 
-    public BigDecimal getNumeroDeCotistas() {
+    public Long getNumeroDeCotistas() {
         return numeroDeCotistas;
     }
 
-    public void setNumeroDeCotistas(BigDecimal numeroDeCotistas) {
+    public void setNumeroDeCotistas(Long numeroDeCotistas) {
         this.numeroDeCotistas = numeroDeCotistas;
     }
 
-    public BigDecimal getCotasEmitidas() {
+    public Long getCotasEmitidas() {
         return cotasEmitidas;
     }
 
-    public void setCotasEmitidas(BigDecimal cotasEmitidas) {
+    public void setCotasEmitidas(Long cotasEmitidas) {
         this.cotasEmitidas = cotasEmitidas;
+    }
+
+    public List<FiiDividendo> getFiiDividendos() {
+        return fiiDividendos;
+    }
+
+    public void setFiiDividendos(List<FiiDividendo> fiiDividendos) {
+        this.fiiDividendos = fiiDividendos;
     }
 }
