@@ -4,15 +4,24 @@ import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.Fu
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PagedResult;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.FundoImobiliario;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
 public interface FiiRepositoryPort {
 
-    FundoImobiliarioEntity save(FundoImobiliarioEntity acaoEntity);
+
     Optional<FundoImobiliario> findById(Long id);
+
     PagedResult<FundoImobiliario> findAll(PageQuery query);
 
-    Optional<FundoImobiliarioEntity> findByTicker(String ticker);
+    Optional<FundoImobiliario> findByTicker(String ticker);
+
+    Optional<FundoImobiliario> findByTickerWithDividendos(String ticker);
+
+    FundoImobiliario saveReplacingDividends(FundoImobiliario fii, Long internalId, String rawJsonAudit);
+
+    Optional<String> findRawJsonByTicker(String ticker);
+
 }
 

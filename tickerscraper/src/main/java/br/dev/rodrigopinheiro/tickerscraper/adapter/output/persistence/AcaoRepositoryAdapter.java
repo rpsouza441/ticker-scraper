@@ -1,7 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.AcaoEntity;
-import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.AcaoJpaReporitoty;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.AcaoJpaRepository;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.AcaoPersistenceMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PagedResult;
@@ -17,43 +17,52 @@ import java.util.Optional;
 
 @Component
 public class AcaoRepositoryAdapter implements AcaoRepositoryPort {
-    private final AcaoJpaReporitoty repository;
+
+    private final AcaoJpaRepository jpa;
     private final AcaoPersistenceMapper mapper;
 
-    public AcaoRepositoryAdapter(AcaoJpaReporitoty repository, AcaoPersistenceMapper mapper) {
-        this.repository = repository;
+    public AcaoRepositoryAdapter(AcaoJpaRepository jpa, AcaoPersistenceMapper mapper) {
+        this.jpa = jpa;
         this.mapper = mapper;
     }
 
     @Override
-    public AcaoEntity save(AcaoEntity acaoEntity) {
-        return  repository.save(acaoEntity);
+    public Optional<Acao> findByTicker(String ticker) {
+        return jpa.findByTicker(ticker).map(mapper::toDomain);
+    }
+
+    @Override
+    public Acao save(Acao acao, String rawJsonAudit) {
+        // upsert por ticker
+        AcaoEntity entity = jpa.findByTicker(acao.getTicker())
+                .orElseGet(() -> mapper.toEntity(acao));
+
+        if (entity.getId() != null) {
+            mapper.updateEntity(acao, entity); // seu mapper deve ter @BeanMapping IGNORE nulos
+        }
+        if (rawJsonAudit != null) {
+            entity.setDadosBrutosJson(rawJsonAudit);
+        }
+
+        entity = jpa.save(entity);
+        return mapper.toDomain(entity);
+    }
+
+    @Override
+    public Optional<String> findRawJsonByTicker(String ticker) {
+        return jpa.findByTicker(ticker).map(AcaoEntity::getDadosBrutosJson);
     }
 
     @Override
     public Optional<Acao> findById(Long id) {
-        return repository.findById(id).map(mapper::toDomain);
+        return jpa.findById(id).map(mapper::toDomain);
     }
 
     @Override
     public PagedResult<Acao> findAll(PageQuery query) {
         Pageable pageable = PageRequest.of(query.pageNumber(), query.pageSize());
-        Page<AcaoEntity> pageOfEntities = repository.findAll(pageable);
-
-        List<Acao> acoesDaPagina = pageOfEntities.getContent().stream()
-                .map(mapper::toDomain)
-                .toList();
-
-        return new PagedResult<>(
-                acoesDaPagina,
-                pageOfEntities.getTotalElements(),
-                pageOfEntities.getTotalPages(),
-                pageOfEntities.getNumber()
-        );
-    }
-
-    @Override
-    public Optional<AcaoEntity> findByTicker(String ticker) {
-        return repository.findByTicker(ticker);
+        Page<AcaoEntity> page = jpa.findAll(pageable);
+        List<Acao> content = page.getContent().stream().map(mapper::toDomain).toList();
+        return new PagedResult<>(content, page.getTotalElements(), page.getTotalPages(), page.getNumber());
     }
 }
