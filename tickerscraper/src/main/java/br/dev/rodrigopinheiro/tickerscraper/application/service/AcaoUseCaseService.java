@@ -5,6 +5,7 @@ import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.Ac
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoDataScrapperPort;
+import br.dev.rodrigopinheiro.tickerscraper.application.service.base.AbstractTickerUseCaseService;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.mapper.AcaoScraperMapper;
@@ -24,134 +25,87 @@ import java.util.Optional;
 
 
 @Service
-public class AcaoUseCaseService implements AcaoUseCasePort {
+public class AcaoUseCaseService extends AbstractTickerUseCaseService<AcaoDadosFinanceirosDTO, Acao, AcaoEntity> implements AcaoUseCasePort {
     private static final Logger logger = LoggerFactory.getLogger(AcaoUseCaseService.class);
-
     private final AcaoDataScrapperPort scraper;
-    private final AcaoScraperMapper acaoScraperMapper;
-    private final AcaoPersistenceMapper acaoPersistenceMapper;
-    private final AcaoRepositoryPort acaoRepository;
-    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final AcaoRepositoryPort repo;
+    private final AcaoScraperMapper scraperMapper;
+    private final AcaoPersistenceMapper persistenceMapper;
 
     public AcaoUseCaseService(@Qualifier("acaoPlaywrightScraper") AcaoDataScrapperPort scraper,
-                              AcaoScraperMapper acaoScraperMapper,
-                              AcaoPersistenceMapper acaoPersistenceMapper,
-                              AcaoRepositoryPort acaoRepository) {
+                              AcaoRepositoryPort repo,
+                              AcaoScraperMapper scraperMapper,
+                              AcaoPersistenceMapper persistenceMapper,
+                              ObjectMapper objectMapper) {
+        super(objectMapper, Duration.ofDays(1), AcaoDadosFinanceirosDTO.class);
         this.scraper = scraper;
-        this.acaoScraperMapper = acaoScraperMapper;
-        this.acaoPersistenceMapper = acaoPersistenceMapper;
-        this.acaoRepository = acaoRepository;
+        this.repo = repo;
+        this.scraperMapper = scraperMapper;
+        this.persistenceMapper = persistenceMapper;
     }
 
-    /**
-     * Orquestra a busca de dados de forma reativa, com lógica de cache.
-     *
-     * @param ticker O ticker da ação.
-     * @return Um Mono contendo a entidade AcaoEntity final.
-     */
-    public Mono<AcaoEntity> getTickerData(String ticker) {
-        final String tickerNormalizado = ticker.toUpperCase().trim();
-        // 1. Tenta buscar no banco de forma não-bloqueante
-        return Mono.fromCallable(() -> acaoRepository.findByTicker(tickerNormalizado))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalAcao -> {
-                    // 2. Se encontrou, verifica se o cache é válido
-                    if (optionalAcao.isPresent()) {
-                        AcaoEntity acaoExistente = optionalAcao.get();
-                        if (isCacheValid(acaoExistente)) {
-                            logger.info("Cache para {} é válido. Retornando do banco de dados.", ticker);
-                            logger.info("Acao Existente toString {}",acaoExistente.toString());
-                            return Mono.just(acaoExistente); // Retorna a entidade do cache
-                        }
-                    }
-                    // 3. Se não encontrou ou o cache está velho, dispara o scraping
-                    logger.info("Cache para {} inválido ou inexistente. Iniciando scraping.", ticker);
-                    try {
-                        return doScrapeAndSave(ticker, optionalAcao);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+    @Override
+    protected String normalize(String ticker) {
+        return ticker == null ? null : ticker.trim().toUpperCase();
     }
 
-
-    /**
-     * Busca os dados brutos e completos de uma ação, usando o cache se possível.
-     * Esta é uma operação de "leitura". Ela não salva/atualiza os dados no banco.
-     *
-     * @param ticker O ticker da ação.
-     * @return Um Mono contendo o objeto DadosFinanceiros completo.
-     */
-    public Mono<AcaoDadosFinanceirosDTO> getRawTickerData(String ticker) {
-        final String tickerNormalizado = ticker.toUpperCase().trim();
-
-        logger.info("Buscando dados brutos para {}", tickerNormalizado);
-
-        // 1. Tenta buscar no banco de forma não-bloqueante
-        return Mono.fromCallable(() -> acaoRepository.findByTicker(tickerNormalizado))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalAcao -> {
-                    // 2. Se encontrou E o cache é válido...
-                    if (optionalAcao.isPresent() && isCacheValid(optionalAcao.get())) {
-                        logger.info("Cache de DADOS BRUTOS para {} é válido. Deserializando JSON do banco.", tickerNormalizado);
-
-                        // 3. ...nós deserializamos o JSON guardado de volta para o objeto DadosFinanceiros.
-                        // Como a deserialização pode ser uma operação de I/O (mesmo que pequena),
-                        // a envolvemos em um fromCallable para segurança.
-                        return Mono.fromCallable(() ->
-                                jsonMapper.readValue(optionalAcao.get().getDadosBrutosJson(), AcaoDadosFinanceirosDTO.class)
-                        ).subscribeOn(Schedulers.boundedElastic());
-                    }
-
-                    // 4. Se não encontrou ou o cache está velho, simplesmente dispara o scraping
-                    logger.info("Cache de DADOS BRUTOS para {} inválido ou inexistente. Fazendo scraping ao vivo.", tickerNormalizado);
-                    try {
-                        return scraper.scrape(tickerNormalizado);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+    @Override
+    protected Mono<Optional<AcaoEntity>> findByTicker(String t) {
+        return Mono.fromCallable(() -> repo.findByTicker(t)).subscribeOn(Schedulers.boundedElastic());
     }
 
-    /**
-     * Lógica de scraping e salvamento, encapsulada em um fluxo reativo.
-     */
-    private Mono<AcaoEntity> doScrapeAndSave(String ticker, Optional<AcaoEntity> acaoExistente) throws IOException {
-        // A. O scraper retorna a promessa dos dados brutos
-        return scraper.scrape(ticker)
-                .flatMap(dadosBrutos -> {
-                    // B. O mapeamento e a persistência são tarefas bloqueantes, então as encapsulamos
-                    return Mono.fromCallable(() -> {
-                        // Mapeia os dados brutos para a entidade
-                        Acao acao = acaoScraperMapper.toDomain(dadosBrutos);
-                        AcaoEntity entity = acaoPersistenceMapper.toEntity(acao);
-                        // Serializa o JSON bruto para auditoria
-                        try {
-                            String jsonString = jsonMapper.writeValueAsString(dadosBrutos);
-                            entity.setDadosBrutosJson(jsonString);
-                        } catch (JsonProcessingException e) {
-                            logger.warn("Não foi possível serializar o JSON bruto para {}", ticker);
-                            // Continua mesmo se a serialização falhar
-                        }
-
-                        // Garante que será um UPDATE se a entidade já existia
-                        acaoExistente.ifPresent(existente -> entity.setId(existente.getId()));
-
-                        // Salva no banco e retorna a entidade final
-                        logger.info("Salvando/Atualizando dados para {} no banco de dados.", ticker);
-                        return acaoRepository.save(entity);
-                    }).subscribeOn(Schedulers.boundedElastic());
-                });
+    @Override
+    protected Mono<AcaoDadosFinanceirosDTO> scrape(String t) {
+        return scraper.scrape(t);
     }
 
+    @Override
+    protected boolean isCacheValid(AcaoEntity e, Duration maxAge) {
+        return Duration.between(e.getDataAtualizacao(), LocalDateTime.now()).compareTo(maxAge) < 0;
+    }
 
-    /**
-     * Regra de negócio para a validade do cache.
-     */
-    private boolean isCacheValid(AcaoEntity acao) {
-        final Duration maxAge = Duration.ofDays(1);
-        return Duration.between(acao.getDataAtualizacao(), LocalDateTime.now()).compareTo(maxAge) < 0;
+    @Override
+    protected Acao toDomain(AcaoDadosFinanceirosDTO raw) {
+        return scraperMapper.toDomain(raw);
+    }
+
+    @Override
+    protected AcaoEntity toEntity(Acao domain) {
+        return persistenceMapper.toEntity(domain);
+    }
+
+    @Override
+    protected Acao entityToDomain(AcaoEntity acaoEntity) {
+        return scraperMapper.toDomain(acaoEntity);
+    }
+
+    @Override
+    protected void enrichEntity(AcaoEntity entity, AcaoDadosFinanceirosDTO raw) {
+        serializeRawInto(entity, raw); // só grava dadosBrutosJson
+    }
+
+    @Override
+    protected void mergeForUpdate(AcaoEntity existente, AcaoEntity mapped) {
+        mapped.setId(existente.getId()); // garante UPDATE
+    }
+
+    @Override
+    protected AcaoEntity save(AcaoEntity e) {
+        return repo.save(e);
+    }
+
+    @Override
+    protected LocalDateTime entityUpdatedAt(AcaoEntity e) {
+        return e.getDataAtualizacao();
+    }
+
+    @Override
+    protected String entityRawJson(AcaoEntity e) {
+        return e.getDadosBrutosJson();
+    }
+
+    @Override
+    protected void setEntityRawJson(AcaoEntity e, String json) {
+        e.setDadosBrutosJson(json);
     }
 }
-
-
