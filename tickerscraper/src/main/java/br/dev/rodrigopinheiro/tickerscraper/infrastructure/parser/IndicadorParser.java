@@ -65,7 +65,15 @@ public class IndicadorParser {
         return Optional.ofNullable(raw)
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .map(IndicadorParser::limparTextoNumerico)
+                .map(s -> {
+                    // Tratamento especial para taxa de administração no formato "X,XX % a.a" ou "X,XX% a.a"
+                    if (s.contains(" % a.a") || s.contains(" % ao ano") || s.contains("% a.a") || s.contains("% ao ano")) {
+                        // Extrai apenas a parte numérica antes do "%"
+                        String numericPart = s.contains(" %") ? s.split(" %")[0] : s.split("%")[0];
+                        return limparTextoNumerico(numericPart);
+                    }
+                    return limparTextoNumerico(s);
+                })
                 .filter(s -> s.matches("-?\\d+(\\.\\d+)?"))
                 .map(s -> {
                     try {
