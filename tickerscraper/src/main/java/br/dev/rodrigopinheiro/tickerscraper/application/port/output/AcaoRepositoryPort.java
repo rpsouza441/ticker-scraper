@@ -1,6 +1,5 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.port.output;
 
-import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.AcaoEntity;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PagedResult;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
