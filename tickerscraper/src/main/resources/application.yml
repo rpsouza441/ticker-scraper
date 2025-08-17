@@ -3,6 +3,8 @@ spring:
     name: tickerscraper
   server:
     port: ${SERVER_PORT:8080}
+  reactor:
+    context-propagation: AUTO
 
   datasource:
     url: ${DB_URL:jdbc:postgresql://192.168.22.245:5432/tickerscraper}

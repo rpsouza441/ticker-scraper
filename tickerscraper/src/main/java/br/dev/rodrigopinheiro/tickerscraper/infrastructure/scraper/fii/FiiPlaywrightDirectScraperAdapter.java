@@ -75,8 +75,8 @@ public class FiiPlaywrightDirectScraperAdapter implements FiiDataScrapperPort {
      * Utiliza Selenium como alternativa ao Playwright para FIIs.
      */
     public Mono<FiiDadosFinanceirosDTO> fallbackToSelenium(String ticker, Exception ex) {
-        logger.warn("[{}] Fallback FII para Selenium ativado. Ticker: {}, Causa: {}", 
-                   MDC.get("correlationId"), ticker, ex.getClass().getSimpleName());
+        logger.warn("Fallback FII para Selenium ativado. Ticker: {}, Causa: {}", 
+                   ticker, ex.getClass().getSimpleName());
         return seleniumFallback.scrape(ticker);
     }
 
@@ -86,105 +86,98 @@ public class FiiPlaywrightDirectScraperAdapter implements FiiDataScrapperPort {
         AtomicReference<Page> pageRef = new AtomicReference<>();
 
         return Mono.fromCallable(() -> {
-                    try (var ignored = MDC.putCloseable("ticker", ticker)) {
-                        logger.info("Iniciando scraping Playwright: {}", url);
+                    logger.info("Iniciando scraping Playwright: {}", url);
 
-                        Browser browser = pwInit.getBrowser(); // singleton já inicializado
+                    Browser browser = pwInit.getBrowser(); // singleton já inicializado
 
-                        // Contexto por scrape → isolamento + "anti-bot" básico
-                        Browser.NewContextOptions ctxOpts = new Browser.NewContextOptions()
-                                .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-                                .setViewportSize(1920, 1080)
-                                .setLocale("pt-BR")
-                                .setTimezoneId("America/Sao_Paulo")
-                                .setExtraHTTPHeaders(Map.of(
-                                        "Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
-                                ));
+                    // Contexto por scrape → isolamento + "anti-bot" básico
+                    Browser.NewContextOptions ctxOpts = new Browser.NewContextOptions()
+                            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
+                            .setViewportSize(1920, 1080)
+                            .setLocale("pt-BR")
+                            .setTimezoneId("America/Sao_Paulo")
+                            .setExtraHTTPHeaders(Map.of(
+                                    "Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
+                            ));
 
-                        BrowserContext ctx = browser.newContext(ctxOpts);
-                        // disfarce leve
-                        ctx.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+                    BrowserContext ctx = browser.newContext(ctxOpts);
+                    // disfarce leve
+                    ctx.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
 
-                        Page page = ctx.newPage();
-                        page.setDefaultTimeout(15_000);
+                    Page page = ctx.newPage();
+                    page.setDefaultTimeout(15_000);
 
-                        ctxRef.set(ctx);
-                        pageRef.set(page);
+                    ctxRef.set(ctx);
+                    pageRef.set(page);
 
-                        // Navegação com tratamento de exceções
-                        try {
-                            page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
-                        } catch (TimeoutError e) {
-                            throw new ScrapingTimeoutException(ticker, url, Duration.ofSeconds(15), "NAVIGATION");
-                        } catch (Exception e) {
-                            if (e.getMessage().contains("blocked") || e.getMessage().contains("captcha")) {
-                                throw new AntiBotDetectedException(ticker, url, e.getMessage(), "Playwright");
-                            }
-                            throw new ScrapingException(e.getMessage(), ticker, url, "NAVIGATION", e) {
-                                @Override
-                                public String getErrorCode() {
-                                    return "NAVIGATION_ERROR";
-                                }
-                            };
-                        }
-
-                        // Captura de XHR por substring (sem regex)
-                        final Map<String, String> urlsMapeadas = new HashMap<>();
-                        page.onRequest(req -> {
-                            String u = req.url();
-                            for (String chave : TODAS_AS_CHAVES) {
-                                if (!urlsMapeadas.containsKey(chave) && u.contains(chave)) {
-                                    urlsMapeadas.put(chave, u);
-                                    logger.info("API capturada ({}): {}", chave, u);
-                                }
-                            }
-                        });
-
-                        // Navegação (sem NETWORKIDLE) + espera passiva por endpoints críticos
+                    // Navegação com tratamento de exceções
+                    try {
                         page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
-
-                        // Esperas curtas por cada endpoint (polling leve com timeout)
-                        waitForKey(urlsMapeadas, HISTORICO_INDICADORES, 12_000);
-                        waitForKey(urlsMapeadas, DIVIDENDOS,           12_000);
-                        waitForKey(urlsMapeadas, COTACAO,               12_000);
-
-                        // HTML para parsers existentes
-                        String html = page.content();
-                        Document doc = Jsoup.parse(html);
-
-                        // Parsers (compatíveis com Selenium/Playwright)
-                        FiiInfoHeaderDTO infoHeader = headerScraper.scrape(doc);
-                        FiiInfoSobreDTO infoSobre  = infoSobreScraper.scrape(doc);
-                        FiiInfoCardsDTO infoCards  = cardsScraper.scrape(doc);
-
-                        // ID interno via URLs capturadas
-                        Integer internalId = internalIdScrapper.scrape(new ArrayList<>(urlsMapeadas.values()));
-
-                        // Monos das APIs com fallback seguro
-                        Mono<FiiCotacaoDTO> cotacaoMono = Optional.ofNullable(urlsMapeadas.get(COTACAO))
-                                .map(apiScraper::fetchCotacao)
-                                .orElse(Mono.just(new FiiCotacaoDTO(null, null)));
-
-                        Mono<List<FiiDividendoDTO>> dividendosMono = Optional.ofNullable(urlsMapeadas.get(DIVIDENDOS))
-                                .map(apiScraper::fetchDividendos)
-                                .orElse(Mono.just(Collections.emptyList()));
-
-                        Mono<FiiIndicadorHistoricoDTO> historicoMono = Optional.ofNullable(urlsMapeadas.get(HISTORICO_INDICADORES))
-                                .map(apiScraper::fetchHistorico)
-                                .orElse(Mono.just(new FiiIndicadorHistoricoDTO(Collections.emptyMap())));
-
-                        // Composição final
-                        return Mono.zip(cotacaoMono, dividendosMono, historicoMono)
-                                .map(t -> new FiiDadosFinanceirosDTO(
-                                        internalId,
-                                        infoHeader,
-                                        t.getT3(), // historico
-                                        infoSobre,
-                                        infoCards,
-                                        t.getT2(), // dividendos
-                                        t.getT1()  // cotacao
-                                ));
+                    } catch (TimeoutError e) {
+                        throw new ScrapingTimeoutException(ticker, url, Duration.ofSeconds(15), "NAVIGATION");
+                    } catch (Exception e) {
+                        if (e.getMessage().contains("blocked") || e.getMessage().contains("captcha")) {
+                            throw new AntiBotDetectedException(ticker, url, e.getMessage(), "Playwright");
+                        }
+                        throw new RuntimeException("Navigation error for " + ticker + ": " + e.getMessage(), e);
                     }
+
+                    // Captura de XHR por substring (sem regex)
+                    final Map<String, String> urlsMapeadas = new HashMap<>();
+                    page.onRequest(req -> {
+                        String u = req.url();
+                        for (String chave : TODAS_AS_CHAVES) {
+                            if (!urlsMapeadas.containsKey(chave) && u.contains(chave)) {
+                                urlsMapeadas.put(chave, u);
+                                logger.info("API capturada ({}): {}", chave, u);
+                            }
+                        }
+                    });
+
+                    // Navegação (sem NETWORKIDLE) + espera passiva por endpoints críticos
+                    page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+
+                    // Esperas curtas por cada endpoint (polling leve com timeout)
+                    waitForKey(urlsMapeadas, HISTORICO_INDICADORES, 12_000);
+                    waitForKey(urlsMapeadas, DIVIDENDOS,           12_000);
+                    waitForKey(urlsMapeadas, COTACAO,               12_000);
+
+                    // HTML para parsers existentes
+                    String html = page.content();
+                    Document doc = Jsoup.parse(html);
+
+                    // Parsers (compatíveis com Selenium/Playwright)
+                    FiiInfoHeaderDTO infoHeader = headerScraper.scrape(doc);
+                    FiiInfoSobreDTO infoSobre  = infoSobreScraper.scrape(doc);
+                    FiiInfoCardsDTO infoCards  = cardsScraper.scrape(doc);
+
+                    // ID interno via URLs capturadas
+                    Integer internalId = internalIdScrapper.scrape(new ArrayList<>(urlsMapeadas.values()));
+
+                    // Monos das APIs com fallback seguro
+                    Mono<FiiCotacaoDTO> cotacaoMono = Optional.ofNullable(urlsMapeadas.get(COTACAO))
+                            .map(apiScraper::fetchCotacao)
+                            .orElse(Mono.just(new FiiCotacaoDTO(null, null)));
+
+                    Mono<List<FiiDividendoDTO>> dividendosMono = Optional.ofNullable(urlsMapeadas.get(DIVIDENDOS))
+                            .map(apiScraper::fetchDividendos)
+                            .orElse(Mono.just(Collections.emptyList()));
+
+                    Mono<FiiIndicadorHistoricoDTO> historicoMono = Optional.ofNullable(urlsMapeadas.get(HISTORICO_INDICADORES))
+                            .map(apiScraper::fetchHistorico)
+                            .orElse(Mono.just(new FiiIndicadorHistoricoDTO(Collections.emptyMap())));
+
+                    // Composição final
+                    return Mono.zip(cotacaoMono, dividendosMono, historicoMono)
+                            .map(t -> new FiiDadosFinanceirosDTO(
+                                    internalId,
+                                    infoHeader,
+                                    t.getT3(), // historico
+                                    infoSobre,
+                                    infoCards,
+                                    t.getT2(), // dividendos
+                                    t.getT1()  // cotacao
+                            ));
                 })
                 .flatMap(m -> m)
                 .doOnError(e -> logger.error("Falha no Playwright para {}: {}", ticker, e.toString()))

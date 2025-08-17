@@ -9,7 +9,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.UUID;
 
 /**
- * Interceptor para gerenciar correlationId em todas as requisições HTTP.
+ * Interceptor para gerenciar correlationId em requisições HTTP tradicionais (MVC).
+ * Funciona em conjunto com CorrelationIdWebFilter para cobertura completa.
  * Garante rastreabilidade de requisições através de todos os componentes do sistema.
  */
 @Component

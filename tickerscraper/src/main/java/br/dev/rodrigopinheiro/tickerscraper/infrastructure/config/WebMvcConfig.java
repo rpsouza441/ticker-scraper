@@ -6,7 +6,9 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Configuração do Spring MVC para registrar interceptors e outras customizações.
+ * Configuração do Spring MVC para customizações específicas.
+ * Registra CorrelationIdInterceptor para cobertura MVC tradicional.
+ * Funciona em conjunto com CorrelationIdWebFilter para WebFlux.
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -19,7 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // Registrar interceptor de correlationId para todas as rotas
+        // Registrar interceptor de correlationId para todas as rotas MVC
         registry.addInterceptor(correlationIdInterceptor)
                 .addPathPatterns("/**")  // Aplicar a todas as rotas
                 .excludePathPatterns(

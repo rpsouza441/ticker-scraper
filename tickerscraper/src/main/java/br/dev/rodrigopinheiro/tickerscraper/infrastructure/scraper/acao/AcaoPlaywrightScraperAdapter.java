@@ -66,8 +66,8 @@ public class AcaoPlaywrightScraperAdapter implements AcaoDataScrapperPort {
      * Utiliza Selenium como alternativa ao Playwright.
      */
     public Mono<AcaoDadosFinanceirosDTO> fallbackToSelenium(String ticker, Exception ex) {
-        logger.warn("[{}] Fallback para Selenium ativado. Ticker: {}, Causa: {}", 
-                   MDC.get("correlationId"), ticker, ex.getClass().getSimpleName());
+        logger.warn("Fallback para Selenium ativado. Ticker: {}, Causa: {}", 
+                   ticker, ex.getClass().getSimpleName());
         return seleniumFallback.scrape(ticker);
     }
 
@@ -76,54 +76,51 @@ public class AcaoPlaywrightScraperAdapter implements AcaoDataScrapperPort {
         AtomicReference<Page> pageRef = new AtomicReference<>();
 
         return Mono.fromCallable(() -> {
-                    try (var ignored = MDC.putCloseable("ticker", ticker)) {
-                        logger.info("Iniciando scraping Playwright (Ação): {}", url);
-                        Browser browser = pwInit.getBrowser();
+                    logger.info("Iniciando scraping Playwright (Ação): {}", url);
+                    Browser browser = pwInit.getBrowser();
 
-                        // Contexto por scrape + anti-bot básico
-                        Browser.NewContextOptions ctxOpts = new Browser.NewContextOptions()
-                                .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-                                .setViewportSize(1920, 1080)
-                                .setLocale("pt-BR")
-                                .setTimezoneId("America/Sao_Paulo")
-                                .setExtraHTTPHeaders(Map.of("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"));
+                    // Contexto por scrape + anti-bot básico
+                    Browser.NewContextOptions ctxOpts = new Browser.NewContextOptions()
+                            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
+                            .setViewportSize(1920, 1080)
+                            .setLocale("pt-BR")
+                            .setTimezoneId("America/Sao_Paulo")
+                            .setExtraHTTPHeaders(Map.of("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"));
 
-                        BrowserContext ctx = browser.newContext(ctxOpts);
-                        ctx.addInitScript("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})");
+                    BrowserContext ctx = browser.newContext(ctxOpts);
+                    ctx.addInitScript("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})");
 
-                        Page page = ctx.newPage();
-                        page.setDefaultTimeout(15_000);
+                    Page page = ctx.newPage();
+                    page.setDefaultTimeout(15_000);
 
-                        ctxRef.set(ctx);
-                        pageRef.set(page);
+                    ctxRef.set(ctx);
+                    pageRef.set(page);
 
-
-                        // Navegar e esperar DOM básico
-                        try {
-                            page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
-                        } catch (TimeoutError e) {
-                            throw new ScrapingTimeoutException(ticker, url, Duration.ofSeconds(15), "NAVIGATION");
-                        }
-
-                        // Esperar seletores que os scrapers usam (cada um com timeout curto)
-                        waitSelectorWithException(page, "div.name-ticker", 10_000, ticker, url);       // usado no header
-                        waitSelectorWithException(page, "section#cards-ticker", 10_000, ticker, url);  // usado nos cards
-                        waitSelectorWithException(page, "#table-indicators", 10_000, ticker, url);     // usado nos indicadores
-
-                        // HTML final
-                        String html = page.content();
-                        Document doc = Jsoup.parse(html);
-
-                        // Scrapers existentes (iguais ao Selenium)
-                        AcaoInfoHeaderDTO header = headerScraper.scrapeInfoHeader(doc);
-                        AcaoInfoCardsDTO cards = cardsScraper.scrapeCardsInfo(doc);
-                        AcaoInfoDetailedDTO detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
-                        AcaoIndicadoresFundamentalistasDTO indicators = indicatorsScraper.scrape(doc, ticker);
-
-                        AcaoDadosFinanceirosDTO dto = new AcaoDadosFinanceirosDTO(header, detailed, cards, indicators);
-                        logger.info("Acao DTO montado para {}.", ticker);
-                        return dto;
+                    // Navegar e esperar DOM básico
+                    try {
+                        page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+                    } catch (TimeoutError e) {
+                        throw new ScrapingTimeoutException(ticker, url, Duration.ofSeconds(15), "NAVIGATION");
                     }
+
+                    // Esperar seletores que os scrapers usam (cada um com timeout curto)
+                    waitSelectorWithException(page, "div.name-ticker", 10_000, ticker, url);       // usado no header
+                    waitSelectorWithException(page, "section#cards-ticker", 10_000, ticker, url);  // usado nos cards
+                    waitSelectorWithException(page, "#table-indicators", 10_000, ticker, url);     // usado nos indicadores
+
+                    // HTML final
+                    String html = page.content();
+                    Document doc = Jsoup.parse(html);
+
+                    // Scrapers existentes (iguais ao Selenium)
+                    AcaoInfoHeaderDTO header = headerScraper.scrapeInfoHeader(doc);
+                    AcaoInfoCardsDTO cards = cardsScraper.scrapeCardsInfo(doc);
+                    AcaoInfoDetailedDTO detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
+                    AcaoIndicadoresFundamentalistasDTO indicators = indicatorsScraper.scrape(doc, ticker);
+
+                    AcaoDadosFinanceirosDTO dto = new AcaoDadosFinanceirosDTO(header, detailed, cards, indicators);
+                    logger.info("Acao DTO montado para {}.", ticker);
+                    return dto;
                 })
                 .doOnError(e -> logger.error("Falha Playwright (Ação) para {}: {}", ticker, e.toString()))
                 .doOnCancel(() -> closeQuietly(pageRef.get(), ctxRef.get()))
