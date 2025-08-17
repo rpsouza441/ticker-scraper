@@ -31,3 +31,50 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Configurações Sensíveis ###
+# Arquivos de ambiente com credenciais
+.env
+.env.local
+.env.*.local
+
+# Arquivos de configuração com dados sensíveis
+application-*.yml
+application-*.yaml
+application-*.properties
+!application.yml
+!application.yaml
+!application.properties
+
+# Logs da aplicação
+logs/
+*.log
+*.log.*
+
+# Arquivos temporários de scraping
+temp/
+scraping-cache/
+
+# Certificados e chaves
+*.p12
+*.jks
+*.pem
+*.key
+*.crt
+
+# Dados de teste sensíveis
+test-data/sensitive/
+
+### Sistema Operacional ###
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~

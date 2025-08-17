@@ -1,7 +1,10 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiDataScrapperPort;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.*;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.PlaywrightInitializer;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiCotacaoDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDividendoDTO;
@@ -12,6 +15,7 @@ import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiIn
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.options.WaitUntilState;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -21,7 +25,6 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.*;
@@ -60,15 +63,21 @@ public class FiiPlaywrightDirectScraperAdapter implements FiiDataScrapperPort {
     }
 
     @Override
+    @CircuitBreaker(name = "scraper", fallbackMethod = "fallbackToSelenium")
+    @Retry(name = "scraper")
     public Mono<FiiDadosFinanceirosDTO> scrape(String ticker) {
         final String url = "https://investidor10.com.br/fiis/" + ticker;
-
-        return Mono.defer(() -> executarComPlaywright(ticker, url))
-                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)))
-                .onErrorResume(e -> {
-                    logger.warn("Playwright falhou para {}, fallback Selenium. Causa: {}", ticker, e.toString());
-                    return seleniumFallback.scrape(ticker);
-                });
+        return executarComPlaywright(ticker, url);
+    }
+    
+    /**
+     * Método de fallback quando o Circuit Breaker está aberto ou há falhas.
+     * Utiliza Selenium como alternativa ao Playwright para FIIs.
+     */
+    public Mono<FiiDadosFinanceirosDTO> fallbackToSelenium(String ticker, Exception ex) {
+        logger.warn("[{}] Fallback FII para Selenium ativado. Ticker: {}, Causa: {}", 
+                   MDC.get("correlationId"), ticker, ex.getClass().getSimpleName());
+        return seleniumFallback.scrape(ticker);
     }
 
     private Mono<FiiDadosFinanceirosDTO> executarComPlaywright(String ticker, String url) {
@@ -101,6 +110,23 @@ public class FiiPlaywrightDirectScraperAdapter implements FiiDataScrapperPort {
 
                         ctxRef.set(ctx);
                         pageRef.set(page);
+
+                        // Navegação com tratamento de exceções
+                        try {
+                            page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+                        } catch (TimeoutError e) {
+                            throw new ScrapingTimeoutException(ticker, url, Duration.ofSeconds(15), "NAVIGATION");
+                        } catch (Exception e) {
+                            if (e.getMessage().contains("blocked") || e.getMessage().contains("captcha")) {
+                                throw new AntiBotDetectedException(ticker, url, e.getMessage(), "Playwright");
+                            }
+                            throw new ScrapingException(e.getMessage(), ticker, url, "NAVIGATION", e) {
+                                @Override
+                                public String getErrorCode() {
+                                    return "NAVIGATION_ERROR";
+                                }
+                            };
+                        }
 
                         // Captura de XHR por substring (sem regex)
                         final Map<String, String> urlsMapeadas = new HashMap<>();

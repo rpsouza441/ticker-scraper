@@ -2,6 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.FundoImobiliarioEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,5 +21,8 @@ public interface FiiJpaRepository extends JpaRepository<FundoImobiliarioEntity, 
     """)
     Optional<FundoImobiliarioEntity> findByTickerWithDividendos(@Param("ticker") String ticker);
 
+    @Modifying
+    @Query("DELETE FROM FiiDividendoEntity d WHERE d.fundoImobiliario.id = :fundoId")
+    void deleteAllDividendosByFundoId(@Param("fundoId") Long fundoId);
 
 }

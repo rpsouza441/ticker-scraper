@@ -104,11 +104,14 @@ public interface FiiPersistenceMapper {
 
     // ------- Coleção: wipe & recreate (12 meses, FK garantida) -------
     default void replaceDividendos(FundoImobiliario source, @MappingTarget FundoImobiliarioEntity target) {
+        // Não substitui a coleção para evitar orphan deletion error
+        // O delete explícito já foi feito no repositório, então a coleção está vazia
         if (target.getFiiDividendos() == null) {
             target.setFiiDividendos(new ArrayList<>());
-        } else {
-            target.getFiiDividendos().clear(); // orphanRemoval=true no mapeamento JPA
         }
+        // Não faz clear() pois pode causar orphan deletion error
+        
+        // Adiciona os novos dividendos
         if (source.getFiiDividendos() != null) {
             for (FiiDividendo d : source.getFiiDividendos()) {
                 FiiDividendoEntity e = toEntity(d);
@@ -121,8 +124,17 @@ public interface FiiPersistenceMapper {
     // ------- Back-ref quando criar com lista preenchida -------
     @AfterMapping
     default void wireParent(@MappingTarget FundoImobiliarioEntity parent) {
-        List<FiiDividendoEntity> lst = parent.getFiiDividendos();
-        if (lst != null) for (FiiDividendoEntity child : lst) child.setFundoImobiliario(parent);
+        // Evita LazyInitializationException verificando se a coleção está inicializada
+        try {
+            List<FiiDividendoEntity> lst = parent.getFiiDividendos();
+            if (lst != null) {
+                for (FiiDividendoEntity child : lst) {
+                    child.setFundoImobiliario(parent);
+                }
+            }
+        } catch (org.hibernate.LazyInitializationException e) {
+            // Ignora se a coleção não está inicializada - será tratada pelo replaceDividendos
+        }
     }
 
     // ------- Conversores YearMonth <-> LocalDate -------

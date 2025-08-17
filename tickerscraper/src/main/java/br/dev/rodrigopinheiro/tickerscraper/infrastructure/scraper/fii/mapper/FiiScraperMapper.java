@@ -10,7 +10,6 @@ import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDi
 import org.mapstruct.*;
 
 import java.math.BigDecimal;
-import java.time.YearMonth;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public interface FiiScraperMapper {
             @Mapping(source = "dividendos", target = "fiiDividendos")
     })
     FundoImobiliario toDomain(FiiDadosFinanceirosDTO dados);
-
+    
     // -------- elemento da lista: FiiDividendoDTO → FiiDividendo (domain) --------
     @Mappings({
             // ajuste aqui se o seu record usa nomes diferentes:

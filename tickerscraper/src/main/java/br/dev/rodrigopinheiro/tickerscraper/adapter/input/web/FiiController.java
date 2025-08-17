@@ -2,8 +2,8 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.FiiResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.FiiApiMapper;
+import br.dev.rodrigopinheiro.tickerscraper.application.dto.FiiRawDataResponse;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.FiiUseCasePort;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
 import com.github.dockerjava.api.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +35,9 @@ public class FiiController {
     }
 
     @GetMapping("/get-{ticker}/raw")
-    public Mono<ResponseEntity<FiiDadosFinanceirosDTO>> getRaw(@PathVariable String ticker) {
+    public Mono<ResponseEntity<FiiRawDataResponse>> getRaw(@PathVariable String ticker) {
         log.info("GET /fii/get-{}/raw", ticker);
-        return useCase.getRawTickerData(ticker)       // Mono<FiiDadosFinanceirosDTO>
+        return useCase.getRawTickerData(ticker)       // Mono<FiiRawDataResponse>
                 .map(ResponseEntity::ok)
                 .onErrorResume(NotFoundException.class,
                         e -> Mono.just(ResponseEntity.notFound().build()));

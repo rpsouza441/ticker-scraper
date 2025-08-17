@@ -9,6 +9,11 @@ spring:
     username: ${DB_USER:postgresql}
     password: ${DB_PASS:2Tyz5@5ykD7}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      minimum-idle: ${DB_MIN_IDLE:2}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
 
   jpa:
     hibernate:
@@ -29,3 +34,63 @@ logging:
   level:
     org.hibernate.SQL: ${LOG_SQL_LEVEL:DEBUG}
     org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_BIND_LEVEL:TRACE}
+    root: ${ROOT_LOG_LEVEL:INFO}
+  pattern:
+    console: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%X{correlationId:-NO-CORRELATION}] [%-5level] %logger{36} - %msg%n"
+    file: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%X{correlationId:-NO-CORRELATION}] [%-5level] %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE_PATH:logs/tickerscraper.log}
+    max-size: ${LOG_FILE_MAX_SIZE:10MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:30}
+
+# Configurações do Resilience4j
+resilience4j:
+  circuitbreaker:
+    instances:
+      scraper:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 30s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        record-exceptions:
+          - br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingTimeoutException
+          - br.dev.rodrigopinheiro.tickerscraper.domain.exception.AntiBotDetectedException
+          - br.dev.rodrigopinheiro.tickerscraper.domain.exception.RateLimitExceededException
+        ignore-exceptions:
+          - br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException
+          - br.dev.rodrigopinheiro.tickerscraper.domain.exception.DataParsingException
+  
+  retry:
+    instances:
+      scraper:
+        max-attempts: 3
+        wait-duration: 2s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingTimeoutException
+        ignore-exceptions:
+          - br.dev.rodrigopinheiro.tickerscraper.domain.exception.AntiBotDetectedException
+          - br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException
+  
+  timelimiter:
+    instances:
+      scraper:
+        timeout-duration: 30s
+        cancel-running-future: true
+
+# Configurações de management para monitoramento
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true

@@ -2,9 +2,8 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AcaoResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
+import br.dev.rodrigopinheiro.tickerscraper.application.dto.AcaoRawDataResponse;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
-import br.dev.rodrigopinheiro.tickerscraper.application.service.AcaoUseCaseService;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
 import com.github.dockerjava.api.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +35,9 @@ public class AcaoController {
     }
 
     @GetMapping("/get-{ticker}/raw")
-    public Mono<ResponseEntity<AcaoDadosFinanceirosDTO>> getRawData(@PathVariable String ticker) {
+    public Mono<ResponseEntity<AcaoRawDataResponse>> getRawData(@PathVariable String ticker) {
         log.info("GET /acao/get-{}/raw", ticker);
-        return useCase.getRawTickerData(ticker)       // Mono<AcaoDadosFinanceirosDTO>
+        return useCase.getRawTickerData(ticker)       // Mono<AcaoRawDataResponse>
                 .map(ResponseEntity::ok)
                 .onErrorResume(NotFoundException.class,
                         e -> Mono.just(ResponseEntity.notFound().build()));

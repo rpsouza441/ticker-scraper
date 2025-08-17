@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +53,7 @@ public class FiiRepositoryAdapter implements FiiRepositoryPort {
     }
 
     @Override
+    @Transactional
     public FundoImobiliario saveReplacingDividends(FundoImobiliario fii, Long internalId, String rawJsonAudit) {
         FundoImobiliarioEntity entity = jpa.findByTicker(fii.getTicker())
                 .orElseGet(() -> mapper.toEntity(fii));
@@ -76,6 +78,12 @@ public class FiiRepositoryAdapter implements FiiRepositoryPort {
             entity.setDadosBrutosJson(rawJsonAudit);
         }
 
+        // Limpar dividendos existentes antes de adicionar novos (evita constraint violation)
+        if (entity.getId() != null) {
+            jpa.deleteAllDividendosByFundoId(entity.getId());
+            jpa.flush(); // Força a execução do DELETE antes do INSERT
+        }
+        
         // dividendos (12 meses, FK/back-ref)
         mapper.replaceDividendos(fii, entity);
 

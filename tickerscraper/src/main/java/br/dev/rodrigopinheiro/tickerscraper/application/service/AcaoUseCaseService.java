@@ -1,5 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
+import br.dev.rodrigopinheiro.tickerscraper.application.dto.AcaoRawDataResponse;
+import br.dev.rodrigopinheiro.tickerscraper.application.mapper.RawDataMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
@@ -19,21 +21,24 @@ import java.util.Optional;
 
 @Service
 public class AcaoUseCaseService
-        extends AbstractTickerUseCaseService<AcaoDadosFinanceirosDTO, Acao>
+        extends AbstractTickerUseCaseService<AcaoDadosFinanceirosDTO, Acao, AcaoRawDataResponse>
         implements AcaoUseCasePort {
 
     private final AcaoDataScrapperPort scraper;
     private final AcaoRepositoryPort repo;
     private final AcaoScraperMapper scraperMapper;
+    private final RawDataMapper rawDataMapper;
 
     public AcaoUseCaseService(@Qualifier("acaoPlaywrightScraper") AcaoDataScrapperPort scraper,
                               AcaoRepositoryPort repo,
                               AcaoScraperMapper scraperMapper,
+                              RawDataMapper rawDataMapper,
                               ObjectMapper json) {
         super(json, Duration.ofDays(1), AcaoDadosFinanceirosDTO.class);
         this.scraper = scraper;
         this.repo = repo;
         this.scraperMapper = scraperMapper;
+        this.rawDataMapper = rawDataMapper;
     }
 
     @Override protected String normalize(String t) { return t == null ? null : t.trim().toUpperCase(); }
@@ -78,5 +83,30 @@ public class AcaoUseCaseService
                         })
                         .orElseGet(Mono::empty))
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+    
+    /**
+     * Implementação da interface para retornar dados brutos como DTO da application.
+     * Utiliza template method da classe pai para conversão consistente.
+     */
+    @Override
+    public Mono<AcaoRawDataResponse> getRawTickerData(String ticker) {
+        return super.getRawTickerDataAsResponse(ticker);
+    }
+    
+    /**
+     * Converte DTO de infraestrutura para DTO da application usando MapStruct.
+     */
+    @Override
+    protected AcaoRawDataResponse convertToRawResponse(AcaoDadosFinanceirosDTO infraDto) {
+        return rawDataMapper.toAcaoRawDataResponse(infraDto);
+    }
+    
+    /**
+     * Cria resposta de falha específica para Ação.
+     */
+    @Override
+    protected AcaoRawDataResponse createFailedResponse(String ticker, String source, String error) {
+        return rawDataMapper.createFailedAcaoResponse(ticker, source, error);
     }
 }
