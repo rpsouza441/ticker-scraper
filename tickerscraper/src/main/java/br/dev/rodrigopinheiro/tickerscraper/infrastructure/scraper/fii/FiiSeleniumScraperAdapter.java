@@ -3,6 +3,7 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.*;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.AbstractScraperAdapter;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.selenium.retry.SeleniumRetryManager;
 
 import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.*;
 
@@ -42,14 +43,23 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
     private final FiiInternalIdScrapper fiiInternalIdScrapper;
     private final FiiInfoSobreScraper fiiInfoSobreScraper;
     private final FiiCardsScraper fiiCardsScraper;
+    private final SeleniumRetryManager retryManager;
 
-    public FiiSeleniumScraperAdapter(FiiHeaderScraper fiiHeaderScraper, FiiApiScraper fiiApiScraper, FiiInternalIdScrapper fiiInternalIdScrapper, FiiInfoSobreScraper fiiInfoSobreScraper, FiiCardsScraper fiiCardsScraper) {
+    public FiiSeleniumScraperAdapter(FiiHeaderScraper fiiHeaderScraper, 
+                                   FiiApiScraper fiiApiScraper, 
+                                   FiiInternalIdScrapper fiiInternalIdScrapper, 
+                                   FiiInfoSobreScraper fiiInfoSobreScraper, 
+                                   FiiCardsScraper fiiCardsScraper,
+                                   SeleniumRetryManager retryManager) {
         this.fiiHeaderScraper = fiiHeaderScraper;
         this.fiiApiScraper = fiiApiScraper;
         this.fiiInternalIdScrapper = fiiInternalIdScrapper;
         this.fiiInfoSobreScraper = fiiInfoSobreScraper;
         this.fiiCardsScraper = fiiCardsScraper;
-
+        this.retryManager = retryManager;
+        
+        logger.info("FiiSeleniumScraperAdapter inicializado com retry manager: {}", 
+                   retryManager.getRetryConfiguration());
     }
 
     @Override
@@ -57,26 +67,11 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
         String urlCompleta = buildUrl(ticker);
         logger.info("Iniciando scraping com Selenium para a url {}", urlCompleta);
 
-        // 1. Criação robusta do WebDriver com tratamento de erros abrangente
+        // 1. Criação robusta do WebDriver com retry automático
         Mono<ChromeDriver> driverMono = Mono.fromCallable(() -> {
-            try {
-                WebDriverManager.chromedriver().setup();
-                ChromeOptions options = createChromeOptions();
-                return new ChromeDriver(options);
-            } catch (org.openqa.selenium.WebDriverException e) {
-                logger.error("Falha ao inicializar ChromeDriver para FII ticker {}: {}", ticker, e.getMessage());
-                throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.WebDriverInitializationException(
-                    "Falha ao inicializar ChromeDriver para FII scraping", e);
-            } catch (Exception e) {
-                logger.error("Erro inesperado na criação do WebDriver para FII ticker {}: {}", ticker, e.getMessage());
-                throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException(
-                    "Erro inesperado na criação do WebDriver", ticker, urlCompleta, "DRIVER_INIT", e) {
-                    @Override
-                    public String getErrorCode() {
-                        return "FII_WEBDRIVER_UNEXPECTED_ERROR";
-                    }
-                };
-            }
+            WebDriverManager.chromedriver().setup();
+            ChromeOptions options = createChromeOptions();
+            return retryManager.createWebDriverWithRetry(options);
         });
 
         // 2. Configuração robusta do DevTools com degradação graceful
@@ -85,9 +80,7 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
                     final Map<String, String> urlsMapeadas = new ConcurrentHashMap<>();
                     
                     try {
-                        devTools = driver.getDevTools();
-                        devTools.createSession();
-                        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
+                        devTools = retryManager.setupDevToolsWithRetry(driver);
                         
                         // Configurar listener de rede com tratamento de erros
                         devTools.addListener(Network.requestWillBeSent(), requestSent -> {
@@ -116,31 +109,8 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
 
                     // A lógica principal de scraping está encapsulada em um novo Mono.fromCallable
                      return Mono.fromCallable(() -> {
-                                 // Navegação robusta com tratamento de timeout
-                                 try {
-                                     driver.manage().timeouts().pageLoadTimeout(java.time.Duration.ofSeconds(45));
-                                     driver.get(urlCompleta);
-                                     
-                                     // Aguardar carregamento completo
-                                     org.openqa.selenium.support.ui.WebDriverWait wait = 
-                                         new org.openqa.selenium.support.ui.WebDriverWait(driver, java.time.Duration.ofSeconds(15));
-                                     wait.until(webDriver -> ((org.openqa.selenium.JavascriptExecutor) webDriver)
-                                         .executeScript("return document.readyState").equals("complete"));
-                                         
-                                 } catch (org.openqa.selenium.TimeoutException e) {
-                                     logger.warn("Timeout no carregamento da página {} para FII ticker {}", urlCompleta, ticker);
-                                     throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingTimeoutException(
-                                         ticker, urlCompleta, java.time.Duration.ofSeconds(45), "FII_PAGE_LOAD");
-                                 } catch (org.openqa.selenium.WebDriverException e) {
-                                     logger.error("Falha na navegação para {} (FII ticker {}): {}", urlCompleta, ticker, e.getMessage());
-                                     throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException(
-                                         "Falha na navegação FII", ticker, urlCompleta, "FII_NAVIGATION", e) {
-                                         @Override
-                                         public String getErrorCode() {
-                                             return "FII_NAVIGATION_FAILED";
-                                         }
-                                     };
-                                 }
+                                 // Navegação robusta com retry automático
+                                 retryManager.loadPageWithRetry(driver, urlCompleta);
                                  
                                  // Aguardar captura de APIs com timeout inteligente
                                  try {

@@ -77,7 +77,13 @@ public class FiiApiScraper {
         return webClient.get().uri(url)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<FiiDividendoDTO>>() {})
+                .doOnNext(dividendos -> {
+                    if (!dividendos.isEmpty()) {
+                        logger.debug("Processados {} dividendos da API", dividendos.size());
+                    }
+                })
                 .doOnError(e -> logger.error("Falha ao buscar dividendos da API: {}", url, e))
                 .onErrorReturn(Collections.emptyList());
     }
+
 }

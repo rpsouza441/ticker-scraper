@@ -45,6 +45,26 @@ logging:
     max-size: ${LOG_FILE_MAX_SIZE:10MB}
     max-history: ${LOG_FILE_MAX_HISTORY:30}
 
+# Configurações específicas do Scraper
+scraper:
+  selenium:
+    retry:
+      # Configurações para inicialização do WebDriver
+      web-driver-max-attempts: ${SELENIUM_WEBDRIVER_MAX_ATTEMPTS:3}
+      web-driver-backoff: ${SELENIUM_WEBDRIVER_BACKOFF:2s}
+      
+      # Configurações para carregamento de páginas
+      page-load-max-attempts: ${SELENIUM_PAGELOAD_MAX_ATTEMPTS:5}
+      page-load-backoff: ${SELENIUM_PAGELOAD_BACKOFF:500ms}
+      
+      # Configurações para captura de rede (DevTools)
+      network-capture-max-attempts: ${SELENIUM_NETWORK_MAX_ATTEMPTS:3}
+      network-capture-backoff: ${SELENIUM_NETWORK_BACKOFF:1s}
+      
+      # Configurações gerais
+      enable-retry-logging: ${SELENIUM_RETRY_LOGGING:true}
+      max-retry-duration: ${SELENIUM_MAX_RETRY_DURATION:2m}
+
 # Configurações do Resilience4j
 resilience4j:
   circuitbreaker:
