@@ -16,6 +16,11 @@ import reactor.core.scheduler.Schedulers;
 @Component("acaoSeleniumScraper")
 public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
     private static final Logger logger = LoggerFactory.getLogger(AcaoSeleniumScraperAdapter.class);
+    
+    // Constantes para seletores CSS com fallbacks para validação de elementos essenciais
+    private static final String[] ESSENTIAL_SELECTORS = {"div.name-ticker", "div.container-header", "header div.company-info"};
+    private static final String[] CARDS_SELECTORS = {"section#cards-ticker", ".cards-section", ".ticker-cards"};
+    private static final String[] INDICATORS_SELECTORS = {"#table-indicators", ".indicators-table", "table.indicators"};
     private final AcaoHeaderScraper acaoHeaderScraper;
     private final AcaoCardsScraper cardsScraper;
     private final AcaoDetailedInfoScraper detailedInfoScraper;
@@ -119,9 +124,61 @@ public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
                                             ticker, urlCompleta, "Estrutura HTML inválida - sem título");
                                     }
                                     
-                                    // Verificar se elementos essenciais estão presentes
-                                    if (doc.select("div.name-ticker").isEmpty()) {
-                                        logger.warn("Elemento 'div.name-ticker' não encontrado para ticker {}", ticker);
+                                    // Verificar elementos essenciais com fallbacks
+                                    boolean hasEssentialElements = false;
+                                    for (String selector : ESSENTIAL_SELECTORS) {
+                                        if (!doc.select(selector).isEmpty()) {
+                                            hasEssentialElements = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (!hasEssentialElements) {
+                                        logger.warn("Nenhum elemento essencial encontrado para ticker {} com seletores: {}", 
+                                                   ticker, java.util.Arrays.toString(ESSENTIAL_SELECTORS));
+                                    }
+                                    
+                                    // Verificar elementos de cards
+                                    boolean hasCardsElements = false;
+                                    for (String selector : CARDS_SELECTORS) {
+                                        if (!doc.select(selector).isEmpty()) {
+                                            hasCardsElements = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (!hasCardsElements) {
+                                        logger.warn("Nenhum elemento de cards encontrado para ticker {} com seletores: {}", 
+                                                   ticker, java.util.Arrays.toString(CARDS_SELECTORS));
+                                    }
+                                    
+                                    // Verificar elementos de indicadores
+                                    boolean hasIndicatorsElements = false;
+                                    for (String selector : INDICATORS_SELECTORS) {
+                                        if (!doc.select(selector).isEmpty()) {
+                                            hasIndicatorsElements = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // Se nenhum elemento essencial foi encontrado, pode indicar ticker inexistente
+                                    if (!hasEssentialElements && !hasCardsElements && !hasIndicatorsElements) {
+                                        logger.error("Nenhum elemento essencial encontrado para ticker {} - possível ticker inexistente", ticker);
+                                        
+                                        // Verificar se a página contém indicadores de erro ou ticker não encontrado
+                                        if (html.contains("410 Gone") || html.contains("Not Found") || 
+                                            html.contains("Página não encontrada") || html.contains("Ticker não encontrado")) {
+                                            throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, urlCompleta);
+                                        }
+                                        
+                                        // Se não há elementos essenciais mas não é claramente um erro 404/410,
+                                        // ainda assim pode ser um ticker inexistente
+                                        throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, urlCompleta);
+                                    }
+                                    
+                                    if (!hasIndicatorsElements) {
+                                        logger.warn("Nenhum elemento de indicadores encontrado para ticker {} com seletores: {}", 
+                                                   ticker, java.util.Arrays.toString(INDICATORS_SELECTORS));
                                     }
                                     
                                 } catch (Exception e) {

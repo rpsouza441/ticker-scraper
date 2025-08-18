@@ -15,8 +15,13 @@ import java.util.Objects;
 @AllArgsConstructor
 @Builder
 @Table(
-        name = "fii_dividendo"
-
+        name = "fii_dividendo",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_fii_dividendo_fundo_mes",
+                        columnNames = {"fundo_imobiliario_id", "mes"}
+                )
+        }
 )
 public class FiiDividendoEntity {
 

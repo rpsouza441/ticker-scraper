@@ -30,6 +30,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
 
     private static final Logger logger = LoggerFactory.getLogger(FiiSeleniumScraperAdapter.class);
+    
+    // Constantes para seletores CSS com fallbacks para validação de elementos essenciais
+    private static final String[] ESSENTIAL_SELECTORS = {"div.name-ticker", "div.container-header", "header div.fii-info"};
+    private static final String[] CARDS_SELECTORS = {"section#cards-ticker", ".cards-section", ".fii-cards"};
+    private static final String[] ABOUT_SELECTORS = {"div#about-company", "div.about-section", ".fii-about"};
 
     private final FiiHeaderScraper fiiHeaderScraper;
     private final FiiApiScraper fiiApiScraper;
@@ -193,10 +198,48 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                                              ticker, urlCompleta, "Estrutura HTML inválida para FII - sem título");
                                      }
                                      
-                                     // Verificar elementos essenciais para FII
-                                     if (tempDoc.select("div.name-ticker").isEmpty()) {
-                                         logger.warn("Elemento 'div.name-ticker' não encontrado para FII ticker {}", ticker);
+                                     // Verificar elementos essenciais para FII com fallbacks
+                                 boolean hasEssentialElements = false;
+                                 for (String selector : ESSENTIAL_SELECTORS) {
+                                     if (!tempDoc.select(selector).isEmpty()) {
+                                         hasEssentialElements = true;
+                                         break;
                                      }
+                                 }
+                                 
+                                 if (!hasEssentialElements) {
+                                     logger.warn("Nenhum elemento essencial encontrado para FII ticker {} com seletores: {}", 
+                                                ticker, java.util.Arrays.toString(ESSENTIAL_SELECTORS));
+                                 }
+                                 
+                                 // Verificar elementos de cards
+                                 boolean hasCardsElements = false;
+                                 for (String selector : CARDS_SELECTORS) {
+                                     if (!tempDoc.select(selector).isEmpty()) {
+                                         hasCardsElements = true;
+                                         break;
+                                     }
+                                 }
+                                 
+                                 // Se nenhum elemento essencial foi encontrado, pode indicar ticker inexistente
+                                  if (!hasEssentialElements && !hasCardsElements) {
+                                      logger.error("Nenhum elemento essencial encontrado para FII ticker {} - possível ticker inexistente", ticker);
+                                      
+                                      // Verificar se a página contém indicadores de erro ou ticker não encontrado
+                                      if (html.contains("410 Gone") || html.contains("Not Found") || 
+                                          html.contains("Página não encontrada") || html.contains("Ticker não encontrado")) {
+                                          throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, urlCompleta);
+                                      }
+                                      
+                                      // Se não há elementos essenciais mas não é claramente um erro 404/410,
+                                      // ainda assim pode ser um ticker inexistente
+                                      throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, urlCompleta);
+                                  }
+                                  
+                                  if (!hasCardsElements) {
+                                      logger.warn("Nenhum elemento de cards encontrado para FII ticker {} com seletores: {}", 
+                                                 ticker, java.util.Arrays.toString(CARDS_SELECTORS));
+                                  }
                                      
                                  } catch (Exception e) {
                                      logger.error("Falha na validação HTML para FII ticker {}: {}", ticker, e.getMessage());

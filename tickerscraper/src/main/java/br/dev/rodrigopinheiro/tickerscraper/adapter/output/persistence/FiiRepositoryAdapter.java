@@ -7,7 +7,8 @@ import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PagedResult;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.FundoImobiliario;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 @Component
 public class FiiRepositoryAdapter implements FiiRepositoryPort {
+    private static final Logger logger = LoggerFactory.getLogger(FiiRepositoryAdapter.class);
 
     private final FiiJpaRepository jpa;
     private final FiiPersistenceMapper mapper;
@@ -55,8 +57,14 @@ public class FiiRepositoryAdapter implements FiiRepositoryPort {
     @Override
     @Transactional
     public FundoImobiliario saveReplacingDividends(FundoImobiliario fii, Long internalId, String rawJsonAudit) {
+        logger.debug("Iniciando saveReplacingDividends para ticker: {}, dividendos: {}", 
+                fii.getTicker(), fii.getFiiDividendos() != null ? fii.getFiiDividendos().size() : 0);
+        
         FundoImobiliarioEntity entity = jpa.findByTicker(fii.getTicker())
-                .orElseGet(() -> mapper.toEntity(fii));
+                .orElseGet(() -> {
+                    logger.debug("Criando nova entidade para ticker: {}", fii.getTicker());
+                    return mapper.toEntity(fii);
+                });
 
         // UPDATE escalar (ignora nulos)
         if (entity.getId() != null) {
@@ -78,16 +86,27 @@ public class FiiRepositoryAdapter implements FiiRepositoryPort {
             entity.setDadosBrutosJson(rawJsonAudit);
         }
 
+        // Salvar a entidade principal primeiro para garantir que tenha ID
+        entity = jpa.save(entity);
+        jpa.flush(); // Garante que a entidade principal seja persistida
+        logger.debug("Entidade principal salva com ID: {} para ticker: {}", entity.getId(), fii.getTicker());
+        
         // Limpar dividendos existentes antes de adicionar novos (evita constraint violation)
-        if (entity.getId() != null) {
-            jpa.deleteAllDividendosByFundoId(entity.getId());
-            jpa.flush(); // Força a execução do DELETE antes do INSERT
-        }
+        logger.debug("Removendo dividendos existentes para fundo ID: {}", entity.getId());
+        jpa.deleteAllDividendosByFundoId(entity.getId());
+        jpa.flush(); // Força a execução do DELETE antes do INSERT
+        logger.debug("Dividendos existentes removidos para fundo ID: {}", entity.getId());
         
         // dividendos (12 meses, FK/back-ref)
+        logger.debug("Adicionando {} novos dividendos para ticker: {}", 
+                fii.getFiiDividendos() != null ? fii.getFiiDividendos().size() : 0, fii.getTicker());
         mapper.replaceDividendos(fii, entity);
 
+        // Salvar novamente para persistir os dividendos
         entity = jpa.save(entity);
+        logger.debug("Entidade final salva com {} dividendos para ticker: {}", 
+                entity.getFiiDividendos() != null ? entity.getFiiDividendos().size() : 0, fii.getTicker());
+        
         return mapper.toDomain(entity);
     }
 

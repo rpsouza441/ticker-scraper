@@ -30,10 +30,16 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.*;
+
 @Component("fiiPlaywrightDirectScraper")
 public class FiiPlaywrightDirectScraperAdapter implements FiiDataScrapperPort {
 
     private static final Logger logger = LoggerFactory.getLogger(FiiPlaywrightDirectScraperAdapter.class);
+    
+    // Constantes para seletores CSS com fallbacks para validação de elementos essenciais
+    private static final String[] ESSENTIAL_SELECTORS = {"div.name-ticker", "div.container-header", "header div.fii-info"};
+    private static final String[] CARDS_SELECTORS = {"section#cards-ticker", ".cards-section", ".fii-cards"};
+    private static final String[] ABOUT_SELECTORS = {"div#about-company", "div.about-section", ".fii-about"};
 
     private final PlaywrightInitializer pwInit;                 // Browser singleton (abre/fecha no @PostConstruct/@PreDestroy)
     private final FiiSeleniumScraperAdapter seleniumFallback;  // Fallback quando Playwright falhar
@@ -111,7 +117,25 @@ public class FiiPlaywrightDirectScraperAdapter implements FiiDataScrapperPort {
 
                     // Navegação com tratamento de exceções
                     try {
-                        page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+                        com.microsoft.playwright.Response response = page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+                        
+                        // Verificar status HTTP para detectar ticker não encontrado
+                        if (response != null) {
+                            int status = response.status();
+                            if (status == 404 || status == 410) {
+                                logger.warn("FII ticker {} não encontrado - HTTP {}: {}", ticker, status, response.statusText());
+                                throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, url);
+                            } else if (status >= 400) {
+                                logger.warn("Erro HTTP {} para FII ticker {}: {}", status, ticker, response.statusText());
+                                throw new ScrapingException("Erro HTTP " + status + ": " + response.statusText(), 
+                                                           ticker, url, "HTTP_ERROR") {
+                                    @Override
+                                    public String getErrorCode() {
+                                        return "HTTP_" + status;
+                                    }
+                                };
+                            }
+                        }
                     } catch (TimeoutError e) {
                         throw new ScrapingTimeoutException(ticker, url, Duration.ofSeconds(15), "NAVIGATION");
                     } catch (Exception e) {
@@ -144,6 +168,50 @@ public class FiiPlaywrightDirectScraperAdapter implements FiiDataScrapperPort {
                     // HTML para parsers existentes
                     String html = page.content();
                     Document doc = Jsoup.parse(html);
+                    
+                    // Validação de elementos essenciais com fallbacks
+                    boolean hasEssentialElements = false;
+                    for (String selector : ESSENTIAL_SELECTORS) {
+                        if (!doc.select(selector).isEmpty()) {
+                            hasEssentialElements = true;
+                            break;
+                        }
+                    }
+                    
+                    // Verificar elementos de cards
+                    boolean hasCardsElements = false;
+                    for (String selector : CARDS_SELECTORS) {
+                        if (!doc.select(selector).isEmpty()) {
+                            hasCardsElements = true;
+                            break;
+                        }
+                    }
+                    
+                    // Se nenhum elemento essencial foi encontrado, pode indicar ticker inexistente
+                    if (!hasEssentialElements && !hasCardsElements) {
+                        logger.error("Nenhum elemento essencial encontrado para FII ticker {} - possível ticker inexistente", ticker);
+                        
+                        // Verificar se a página contém indicadores de erro ou ticker não encontrado
+                        String htmlContent = page.content();
+                        if (htmlContent.contains("410 Gone") || htmlContent.contains("Not Found") || 
+                            htmlContent.contains("Página não encontrada") || htmlContent.contains("Ticker não encontrado")) {
+                            throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, url);
+                        }
+                        
+                        // Se não há elementos essenciais mas não é claramente um erro 404/410,
+                        // ainda assim pode ser um ticker inexistente
+                        throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, url);
+                    }
+                    
+                    if (!hasEssentialElements) {
+                        logger.warn("Nenhum elemento essencial encontrado para FII ticker {} com seletores: {}", 
+                                   ticker, java.util.Arrays.toString(ESSENTIAL_SELECTORS));
+                    }
+                    
+                    if (!hasCardsElements) {
+                        logger.warn("Nenhum elemento de cards encontrado para FII ticker {} com seletores: {}", 
+                                   ticker, java.util.Arrays.toString(CARDS_SELECTORS));
+                    }
 
                     // Parsers (compatíveis com Selenium/Playwright)
                     FiiInfoHeaderDTO infoHeader = headerScraper.scrape(doc);

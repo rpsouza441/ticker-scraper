@@ -28,6 +28,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AcaoPlaywrightScraperAdapter implements AcaoDataScrapperPort {
 
     private static final Logger logger = LoggerFactory.getLogger(AcaoPlaywrightScraperAdapter.class);
+    
+    // Constantes para seletores CSS com fallbacks para validação de elementos essenciais
+    private static final String[] ESSENTIAL_SELECTORS = {"div.name-ticker", "div.container-header", "header div.company-info"};
+    private static final String[] CARDS_SELECTORS = {"section#cards-ticker", ".cards-section", ".ticker-cards"};
+    private static final String[] INDICATORS_SELECTORS = {"#table-indicators", ".indicators-table", "table.indicators"};
 
     private final PlaywrightInitializer pwInit;                 // Browser singleton
     private final AcaoSeleniumScraperAdapter seleniumFallback; // fallback
@@ -97,15 +102,64 @@ public class AcaoPlaywrightScraperAdapter implements AcaoDataScrapperPort {
 
                     // Navegar e esperar DOM básico
                     try {
-                        page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+                        com.microsoft.playwright.Response response = page.navigate(url, new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+                        
+                        // Verificar status HTTP para detectar ticker não encontrado
+                        if (response != null) {
+                            int status = response.status();
+                            if (status == 404 || status == 410) {
+                                logger.warn("Ticker {} não encontrado - HTTP {}: {}", ticker, status, response.statusText());
+                                throw new TickerNotFoundException(ticker, url);
+                            } else if (status >= 400) {
+                                logger.warn("Erro HTTP {} para ticker {}: {}", status, ticker, response.statusText());
+                                throw new ScrapingException("Erro HTTP " + status + ": " + response.statusText(), 
+                                                           ticker, url, "HTTP_ERROR") {
+                                    @Override
+                                    public String getErrorCode() {
+                                        return "HTTP_" + status;
+                                    }
+                                };
+                            }
+                        }
                     } catch (TimeoutError e) {
                         throw new ScrapingTimeoutException(ticker, url, Duration.ofSeconds(15), "NAVIGATION");
                     }
 
-                    // Esperar seletores que os scrapers usam (cada um com timeout curto)
-                    waitSelectorWithException(page, "div.name-ticker", 10_000, ticker, url);       // usado no header
-                    waitSelectorWithException(page, "section#cards-ticker", 10_000, ticker, url);  // usado nos cards
-                    waitSelectorWithException(page, "#table-indicators", 10_000, ticker, url);     // usado nos indicadores
+                    // Esperar seletores essenciais com fallbacks
+                    boolean hasEssentialElements = waitForAnySelector(page, ESSENTIAL_SELECTORS, 10_000, ticker, url);
+                    boolean hasCardsElements = waitForAnySelector(page, CARDS_SELECTORS, 10_000, ticker, url);
+                    boolean hasIndicatorsElements = waitForAnySelector(page, INDICATORS_SELECTORS, 10_000, ticker, url);
+                    
+                    // Se nenhum elemento essencial foi encontrado, pode indicar ticker inexistente
+                    if (!hasEssentialElements && !hasCardsElements && !hasIndicatorsElements) {
+                        logger.error("Nenhum elemento essencial encontrado para ticker {} - possível ticker inexistente", ticker);
+                        
+                        // Verificar se a página contém indicadores de erro ou ticker não encontrado
+                        String html = page.content();
+                        if (html.contains("410 Gone") || html.contains("Not Found") || 
+                            html.contains("Página não encontrada") || html.contains("Ticker não encontrado")) {
+                            throw new TickerNotFoundException(ticker, url);
+                        }
+                        
+                        // Se não há elementos essenciais mas não é claramente um erro 404/410,
+                        // ainda assim pode ser um ticker inexistente
+                        throw new TickerNotFoundException(ticker, url);
+                    }
+                    
+                    if (!hasEssentialElements) {
+                        logger.warn("Nenhum elemento essencial encontrado para ticker {} com seletores: {}", 
+                                   ticker, java.util.Arrays.toString(ESSENTIAL_SELECTORS));
+                    }
+                    
+                    if (!hasCardsElements) {
+                        logger.warn("Nenhum elemento de cards encontrado para ticker {} com seletores: {}", 
+                                   ticker, java.util.Arrays.toString(CARDS_SELECTORS));
+                    }
+                    
+                    if (!hasIndicatorsElements) {
+                        logger.warn("Nenhum elemento de indicadores encontrado para ticker {} com seletores: {}", 
+                                   ticker, java.util.Arrays.toString(INDICATORS_SELECTORS));
+                    }
 
                     // HTML final
                     String html = page.content();
@@ -144,6 +198,30 @@ public class AcaoPlaywrightScraperAdapter implements AcaoDataScrapperPort {
                 }
             };
         }
+    }
+    
+    /**
+     * Espera por qualquer um dos seletores fornecidos, retornando true se algum for encontrado.
+     */
+    private static boolean waitForAnySelector(Page page, String[] selectors, int timeoutMs, String ticker, String url) {
+        for (String selector : selectors) {
+            try {
+                page.waitForSelector(selector, new Page.WaitForSelectorOptions().setTimeout(timeoutMs));
+                logger.debug("Elemento encontrado com seletor: {} para ticker: {}", selector, ticker);
+                return true;
+            } catch (TimeoutError e) {
+                // Continua tentando os próximos seletores
+                continue;
+            } catch (Exception e) {
+                // Outros erros podem indicar anti-bot
+                if (e.getMessage().contains("blocked") || e.getMessage().contains("captcha")) {
+                    throw new AntiBotDetectedException(ticker, url, e.getMessage(), "Playwright");
+                }
+                // Para outros erros, continua tentando
+                continue;
+            }
+        }
+        return false; // Nenhum seletor foi encontrado
     }
     
     private static void closeQuietly(Page page, BrowserContext ctx) {
