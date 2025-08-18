@@ -2,6 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.*;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.AbstractScraperAdapter;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.WebDriver;
@@ -14,7 +15,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @Component("acaoSeleniumScraper")
-public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
+public class AcaoSeleniumScraperAdapter extends AbstractScraperAdapter<AcaoDadosFinanceirosDTO> implements AcaoDataScrapperPort {
     private static final Logger logger = LoggerFactory.getLogger(AcaoSeleniumScraperAdapter.class);
     
     // Constantes para seletores CSS com fallbacks para validação de elementos essenciais
@@ -38,21 +39,13 @@ public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
 
     @Override
     public Mono<AcaoDadosFinanceirosDTO> scrape(String ticker) {
-        String urlCompleta = "https://investidor10.com.br/acoes/" + ticker;
+        String urlCompleta = buildUrl(ticker);
         logger.info("Iniciando scraping com Selenium para a url {}", urlCompleta);
 
         // 1. Criamos um Mono que representa a "missão" de ter um WebDriver pronto com tratamento robusto.
         Mono<WebDriver> driverMono = Mono.fromCallable(() -> {
             try {
-                ChromeOptions options = new ChromeOptions();
-                options.addArguments("--headless=new");
-                options.addArguments("--window-size=1920,1080");
-                options.addArguments("--disable-blink-features=AutomationControlled");
-                options.addArguments("--no-sandbox");
-                options.addArguments("--disable-dev-shm-usage");
-                options.addArguments("--disable-gpu");
-                options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
-               
+                ChromeOptions options = createChromeOptions();
                 return new ChromeDriver(options);
             } catch (org.openqa.selenium.WebDriverException e) {
                 logger.error("Falha ao inicializar ChromeDriver para ticker {}: {}", ticker, e.getMessage());
@@ -124,58 +117,11 @@ public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
                                             ticker, urlCompleta, "Estrutura HTML inválida - sem título");
                                     }
                                     
-                                    // Verificar elementos essenciais com fallbacks
-                                    boolean hasEssentialElements = false;
-                                    for (String selector : ESSENTIAL_SELECTORS) {
-                                        if (!doc.select(selector).isEmpty()) {
-                                            hasEssentialElements = true;
-                                            break;
-                                        }
-                                    }
-                                    
-                                    if (!hasEssentialElements) {
-                                        logger.warn("Nenhum elemento essencial encontrado para ticker {} com seletores: {}", 
-                                                   ticker, java.util.Arrays.toString(ESSENTIAL_SELECTORS));
-                                    }
-                                    
-                                    // Verificar elementos de cards
-                                    boolean hasCardsElements = false;
-                                    for (String selector : CARDS_SELECTORS) {
-                                        if (!doc.select(selector).isEmpty()) {
-                                            hasCardsElements = true;
-                                            break;
-                                        }
-                                    }
-                                    
-                                    if (!hasCardsElements) {
-                                        logger.warn("Nenhum elemento de cards encontrado para ticker {} com seletores: {}", 
-                                                   ticker, java.util.Arrays.toString(CARDS_SELECTORS));
-                                    }
+                                    // Validar elementos essenciais usando método da classe base
+                                    validateEssentialElements(doc, ESSENTIAL_SELECTORS, CARDS_SELECTORS, ticker, urlCompleta);
                                     
                                     // Verificar elementos de indicadores
-                                    boolean hasIndicatorsElements = false;
-                                    for (String selector : INDICATORS_SELECTORS) {
-                                        if (!doc.select(selector).isEmpty()) {
-                                            hasIndicatorsElements = true;
-                                            break;
-                                        }
-                                    }
-                                    
-                                    // Se nenhum elemento essencial foi encontrado, pode indicar ticker inexistente
-                                    if (!hasEssentialElements && !hasCardsElements && !hasIndicatorsElements) {
-                                        logger.error("Nenhum elemento essencial encontrado para ticker {} - possível ticker inexistente", ticker);
-                                        
-                                        // Verificar se a página contém indicadores de erro ou ticker não encontrado
-                                        if (html.contains("410 Gone") || html.contains("Not Found") || 
-                                            html.contains("Página não encontrada") || html.contains("Ticker não encontrado")) {
-                                            throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, urlCompleta);
-                                        }
-                                        
-                                        // Se não há elementos essenciais mas não é claramente um erro 404/410,
-                                        // ainda assim pode ser um ticker inexistente
-                                        throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, urlCompleta);
-                                    }
-                                    
+                                    boolean hasIndicatorsElements = validateElementsExist(doc, INDICATORS_SELECTORS);
                                     if (!hasIndicatorsElements) {
                                         logger.warn("Nenhum elemento de indicadores encontrado para ticker {} com seletores: {}", 
                                                    ticker, java.util.Arrays.toString(INDICATORS_SELECTORS));
@@ -187,27 +133,46 @@ public class AcaoSeleniumScraperAdapter implements AcaoDataScrapperPort {
                                         ticker, urlCompleta, "Falha no parsing HTML: " + e.getMessage(), e);
                                 }
 
-                                AcaoInfoHeaderDTO header = acaoHeaderScraper.scrapeInfoHeader(doc);
-                                AcaoInfoCardsDTO cards = cardsScraper.scrapeCardsInfo(doc);
-                                AcaoInfoDetailedDTO detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
-                                AcaoIndicadoresFundamentalistasDTO indicators = indicatorsScraper.scrape(doc, ticker);
-                                AcaoDadosFinanceirosDTO dadosFinanceiros = new AcaoDadosFinanceirosDTO(header, detailed, cards, indicators);
-                                logger.info("Dados financeiros de Acao {}", dadosFinanceiros.toString());
-                                return dadosFinanceiros;
+                                return executeSpecificScraping(doc, ticker);
 
                             })// 3. doFinally: Garante que, aconteça o que acontecer (sucesso ou erro),
                             // a limpeza será executada. É o equivalente reativo do `finally`.
                             .doFinally(signalType -> {
                                 logger.info("Finalizando a sessão do Selenium para {}. Sinal: {}", ticker, signalType);
-                                driver.quit();
+                                closeSeleniumResources(driver, null);
                             });
-                })
-                // 4. doOnError: Adiciona um "espião" para logar qualquer erro que ocorra no fluxo.
+                })// 4. doOnError: Adiciona um "espião" para logar qualquer erro que ocorra no fluxo.
                 .doOnError(error -> logger.error("O Mono do AcaoSeleniumScraperAdapter falhou para o ticker {}", ticker, error))
                 // 5. subscribeOn: Garante que TODA a operação (desde criar o driver até o final)
                 // rode em uma thread segura.
                 .subscribeOn(Schedulers.boundedElastic());
-
-
+    }
+    
+    // Template methods implementation
+    
+    @Override
+    protected String[] getEssentialSelectors() {
+        return ESSENTIAL_SELECTORS;
+    }
+    
+    @Override
+    protected String[] getCardsSelectors() {
+        return CARDS_SELECTORS;
+    }
+    
+    @Override
+    protected String buildUrl(String ticker) {
+        return "https://investidor10.com.br/acoes/" + ticker;
+    }
+    
+    @Override
+    protected AcaoDadosFinanceirosDTO executeSpecificScraping(Document doc, String ticker) {
+        AcaoInfoHeaderDTO header = acaoHeaderScraper.scrapeInfoHeader(doc);
+        AcaoInfoCardsDTO cards = cardsScraper.scrapeCardsInfo(doc);
+        AcaoInfoDetailedDTO detailed = detailedInfoScraper.scrapeAndParseDetailedInfo(doc);
+        AcaoIndicadoresFundamentalistasDTO indicators = indicatorsScraper.scrape(doc, ticker);
+        AcaoDadosFinanceirosDTO dadosFinanceiros = new AcaoDadosFinanceirosDTO(header, detailed, cards, indicators);
+        logger.info("Dados financeiros de Acao {}", dadosFinanceiros.toString());
+        return dadosFinanceiros;
     }
 }

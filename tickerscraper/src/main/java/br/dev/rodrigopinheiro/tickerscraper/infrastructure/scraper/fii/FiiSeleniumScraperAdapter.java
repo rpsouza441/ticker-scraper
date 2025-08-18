@@ -2,6 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiDataScrapperPort;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.*;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.AbstractScraperAdapter;
 
 import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.*;
 
@@ -27,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 @Component("fiiSeleniumScraper")
-public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
+public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFinanceirosDTO> implements FiiDataScrapperPort {
 
     private static final Logger logger = LoggerFactory.getLogger(FiiSeleniumScraperAdapter.class);
     
@@ -53,22 +54,14 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
 
     @Override
     public Mono<FiiDadosFinanceirosDTO> scrape(String ticker) {
-        String urlCompleta = "https://investidor10.com.br/fiis/" + ticker;
+        String urlCompleta = buildUrl(ticker);
         logger.info("Iniciando scraping com Selenium para a url {}", urlCompleta);
 
         // 1. Criação robusta do WebDriver com tratamento de erros abrangente
         Mono<ChromeDriver> driverMono = Mono.fromCallable(() -> {
             try {
                 WebDriverManager.chromedriver().setup();
-                ChromeOptions options = new ChromeOptions();
-                options.addArguments("--headless=new");
-                options.addArguments("--window-size=1920,1080");
-                options.addArguments("--disable-blink-features=AutomationControlled");
-                options.addArguments("--no-sandbox");
-                options.addArguments("--disable-dev-shm-usage");
-                options.addArguments("--disable-gpu");
-                options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
-                
+                ChromeOptions options = createChromeOptions();
                 return new ChromeDriver(options);
             } catch (org.openqa.selenium.WebDriverException e) {
                 logger.error("Falha ao inicializar ChromeDriver para FII ticker {}: {}", ticker, e.getMessage());
@@ -198,48 +191,8 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                                              ticker, urlCompleta, "Estrutura HTML inválida para FII - sem título");
                                      }
                                      
-                                     // Verificar elementos essenciais para FII com fallbacks
-                                 boolean hasEssentialElements = false;
-                                 for (String selector : ESSENTIAL_SELECTORS) {
-                                     if (!tempDoc.select(selector).isEmpty()) {
-                                         hasEssentialElements = true;
-                                         break;
-                                     }
-                                 }
-                                 
-                                 if (!hasEssentialElements) {
-                                     logger.warn("Nenhum elemento essencial encontrado para FII ticker {} com seletores: {}", 
-                                                ticker, java.util.Arrays.toString(ESSENTIAL_SELECTORS));
-                                 }
-                                 
-                                 // Verificar elementos de cards
-                                 boolean hasCardsElements = false;
-                                 for (String selector : CARDS_SELECTORS) {
-                                     if (!tempDoc.select(selector).isEmpty()) {
-                                         hasCardsElements = true;
-                                         break;
-                                     }
-                                 }
-                                 
-                                 // Se nenhum elemento essencial foi encontrado, pode indicar ticker inexistente
-                                  if (!hasEssentialElements && !hasCardsElements) {
-                                      logger.error("Nenhum elemento essencial encontrado para FII ticker {} - possível ticker inexistente", ticker);
-                                      
-                                      // Verificar se a página contém indicadores de erro ou ticker não encontrado
-                                      if (html.contains("410 Gone") || html.contains("Not Found") || 
-                                          html.contains("Página não encontrada") || html.contains("Ticker não encontrado")) {
-                                          throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, urlCompleta);
-                                      }
-                                      
-                                      // Se não há elementos essenciais mas não é claramente um erro 404/410,
-                                      // ainda assim pode ser um ticker inexistente
-                                      throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, urlCompleta);
-                                  }
-                                  
-                                  if (!hasCardsElements) {
-                                      logger.warn("Nenhum elemento de cards encontrado para FII ticker {} com seletores: {}", 
-                                                 ticker, java.util.Arrays.toString(CARDS_SELECTORS));
-                                  }
+                                     // Validar elementos essenciais usando método da classe base
+                                 validateEssentialElements(tempDoc, ESSENTIAL_SELECTORS, CARDS_SELECTORS, ticker, urlCompleta);
                                      
                                  } catch (Exception e) {
                                      logger.error("Falha na validação HTML para FII ticker {}: {}", ticker, e.getMessage());
@@ -261,23 +214,8 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                              .doFinally(signalType -> {
                                  logger.info("Finalizando a sessão do Selenium para FII ticker {}. Sinal: {}", ticker, signalType);
                                  
-                                 // Fechar DevTools com segurança
-                                 if (finalDevTools != null) {
-                                     try {
-                                         finalDevTools.close();
-                                         logger.debug("DevTools fechado com sucesso para ticker {}", ticker);
-                                     } catch (Exception e) {
-                                         logger.warn("Erro ao fechar DevTools para ticker {}: {}", ticker, e.getMessage());
-                                     }
-                                 }
-                                 
-                                 // Fechar WebDriver com segurança
-                                 try {
-                                     driver.quit();
-                                     logger.debug("WebDriver fechado com sucesso para ticker {}", ticker);
-                                 } catch (Exception e) {
-                                     logger.warn("Erro ao fechar WebDriver para ticker {}: {}", ticker, e.getMessage());
-                                 }
+                                 // Fechar recursos usando método da classe base
+                                 closeSeleniumResources(driver, finalDevTools);
                              });
                 })
                 // 4. Este flatMap é a segunda etapa reativa do nosso pipeline
@@ -323,8 +261,7 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                                         cotacao
                                 );
                             });
-                })
-                // Esses operadores se aplicam a toda a cadeia reativa
+                })// Esses operadores se aplicam a toda a cadeia reativa
                 .doOnError(error -> {
                     if (error instanceof br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException) {
                         logger.error("Falha específica no scraping FII para ticker {}: {} [{}]", 
@@ -335,5 +272,29 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                     }
                 })
                 .subscribeOn(Schedulers.boundedElastic()); // Ensures the entire operation runs on a dedicated thread
+    }
+    
+    // Template methods implementation
+    
+    @Override
+    protected String[] getEssentialSelectors() {
+        return ESSENTIAL_SELECTORS;
+    }
+    
+    @Override
+    protected String[] getCardsSelectors() {
+        return CARDS_SELECTORS;
+    }
+    
+    @Override
+    protected String buildUrl(String ticker) {
+        return "https://investidor10.com.br/fiis/" + ticker;
+    }
+    
+    @Override
+    protected FiiDadosFinanceirosDTO executeSpecificScraping(Document doc, String ticker) {
+        // Este método não é usado diretamente no FII pois há lógica específica de APIs
+        // Mantido para compatibilidade com a classe abstrata
+        throw new UnsupportedOperationException("FII scraping usa lógica específica com APIs");
     }
 }
