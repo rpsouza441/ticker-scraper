@@ -1,4 +1,4 @@
-package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.exception;
+package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.exception.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

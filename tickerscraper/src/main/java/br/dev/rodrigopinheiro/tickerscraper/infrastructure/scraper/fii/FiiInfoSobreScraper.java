@@ -17,7 +17,6 @@ import static java.util.stream.Collectors.toMap;
 @Component
 public class FiiInfoSobreScraper {
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private IndicadorParser indicadorParser;
 
 
 

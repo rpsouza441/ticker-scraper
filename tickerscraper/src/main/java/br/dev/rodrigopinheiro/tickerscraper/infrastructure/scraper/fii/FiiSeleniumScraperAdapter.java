@@ -51,52 +51,191 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
         String urlCompleta = "https://investidor10.com.br/fiis/" + ticker;
         logger.info("Iniciando scraping com Selenium para a url {}", urlCompleta);
 
-        // 1. Isole a criação do recurso bloqueante (o WebDriver) em seu próprio Mono
+        // 1. Criação robusta do WebDriver com tratamento de erros abrangente
         Mono<ChromeDriver> driverMono = Mono.fromCallable(() -> {
-            WebDriverManager.chromedriver().setup();
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless=new");
-            options.addArguments("--window-size=1920,1080");
-            options.addArguments("--disable-blink-features=AutomationControlled");
-            options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
-            return new ChromeDriver(options);
+            try {
+                WebDriverManager.chromedriver().setup();
+                ChromeOptions options = new ChromeOptions();
+                options.addArguments("--headless=new");
+                options.addArguments("--window-size=1920,1080");
+                options.addArguments("--disable-blink-features=AutomationControlled");
+                options.addArguments("--no-sandbox");
+                options.addArguments("--disable-dev-shm-usage");
+                options.addArguments("--disable-gpu");
+                options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
+                
+                return new ChromeDriver(options);
+            } catch (org.openqa.selenium.WebDriverException e) {
+                logger.error("Falha ao inicializar ChromeDriver para FII ticker {}: {}", ticker, e.getMessage());
+                throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.WebDriverInitializationException(
+                    "Falha ao inicializar ChromeDriver para FII scraping", e);
+            } catch (Exception e) {
+                logger.error("Erro inesperado na criação do WebDriver para FII ticker {}: {}", ticker, e.getMessage());
+                throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException(
+                    "Erro inesperado na criação do WebDriver", ticker, urlCompleta, "DRIVER_INIT", e) {
+                    @Override
+                    public String getErrorCode() {
+                        return "FII_WEBDRIVER_UNEXPECTED_ERROR";
+                    }
+                };
+            }
         });
 
-        // 2. Use flatMap para encadear o restante das operações, garantindo que elas só sejam executadas se o driver for criado
+        // 2. Configuração robusta do DevTools com degradação graceful
         return driverMono.flatMap(driver -> {
-                    DevTools devTools = driver.getDevTools();
-                    devTools.createSession();
+                    DevTools devTools = null;
+                    final Map<String, String> urlsMapeadas = new ConcurrentHashMap<>();
+                    
+                    try {
+                        devTools = driver.getDevTools();
+                        devTools.createSession();
+                        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
+                        
+                        // Configurar listener de rede com tratamento de erros
+                        devTools.addListener(Network.requestWillBeSent(), requestSent -> {
+                            try {
+                                String url = requestSent.getRequest().getUrl();
+                                for (String chave : FiiApiConstants.TODAS_AS_CHAVES) {
+                                    if (url.contains(chave)) {
+                                        urlsMapeadas.putIfAbsent(chave, url);
+                                        logger.info(">> URL de API do tipo '{}' CAPTURADA: {}", chave, url);
+                                        break;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                logger.warn("Erro ao processar requisição de rede para ticker {}: {}", ticker, e.getMessage());
+                            }
+                        });
+                        
+                        logger.info("DevTools configurado com sucesso para ticker {}", ticker);
+                    } catch (Exception e) {
+                        logger.warn("Falha ao configurar DevTools para ticker {}, continuando sem captura de rede: {}", 
+                                   ticker, e.getMessage());
+                        // Continua sem DevTools - degradação graceful
+                    }
+                    
+                    final DevTools finalDevTools = devTools;
 
                     // A lógica principal de scraping está encapsulada em um novo Mono.fromCallable
-                    return Mono.fromCallable(() -> {
-                                // Configurar o listener de rede
-                                devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
-                                final Map<String, String> urlsMapeadas = new ConcurrentHashMap<>();
-                                devTools.addListener(Network.requestWillBeSent(), requestSent -> {
-                                    String url = requestSent.getRequest().getUrl();
-                                    for (String chave : FiiApiConstants.TODAS_AS_CHAVES) {
-                                        if (url.contains(chave)) {
-                                            urlsMapeadas.putIfAbsent(chave, url);
-                                            logger.info(">> URL de API do tipo '{}' CAPTURADA: {}", chave, url);
-                                            break;
-                                        }
-                                    }
-                                });
+                     return Mono.fromCallable(() -> {
+                                 // Navegação robusta com tratamento de timeout
+                                 try {
+                                     driver.manage().timeouts().pageLoadTimeout(java.time.Duration.ofSeconds(45));
+                                     driver.get(urlCompleta);
+                                     
+                                     // Aguardar carregamento completo
+                                     org.openqa.selenium.support.ui.WebDriverWait wait = 
+                                         new org.openqa.selenium.support.ui.WebDriverWait(driver, java.time.Duration.ofSeconds(15));
+                                     wait.until(webDriver -> ((org.openqa.selenium.JavascriptExecutor) webDriver)
+                                         .executeScript("return document.readyState").equals("complete"));
+                                         
+                                 } catch (org.openqa.selenium.TimeoutException e) {
+                                     logger.warn("Timeout no carregamento da página {} para FII ticker {}", urlCompleta, ticker);
+                                     throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingTimeoutException(
+                                         ticker, urlCompleta, java.time.Duration.ofSeconds(45), "FII_PAGE_LOAD");
+                                 } catch (org.openqa.selenium.WebDriverException e) {
+                                     logger.error("Falha na navegação para {} (FII ticker {}): {}", urlCompleta, ticker, e.getMessage());
+                                     throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException(
+                                         "Falha na navegação FII", ticker, urlCompleta, "FII_NAVIGATION", e) {
+                                         @Override
+                                         public String getErrorCode() {
+                                             return "FII_NAVIGATION_FAILED";
+                                         }
+                                     };
+                                 }
+                                 
+                                 // Aguardar captura de APIs com timeout inteligente
+                                 try {
+                                     int maxWaitTime = 8000; // 8 segundos máximo
+                                     int checkInterval = 1000; // Verificar a cada 1 segundo
+                                     int waited = 0;
+                                     
+                                     while (waited < maxWaitTime && urlsMapeadas.size() < FiiApiConstants.TODAS_AS_CHAVES.size()) {
+                                         Thread.sleep(checkInterval);
+                                         waited += checkInterval;
+                                         
+                                         // Log progresso da captura
+                                         if (waited % 2000 == 0) {
+                                             logger.debug("Captura de APIs para ticker {}: {}/{} URLs após {}ms", 
+                                                         ticker, urlsMapeadas.size(), FiiApiConstants.TODAS_AS_CHAVES.size(), waited);
+                                         }
+                                     }
+                                     
+                                     logger.info("Captura finalizada para ticker {}: {}/{} URLs em {}ms", 
+                                                ticker, urlsMapeadas.size(), FiiApiConstants.TODAS_AS_CHAVES.size(), waited);
+                                                
+                                 } catch (InterruptedException e) {
+                                     Thread.currentThread().interrupt();
+                                     logger.warn("Captura de APIs interrompida para ticker {}", ticker);
+                                 }
+                                 
+                                 // Validação e parsing do HTML
+                                 String html;
+                                 try {
+                                     html = driver.getPageSource();
+                                     if (html == null || html.trim().isEmpty()) {
+                                         throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.HtmlStructureException(
+                                             ticker, urlCompleta, "HTML vazio retornado pelo WebDriver para FII");
+                                     }
+                                     logger.info("HTML obtido com sucesso para FII ticker {}: {} caracteres", ticker, html.length());
+                                 } catch (org.openqa.selenium.WebDriverException e) {
+                                     logger.error("Falha ao obter HTML da página {} (FII ticker {}): {}", urlCompleta, ticker, e.getMessage());
+                                     throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.HtmlStructureException(
+                                         ticker, urlCompleta, "Falha ao obter HTML FII: " + e.getMessage(), e);
+                                 }
+                                 
+                                 // Validação básica de estrutura HTML
+                                 try {
+                                     org.jsoup.nodes.Document tempDoc = Jsoup.parse(html);
+                                     
+                                     if (tempDoc.select("title").isEmpty()) {
+                                         throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.HtmlStructureException(
+                                             ticker, urlCompleta, "Estrutura HTML inválida para FII - sem título");
+                                     }
+                                     
+                                     // Verificar elementos essenciais para FII
+                                     if (tempDoc.select("div.name-ticker").isEmpty()) {
+                                         logger.warn("Elemento 'div.name-ticker' não encontrado para FII ticker {}", ticker);
+                                     }
+                                     
+                                 } catch (Exception e) {
+                                     logger.error("Falha na validação HTML para FII ticker {}: {}", ticker, e.getMessage());
+                                     throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.HtmlStructureException(
+                                         ticker, urlCompleta, "Falha na validação HTML FII: " + e.getMessage(), e);
+                                 }
+                                 
+                                 // Verificar se capturou pelo menos algumas URLs importantes
+                                 if (urlsMapeadas.isEmpty()) {
+                                     logger.warn("Nenhuma URL de API capturada para FII ticker {}", ticker);
+                                     throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.NetworkCaptureException(
+                                         ticker, "Falha na captura de APIs - nenhuma URL encontrada", 0, FiiApiConstants.TODAS_AS_CHAVES.size(), null);
+                                 }
 
-                                // Executar a interação com a página
-                                driver.get(urlCompleta);
-                                Thread.sleep(6000); // Aguardar a captura das chamadas iniciais da API
-                                String html = driver.getPageSource();
-
-                                // Empacotar os resultados para a próxima etapa
-                                return new ScrapeResult(html, urlsMapeadas);
+                                 // Empacotar os resultados para a próxima etapa
+                                 return new ScrapeResult(html, urlsMapeadas);
                             })
                             // 3. doFinally garante que o driver será fechado, independentemente do que acontecer
-                            .doFinally(signalType -> {
-                                logger.info("Finalizando a sessão do Selenium para {}. Sinal: {}", ticker, signalType);
-                                devTools.close();
-                                driver.quit();
-                            });
+                             .doFinally(signalType -> {
+                                 logger.info("Finalizando a sessão do Selenium para FII ticker {}. Sinal: {}", ticker, signalType);
+                                 
+                                 // Fechar DevTools com segurança
+                                 if (finalDevTools != null) {
+                                     try {
+                                         finalDevTools.close();
+                                         logger.debug("DevTools fechado com sucesso para ticker {}", ticker);
+                                     } catch (Exception e) {
+                                         logger.warn("Erro ao fechar DevTools para ticker {}: {}", ticker, e.getMessage());
+                                     }
+                                 }
+                                 
+                                 // Fechar WebDriver com segurança
+                                 try {
+                                     driver.quit();
+                                     logger.debug("WebDriver fechado com sucesso para ticker {}", ticker);
+                                 } catch (Exception e) {
+                                     logger.warn("Erro ao fechar WebDriver para ticker {}: {}", ticker, e.getMessage());
+                                 }
+                             });
                 })
                 // 4. Este flatMap é a segunda etapa reativa do nosso pipeline
 
@@ -143,7 +282,15 @@ public class FiiSeleniumScraperAdapter implements FiiDataScrapperPort {
                             });
                 })
                 // Esses operadores se aplicam a toda a cadeia reativa
-                .doOnError(error -> logger.error("O Mono do FiiSeleniumScraperAdapter falhou para o ticker {}", ticker, error))
+                .doOnError(error -> {
+                    if (error instanceof br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException) {
+                        logger.error("Falha específica no scraping FII para ticker {}: {} [{}]", 
+                                   ticker, error.getMessage(), error.getClass().getSimpleName());
+                    } else {
+                        logger.error("Falha inesperada no FiiSeleniumScraperAdapter para ticker {}: {}", 
+                                   ticker, error.getMessage(), error);
+                    }
+                })
                 .subscribeOn(Schedulers.boundedElastic()); // Ensures the entire operation runs on a dedicated thread
     }
 }
