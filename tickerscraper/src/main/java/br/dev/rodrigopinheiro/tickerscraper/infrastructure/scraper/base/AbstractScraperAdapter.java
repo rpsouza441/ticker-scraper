@@ -44,7 +44,7 @@ public abstract class AbstractScraperAdapter<T> {
     protected static final String DEFAULT_TIMEZONE = "America/Sao_Paulo";
     
     // Configurações padronizadas de timeout para operações assíncronas
-    protected static final int ASYNC_OPERATION_TIMEOUT_MS = 45_000;  // Timeout geral para operações assíncronas
+    protected static final int ASYNC_OPERATION_TIMEOUT_MS = 55_000;  // Timeout geral para operações assíncronas
     protected static final int API_CALL_TIMEOUT_MS = 15_000;         // Timeout para chamadas de API individuais
     protected static final int NETWORK_CAPTURE_TIMEOUT_MS = 10_000;  // Timeout para captura de requisições de rede
     protected static final int ELEMENT_WAIT_TIMEOUT_MS = 10_000;     // Timeout para espera de elementos DOM

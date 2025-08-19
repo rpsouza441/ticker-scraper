@@ -198,6 +198,52 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
     
+    @ExceptionHandler(br.dev.rodrigopinheiro.tickerscraper.domain.exception.AsyncRequestTimeoutException.class)
+    public ResponseEntity<ErrorResponse> handleAsyncRequestTimeout(br.dev.rodrigopinheiro.tickerscraper.domain.exception.AsyncRequestTimeoutException ex, WebRequest request) {
+        logger.warn("[{}] Timeout em operação assíncrona: ticker={}, operation={}, timeout={}s, requestId={}", 
+                   getCorrelationId(), ex.getTicker(), ex.getOperation(), ex.getTimeout().getSeconds(), ex.getRequestId());
+        
+        ErrorResponse error = ErrorResponse.builder()
+                .code(ex.getErrorCode())
+                .message("Operação assíncrona excedeu o tempo limite. Tente novamente em alguns minutos.")
+                .ticker(ex.getTicker())
+                .correlationId(getCorrelationId())
+                .timestamp(LocalDateTime.now())
+                .retryable(ex.isRetryable())
+                .details(Map.of(
+                    "operation", ex.getOperation(),
+                    "timeout_seconds", ex.getTimeout().getSeconds(),
+                    "request_id", ex.getRequestId() != null ? ex.getRequestId() : "unknown",
+                    "recommended_retry_delay_seconds", ex.getRecommendedRetryDelay().getSeconds()
+                ))
+                .build();
+        
+        return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
+                .header("Retry-After", String.valueOf(ex.getRecommendedRetryDelay().getSeconds()))
+                .body(error);
+    }
+    
+    @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestTimeoutException.class)
+    public ResponseEntity<ErrorResponse> handleSpringAsyncTimeout(org.springframework.web.context.request.async.AsyncRequestTimeoutException ex, WebRequest request) {
+        logger.warn("[{}] Timeout de requisição assíncrona do Spring: {}", getCorrelationId(), ex.getMessage());
+        
+        ErrorResponse error = ErrorResponse.builder()
+                .code("SPRING_ASYNC_TIMEOUT")
+                .message("Requisição assíncrona excedeu o tempo limite. Tente novamente.")
+                .correlationId(getCorrelationId())
+                .timestamp(LocalDateTime.now())
+                .retryable(true)
+                .details(Map.of(
+                    "timeout_type", "SPRING_ASYNC",
+                    "recommended_action", "Retry with shorter timeout or check server load"
+                ))
+                .build();
+        
+        return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
+                .header("Retry-After", "30")
+                .body(error);
+    }
+    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         logger.error("[{}] Erro não tratado: {}", getCorrelationId(), ex.getMessage(), ex);
