@@ -14,7 +14,7 @@ public interface FiiJpaRepository extends JpaRepository<FundoImobiliarioEntity, 
     Optional<FundoImobiliarioEntity> findByTicker(String ticker);
 
     @Query("""
-       select f
+       select distinct f
        from FundoImobiliarioEntity f
        left join fetch f.fiiDividendos d
        where f.ticker = :ticker
