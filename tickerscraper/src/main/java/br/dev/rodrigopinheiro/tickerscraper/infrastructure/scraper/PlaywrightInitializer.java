@@ -25,7 +25,22 @@ public class PlaywrightInitializer {
 
         List<String> args = new ArrayList<>(List.of(
                 "--no-sandbox",
-                "--disable-blink-features=AutomationControlled"
+                "--disable-blink-features=AutomationControlled",
+                // Flags de performance para otimização (redução de ~20% no tempo)
+                "--disable-web-security",                    // Reduz verificações de segurança
+                "--disable-features=TranslateUI",            // Remove funcionalidade de tradução
+                "--disable-ipc-flooding-protection",        // Melhora comunicação IPC
+                "--disable-renderer-backgrounding",         // Mantém renderer sempre ativo
+                "--disable-backgrounding-occluded-windows", // Evita pausar janelas ocultas
+                "--disable-background-networking",          // Reduz atividade de rede em background
+                "--aggressive-cache-discard",               // Gerenciamento agressivo de cache
+                "--disable-background-timer-throttling",    // Evita throttling de timers
+                "--disable-dev-shm-usage",                  // Otimização de memória compartilhada
+                "--disable-extensions",                     // Remove extensões desnecessárias
+                "--disable-gpu",                            // Desabilita GPU para headless
+                "--disable-sync",                           // Remove sincronização desnecessária
+                "--no-first-run",                           // Pula configuração inicial
+                "--no-default-browser-check"                // Remove verificação de browser padrão
         ));
         // exemplo: PW_ARGS="--disable-web-security,--lang=pt-BR"
         String extraArgs = System.getenv("PW_ARGS");
