@@ -109,7 +109,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
     }
     
     /**
-     * Método de fallback quando o Circuit Breaker está aberto ou há falhas.
+     * Métod de fallback quando o Circuit Breaker está aberto ou há falhas.
      * Utiliza Selenium como alternativa ao Playwright para FIIs.
      */
     public Mono<FiiDadosFinanceirosDTO> fallbackToSelenium(String ticker, Exception ex) {
@@ -120,7 +120,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
     
     /**
      * Scraping completo com APIs assíncronas.
-     * Separação de responsabilidades (SRP) - método específico para operações assíncronas.
+     * Separação de responsabilidades (SRP) - métod específico para operações assíncronas.
      */
     private Mono<FiiDadosFinanceirosDTO> scrapeWithAsyncApis(String ticker) {
         final String url = buildUrl(ticker);
@@ -141,7 +141,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
         final String correlationId = correlationIdProvider.getCurrentCorrelationIdOrDefault("unknown");
 
         return createReactiveStructureForMono(() -> {
-            logger.info("Iniciando scraping Playwright: {} [correlationId={}]", url, correlationId);
+            logger.info("Iniciando scraping Playwright: {} ", url);
 
             try {
                 Browser browser = pwInit.getBrowser(); // singleton já inicializado
@@ -161,7 +161,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                     for (String chave : TODAS_AS_CHAVES) {
                         if (!requestsMapeadas.containsKey(chave) && u.contains(chave)) {
                             requestsMapeadas.put(chave, new CapturedRequest(u, headers));
-                            logger.info("API capturada ({}): {} [correlationId={}]", chave, u, correlationId);
+                            logger.info("API capturada ({}): {} ", chave, u);
                         }
                     }
                 });
@@ -170,7 +170,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 navigateAndValidate(page, url, ticker);
 
                 // Captura paralela de APIs para reduzir tempo de 30s para ~10s (60% de redução)
-                logger.info("Iniciando captura paralela de APIs para {} [correlationId={}]", ticker, correlationId);
+                logger.info("Iniciando captura paralela de APIs para {} ", ticker);
                 
                     CompletableFuture<Void> historicoFuture = CompletableFuture.runAsync(() ->
                     waitForKeyWithTimeout(requestsMapeadas, HISTORICO_INDICADORES, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
@@ -186,13 +186,13 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                     CompletableFuture.allOf(historicoFuture, dividendosFuture, cotacaoFuture)
                         .get(NETWORK_CAPTURE_TIMEOUT_MS + 2000, java.util.concurrent.TimeUnit.MILLISECONDS);
                     
-                    logger.info("Captura paralela concluída para {} [correlationId={}]", ticker, correlationId);
+                    logger.info("Captura paralela concluída para {} ", ticker);
                 } catch (java.util.concurrent.TimeoutException e) {
-                    logger.warn("Timeout na captura paralela para {} após {}ms [correlationId={}]", 
-                               ticker, NETWORK_CAPTURE_TIMEOUT_MS + 2000, correlationId);
+                    logger.warn("Timeout na captura paralela para {} após {}ms ", 
+                               ticker, NETWORK_CAPTURE_TIMEOUT_MS + 2000);
                 } catch (Exception e) {
-                    logger.warn("Erro na captura paralela para {}: {} [correlationId={}]", 
-                               ticker, e.getMessage(), correlationId);
+                    logger.warn("Erro na captura paralela para {}: {} ", 
+                               ticker, e.getMessage());
                 }
 
                 // HTML para parsers existentes
@@ -246,14 +246,14 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                                 t.getT1()  // cotacao
                         ))
                         .doOnError(java.util.concurrent.TimeoutException.class, 
-                                ex -> logger.error("Timeout geral no scraping Playwright para {}: {}s [correlationId={}]", 
-                                          ticker, asyncTimeout.getSeconds(), correlationId))
+                                ex -> logger.error("Timeout geral no scraping Playwright para {}: {}s ", 
+                                          ticker, asyncTimeout.getSeconds()))
                         .onErrorMap(java.util.concurrent.TimeoutException.class, 
                                 ex -> AsyncRequestTimeoutException.forPlaywrightScraping(ticker, asyncTimeout, correlationId));
                         
             } catch (Exception ex) {
-                logger.error("Erro durante inicialização do Playwright para {}: {} [correlationId={}]", 
-                           ticker, ex.getMessage(), correlationId);
+                logger.error("Erro durante inicialização do Playwright para {}: {} ", 
+                           ticker, ex.getMessage());
                 throw ex;
             }
         }, ticker, () -> closePlaywrightResources(pageRef.get(), ctxRef.get()));
@@ -277,33 +277,33 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
         int waited = 0;
         final int checkInterval = 200;
         
-        logger.debug("Aguardando captura da API '{}' para ticker {} (timeout: {}ms) [correlationId={}]", 
-                    key, ticker, timeoutMs, correlationId);
+        logger.debug("Aguardando captura da API '{}' para ticker {} (timeout: {}ms) ", 
+                    key, ticker, timeoutMs);
         
         while (!map.containsKey(key) && waited < timeoutMs) {
             try { 
                 Thread.sleep(checkInterval); 
             } catch (InterruptedException e) { 
                 Thread.currentThread().interrupt(); 
-                logger.warn("Interrompido durante espera da API '{}' para ticker {} [correlationId={}]", 
-                           key, ticker, correlationId);
+                logger.warn("Interrompido durante espera da API '{}' para ticker {} ", 
+                           key, ticker);
                 break; 
             }
             waited += checkInterval;
             
             // Log de progresso a cada 2 segundos
             if (waited % 2000 == 0) {
-                logger.debug("Ainda aguardando API '{}' para ticker {}: {}ms/{}ms [correlationId={}]", 
-                           key, ticker, waited, timeoutMs, correlationId);
+                logger.debug("Ainda aguardando API '{}' para ticker {}: {}ms/{}ms ", 
+                           key, ticker, waited, timeoutMs);
             }
         }
         
         if (map.containsKey(key)) {
-            logger.debug("API '{}' capturada para ticker {} em {}ms [correlationId={}]", 
-                        key, ticker, waited, correlationId);
+            logger.debug("API '{}' capturada para ticker {} em {}ms ", 
+                        key, ticker, waited);
         } else {
-            logger.warn("Timeout na captura da API '{}' para ticker {} após {}ms [correlationId={}]", 
-                       key, ticker, waited, correlationId);
+            logger.warn("Timeout na captura da API '{}' para ticker {} após {}ms ", 
+                       key, ticker, waited);
         }
     }
 
