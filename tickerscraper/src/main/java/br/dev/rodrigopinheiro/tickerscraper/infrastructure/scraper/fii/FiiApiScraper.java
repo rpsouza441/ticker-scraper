@@ -12,9 +12,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Componente especialista em interagir com as APIs externas de FIIs do Investidor10.
@@ -96,7 +96,7 @@ public class FiiApiScraper {
             return request;
         }
 
-        Map<String, String> headerCopy = new HashMap<>();
+        Map<String, String> headerCopy = new ConcurrentHashMap<>();
         String cookieHeader = null;
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             if ("cookie".equalsIgnoreCase(entry.getKey())) {
