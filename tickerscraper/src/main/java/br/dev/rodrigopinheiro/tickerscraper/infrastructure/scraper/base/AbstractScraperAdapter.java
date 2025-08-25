@@ -46,7 +46,7 @@ public abstract class AbstractScraperAdapter<T> {
     // Configurações padronizadas de timeout para operações assíncronas (OTIMIZADAS)
     protected static final int ASYNC_OPERATION_TIMEOUT_MS = 20_000;  // Reduzido de 45s para 20s (56% redução)
     protected static final int API_CALL_TIMEOUT_MS = 8_000;          // Reduzido de 15s para 8s (47% redução)
-    protected static final int NETWORK_CAPTURE_TIMEOUT_MS = 5_000;   // Reduzido de 10s para 5s (50% redução)
+    protected static int NETWORK_CAPTURE_TIMEOUT_MS = 10_000;        // Aumentado para 10s (configurável)
     protected static final int ELEMENT_WAIT_TIMEOUT_MS = 8_000;      // Reduzido de 10s para 8s (20% redução)
     
     /**
