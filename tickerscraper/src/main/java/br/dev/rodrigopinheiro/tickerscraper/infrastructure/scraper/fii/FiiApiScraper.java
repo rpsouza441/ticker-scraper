@@ -42,7 +42,7 @@ public class FiiApiScraper {
      * retorna um Mono com um DTO contendo um mapa vazio, garantindo que o fluxo reativo não seja quebrado.
      */
     public Mono<FiiIndicadorHistoricoDTO> fetchHistorico(String url, Map<String, String> headers) {
-        return fetch(url, new ParameterizedTypeReference<FiiIndicadorHistoricoDTO>() {}, headers);
+          return fetch(url, new ParameterizedTypeReference<FiiIndicadorHistoricoDTO>() {}, headers);
     }
 
     /**
@@ -54,7 +54,7 @@ public class FiiApiScraper {
      * DTO contendo valores nulos para não interromper o fluxo de dados.
      */
     public Mono<FiiCotacaoDTO> fetchCotacao(String url, Map<String, String> headers) {
-        return fetch(url, new ParameterizedTypeReference<FiiCotacaoDTO>() {}, headers);
+return fetch(url, new ParameterizedTypeReference<FiiIndicadorHistoricoDTO>() {}, headers);
     }
 
     /**
@@ -67,7 +67,7 @@ public class FiiApiScraper {
      * retorna um Mono com uma lista vazia, mantendo a integridade do fluxo reativo.
      */
     public Mono<List<FiiDividendoDTO>> fetchDividendos(String url, Map<String, String> headers) {
-        return fetch(url, new ParameterizedTypeReference<List<FiiDividendoDTO>>() {}, headers)
+ return fetch(url, new ParameterizedTypeReference<List<FiiDividendoDTO>>() {}, headers)
                 .doOnNext(dividendos -> {
                     if (!dividendos.isEmpty()) {
                         logger.debug("Processados {} dividendos da API", dividendos.size());
