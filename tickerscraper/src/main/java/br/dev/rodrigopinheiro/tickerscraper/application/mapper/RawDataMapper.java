@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,7 +72,7 @@ public interface RawDataMapper {
      */
     @Named("buildAcaoRawDataMap")
     default Map<String, Object> buildAcaoRawDataMap(AcaoDadosFinanceirosDTO infraDto) {
-        Map<String, Object> rawData = new HashMap<>();
+        Map<String, Object> rawData = Collections.synchronizedMap(new HashMap<>());
         
         if (infraDto == null) return rawData;
         
@@ -191,7 +192,7 @@ public interface RawDataMapper {
      */
     @Named("buildFiiRawDataMap")
     default Map<String, Object> buildFiiRawDataMap(FiiDadosFinanceirosDTO infraDto) {
-        Map<String, Object> rawData = new HashMap<>();
+        Map<String, Object> rawData = Collections.synchronizedMap(new HashMap<>());
         
         if (infraDto == null) return rawData;
         

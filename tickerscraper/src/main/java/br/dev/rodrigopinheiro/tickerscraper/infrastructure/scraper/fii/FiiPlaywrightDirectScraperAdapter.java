@@ -28,6 +28,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.*;
@@ -153,7 +154,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 pageRef.set(page);
 
                 // Captura de XHR por substring (sem regex)
-                final Map<String, CapturedRequest> requestsMapeadas = new HashMap<>();
+                final Map<String, CapturedRequest> requestsMapeadas = new ConcurrentHashMap<>();
                 page.onRequest(req -> {
                     String u = req.url();
                     Map<String, String> headers = req.headers();
