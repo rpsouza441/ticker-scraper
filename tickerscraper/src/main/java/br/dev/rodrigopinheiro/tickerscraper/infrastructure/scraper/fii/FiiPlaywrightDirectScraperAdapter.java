@@ -152,9 +152,6 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 ctxRef.set(ctx);
                 pageRef.set(page);
 
-                // Navegar e validar usando método da classe base
-                navigateAndValidate(page, url, ticker);
-
                 // Captura de XHR por substring (sem regex)
                 final Map<String, CapturedRequest> requestsMapeadas = new HashMap<>();
                 page.onRequest(req -> {
@@ -167,6 +164,9 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                         }
                     }
                 });
+
+                // Navegar e validar usando método da classe base
+                navigateAndValidate(page, url, ticker);
 
                 // Captura paralela de APIs para reduzir tempo de 30s para ~10s (60% de redução)
                 logger.info("Iniciando captura paralela de APIs para {} [correlationId={}]", ticker, correlationId);
