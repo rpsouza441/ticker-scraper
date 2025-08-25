@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ public class FiiApiScraper {
                 new FiiIndicadorHistoricoDTO(Collections.emptyMap()),
                 "Histórico"
         );
+
     }
 
     /**
@@ -66,6 +68,7 @@ public class FiiApiScraper {
                 new FiiCotacaoDTO(null, null),
                 "Cotação"
         );
+
     }
 
     /**
@@ -102,6 +105,7 @@ public class FiiApiScraper {
                 .bodyToMono(typeRef)
                 .doOnError(e -> logger.error("Falha ao buscar {} da API: {}", apiName, url, e))
                 .onErrorReturn(fallback);
+
     }
 
     private WebClient.RequestHeadersSpec<?> prepareRequest(String url, Map<String, String> headers) {
