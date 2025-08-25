@@ -27,7 +27,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.*;
@@ -134,7 +133,6 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
         // Usa constantes padronizadas da classe base (DIP)
         final Duration asyncTimeout = Duration.ofMillis(ASYNC_OPERATION_TIMEOUT_MS);
         final Duration apiTimeout = Duration.ofMillis(API_CALL_TIMEOUT_MS);
-        final Duration networkTimeout = Duration.ofMillis(NETWORK_CAPTURE_TIMEOUT_MS);
         
         // Usa injeção de dependência para correlationId (DIP)
         final String correlationId = correlationIdProvider.getCurrentCorrelationIdOrDefault("unknown");
@@ -168,31 +166,14 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                     }
                 });
 
-                // Captura paralela de APIs para reduzir tempo de 30s para ~10s (60% de redução)
-                logger.info("Iniciando captura paralela de APIs para {} [correlationId={}]", ticker, correlationId);
-                
-                    CompletableFuture<Void> historicoFuture = CompletableFuture.runAsync(() ->
-                    waitForKeyWithTimeout(requestsMapeadas, HISTORICO_INDICADORES, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
+                // Captura sequencial das APIs na ordem em que o site as dispara
+                logger.info("Iniciando captura sequencial de APIs para {} [correlationId={}]", ticker, correlationId);
 
-                CompletableFuture<Void> dividendosFuture = CompletableFuture.runAsync(() ->
-                    waitForKeyWithTimeout(requestsMapeadas, DIVIDENDOS, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
+                waitForKeyWithTimeout(requestsMapeadas, HISTORICO_INDICADORES, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId);
+                waitForKeyWithTimeout(requestsMapeadas, DIVIDENDOS, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId);
+                waitForKeyWithTimeout(requestsMapeadas, COTACAO, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId);
 
-                CompletableFuture<Void> cotacaoFuture = CompletableFuture.runAsync(() ->
-                    waitForKeyWithTimeout(requestsMapeadas, COTACAO, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
-                
-                try {
-                    // Espera todas as APIs simultaneamente com timeout máximo
-                    CompletableFuture.allOf(historicoFuture, dividendosFuture, cotacaoFuture)
-                        .get(NETWORK_CAPTURE_TIMEOUT_MS + 2000, java.util.concurrent.TimeUnit.MILLISECONDS);
-                    
-                    logger.info("Captura paralela concluída para {} [correlationId={}]", ticker, correlationId);
-                } catch (java.util.concurrent.TimeoutException e) {
-                    logger.warn("Timeout na captura paralela para {} após {}ms [correlationId={}]", 
-                               ticker, NETWORK_CAPTURE_TIMEOUT_MS + 2000, correlationId);
-                } catch (Exception e) {
-                    logger.warn("Erro na captura paralela para {}: {} [correlationId={}]", 
-                               ticker, e.getMessage(), correlationId);
-                }
+                logger.info("Captura sequencial concluída para {} [correlationId={}]", ticker, correlationId);
 
                 // HTML para parsers existentes
                 String html = page.content();
@@ -258,16 +239,6 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
         }, ticker, () -> closePlaywrightResources(pageRef.get(), ctxRef.get()));
     }
 
-    /** Espera passiva (polling leve) até uma chave aparecer no mapa, com timeout em ms. */
-    private static void waitForKey(Map<String, ?> map, String key, int timeoutMs) {
-        long deadline = System.nanoTime() + timeoutMs * 1_000_000L;
-        while (System.nanoTime() < deadline) {
-            if (map.containsKey(key)) return;
-            try { Thread.sleep(40); } catch (InterruptedException ignored) {}
-        }
-        // Timeout é aceitável — os Monos já têm fallback default
-    }
-    
     /**
      * Versão melhorada do waitForKey com logging detalhado e tratamento de timeout.
      */
