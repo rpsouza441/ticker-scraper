@@ -47,6 +47,7 @@ logging:
 
 # Configurações específicas do Scraper
 scraper:
+  network-capture-timeout-ms: ${SCRAPER_NETWORK_CAPTURE_TIMEOUT_MS:10000}
   selenium:
     retry:
       # Configurações para inicialização do WebDriver
