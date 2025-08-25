@@ -109,13 +109,14 @@ public class FiiApiScraper {
         request = request.headers(h -> headerCopy.forEach(h::add));
 
         if (cookieHeader != null) {
+            WebClient.RequestHeadersSpec<?> finalRequest = request;
             Arrays.stream(cookieHeader.split(";"))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .forEach(c -> {
                         String[] parts = c.split("=", 2);
                         if (parts.length == 2) {
-                            request.cookie(parts[0].trim(), parts[1].trim());
+                            finalRequest.cookie(parts[0].trim(), parts[1].trim());
                         }
                     });
         }
