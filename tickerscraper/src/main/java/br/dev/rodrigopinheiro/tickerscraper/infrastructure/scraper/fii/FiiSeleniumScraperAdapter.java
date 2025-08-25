@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 
 @Component("fiiSeleniumScraper")
@@ -77,7 +78,7 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
         // 2. Configuração robusta do DevTools com degradação graceful
         return driverMono.flatMap(driver -> {
                     DevTools devTools = null;
-                    final Map<String, String> urlsMapeadas = new ConcurrentHashMap<>();
+                    final Map<String, CapturedRequest> requestsMapeadas = new ConcurrentHashMap<>();
                     
                     try {
                         devTools = retryManager.setupDevToolsWithRetry(driver);
@@ -86,9 +87,11 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
                         devTools.addListener(Network.requestWillBeSent(), requestSent -> {
                             try {
                                 String url = requestSent.getRequest().getUrl();
+                                Map<String, String> headers = requestSent.getRequest().getHeaders().entrySet().stream()
+                                        .collect(Collectors.toMap(Map.Entry::getKey, e -> String.valueOf(e.getValue())));
                                 for (String chave : FiiApiConstants.TODAS_AS_CHAVES) {
                                     if (url.contains(chave)) {
-                                        urlsMapeadas.putIfAbsent(chave, url);
+                                        requestsMapeadas.putIfAbsent(chave, new CapturedRequest(url, headers));
                                         logger.info(">> URL de API do tipo '{}' CAPTURADA: {}", chave, url);
                                         break;
                                     }
@@ -118,19 +121,19 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
                                      int checkInterval = 1000; // Verificar a cada 1 segundo
                                      int waited = 0;
                                      
-                                     while (waited < maxWaitTime && urlsMapeadas.size() < FiiApiConstants.TODAS_AS_CHAVES.size()) {
+                                     while (waited < maxWaitTime && requestsMapeadas.size() < FiiApiConstants.TODAS_AS_CHAVES.size()) {
                                          Thread.sleep(checkInterval);
                                          waited += checkInterval;
                                          
                                          // Log progresso da captura
                                          if (waited % 2000 == 0) {
-                                             logger.debug("Captura de APIs para ticker {}: {}/{} URLs após {}ms", 
-                                                         ticker, urlsMapeadas.size(), FiiApiConstants.TODAS_AS_CHAVES.size(), waited);
+                                             logger.debug("Captura de APIs para ticker {}: {}/{} URLs após {}ms",
+                                                         ticker, requestsMapeadas.size(), FiiApiConstants.TODAS_AS_CHAVES.size(), waited);
                                          }
                                      }
                                      
-                                     logger.info("Captura finalizada para ticker {}: {}/{} URLs em {}ms", 
-                                                ticker, urlsMapeadas.size(), FiiApiConstants.TODAS_AS_CHAVES.size(), waited);
+                                     logger.info("Captura finalizada para ticker {}: {}/{} URLs em {}ms",
+                                                ticker, requestsMapeadas.size(), FiiApiConstants.TODAS_AS_CHAVES.size(), waited);
                                                 
                                  } catch (InterruptedException e) {
                                      Thread.currentThread().interrupt();
@@ -171,14 +174,14 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
                                  }
                                  
                                  // Verificar se capturou pelo menos algumas URLs importantes
-                                 if (urlsMapeadas.isEmpty()) {
+                                 if (requestsMapeadas.isEmpty()) {
                                      logger.warn("Nenhuma URL de API capturada para FII ticker {}", ticker);
                                      throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.NetworkCaptureException(
                                          ticker, "Falha na captura de APIs - nenhuma URL encontrada", 0, FiiApiConstants.TODAS_AS_CHAVES.size(), null);
                                  }
 
                                  // Empacotar os resultados para a próxima etapa
-                                 return new ScrapeResult(html, urlsMapeadas);
+                                 return new ScrapeResult(html, requestsMapeadas);
                             })
                             // 3. doFinally garante que o driver será fechado, independentemente do que acontecer
                              .doFinally(signalType -> {
@@ -195,21 +198,22 @@ public class FiiSeleniumScraperAdapter extends AbstractScraperAdapter<FiiDadosFi
 
                     // Processar os dados síncronos do HTML
                     FiiInfoHeaderDTO infoHeader = fiiHeaderScraper.scrape(doc);
-                    Integer internalId = fiiInternalIdScrapper.scrape(new ArrayList<>(result.urlsMapeadas().values()));
+                    Integer internalId = fiiInternalIdScrapper.scrape(
+                            result.requestsMapeadas().values().stream().map(CapturedRequest::url).toList());
                     FiiInfoSobreDTO infoSobreDTO = fiiInfoSobreScraper.scrape(doc);
                     FiiInfoCardsDTO infoCardsDTO = fiiCardsScraper.scrape(doc);
 
                     // Disparar as chamadas assíncronas da API
-                    Mono<FiiCotacaoDTO> cotacaoMono = result.findUrl(COTACAO)
-                            .map(fiiApiScraper::fetchCotacao)
+                    Mono<FiiCotacaoDTO> cotacaoMono = result.findRequest(COTACAO)
+                            .map(req -> fiiApiScraper.fetchCotacao(req.url(), req.headers()))
                             .orElse(Mono.just(new FiiCotacaoDTO(null, null)));
 
-                    Mono<List<FiiDividendoDTO>> dividendosMono = result.findUrl(DIVIDENDOS)
-                            .map(fiiApiScraper::fetchDividendos)
+                    Mono<List<FiiDividendoDTO>> dividendosMono = result.findRequest(DIVIDENDOS)
+                            .map(req -> fiiApiScraper.fetchDividendos(req.url(), req.headers()))
                             .orElse(Mono.just(Collections.emptyList()));
 
-                    Mono<FiiIndicadorHistoricoDTO> historicoMono = result.findUrl(HISTORICO_INDICADORES)
-                            .map(fiiApiScraper::fetchHistorico)
+                    Mono<FiiIndicadorHistoricoDTO> historicoMono = result.findRequest(HISTORICO_INDICADORES)
+                            .map(req -> fiiApiScraper.fetchHistorico(req.url(), req.headers()))
                             .orElse(Mono.just(new FiiIndicadorHistoricoDTO(Collections.emptyMap())));
 
                     // 5. Usar Mono.zip para aguardar a conclusão de todas as chamadas da API e então combinar os resultados

@@ -14,6 +14,7 @@ import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiIn
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiInfoCardsDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiInfoHeaderDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiInfoSobreDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.CapturedRequest;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
@@ -155,12 +156,13 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 navigateAndValidate(page, url, ticker);
 
                 // Captura de XHR por substring (sem regex)
-                final Map<String, String> urlsMapeadas = new HashMap<>();
+                final Map<String, CapturedRequest> requestsMapeadas = new HashMap<>();
                 page.onRequest(req -> {
                     String u = req.url();
+                    Map<String, String> headers = req.headers();
                     for (String chave : TODAS_AS_CHAVES) {
-                        if (!urlsMapeadas.containsKey(chave) && u.contains(chave)) {
-                            urlsMapeadas.put(chave, u);
+                        if (!requestsMapeadas.containsKey(chave) && u.contains(chave)) {
+                            requestsMapeadas.put(chave, new CapturedRequest(u, headers));
                             logger.info("API capturada ({}): {} [correlationId={}]", chave, u, correlationId);
                         }
                     }
@@ -169,14 +171,14 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 // Captura paralela de APIs para reduzir tempo de 30s para ~10s (60% de redução)
                 logger.info("Iniciando captura paralela de APIs para {} [correlationId={}]", ticker, correlationId);
                 
-                CompletableFuture<Void> historicoFuture = CompletableFuture.runAsync(() -> 
-                    waitForKeyWithTimeout(urlsMapeadas, HISTORICO_INDICADORES, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
-                
-                CompletableFuture<Void> dividendosFuture = CompletableFuture.runAsync(() -> 
-                    waitForKeyWithTimeout(urlsMapeadas, DIVIDENDOS, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
-                
-                CompletableFuture<Void> cotacaoFuture = CompletableFuture.runAsync(() -> 
-                    waitForKeyWithTimeout(urlsMapeadas, COTACAO, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
+                    CompletableFuture<Void> historicoFuture = CompletableFuture.runAsync(() ->
+                    waitForKeyWithTimeout(requestsMapeadas, HISTORICO_INDICADORES, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
+
+                CompletableFuture<Void> dividendosFuture = CompletableFuture.runAsync(() ->
+                    waitForKeyWithTimeout(requestsMapeadas, DIVIDENDOS, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
+
+                CompletableFuture<Void> cotacaoFuture = CompletableFuture.runAsync(() ->
+                    waitForKeyWithTimeout(requestsMapeadas, COTACAO, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
                 
                 try {
                     // Espera todas as APIs simultaneamente com timeout máximo
@@ -205,25 +207,26 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 FiiInfoCardsDTO infoCards  = cardsScraper.scrape(doc);
 
                 // ID interno via URLs capturadas
-                Integer internalId = internalIdScrapper.scrape(new ArrayList<>(urlsMapeadas.values()));
+                Integer internalId = internalIdScrapper.scrape(
+                        requestsMapeadas.values().stream().map(CapturedRequest::url).toList());
 
                 // Monos das APIs com fallback seguro e timeout padronizado
-                Mono<FiiCotacaoDTO> cotacaoMono = Optional.ofNullable(urlsMapeadas.get(COTACAO))
-                        .map(apiUrl -> apiScraper.fetchCotacao(apiUrl)
+                Mono<FiiCotacaoDTO> cotacaoMono = Optional.ofNullable(requestsMapeadas.get(COTACAO))
+                        .map(req -> apiScraper.fetchCotacao(req.url(), req.headers())
                                 .timeout(apiTimeout)
                                 .doOnError(ex -> logger.warn("Timeout na API de cotação para {}: {}", ticker, ex.getMessage()))
                                 .onErrorReturn(new FiiCotacaoDTO(null, null)))
                         .orElse(Mono.just(new FiiCotacaoDTO(null, null)));
 
-                Mono<List<FiiDividendoDTO>> dividendosMono = Optional.ofNullable(urlsMapeadas.get(DIVIDENDOS))
-                        .map(apiUrl -> apiScraper.fetchDividendos(apiUrl)
+                Mono<List<FiiDividendoDTO>> dividendosMono = Optional.ofNullable(requestsMapeadas.get(DIVIDENDOS))
+                        .map(req -> apiScraper.fetchDividendos(req.url(), req.headers())
                                 .timeout(apiTimeout)
                                 .doOnError(ex -> logger.warn("Timeout na API de dividendos para {}: {}", ticker, ex.getMessage()))
                                 .onErrorReturn(Collections.emptyList()))
                         .orElse(Mono.just(Collections.emptyList()));
 
-                Mono<FiiIndicadorHistoricoDTO> historicoMono = Optional.ofNullable(urlsMapeadas.get(HISTORICO_INDICADORES))
-                        .map(apiUrl -> apiScraper.fetchHistorico(apiUrl)
+                Mono<FiiIndicadorHistoricoDTO> historicoMono = Optional.ofNullable(requestsMapeadas.get(HISTORICO_INDICADORES))
+                        .map(req -> apiScraper.fetchHistorico(req.url(), req.headers())
                                 .timeout(apiTimeout)
                                 .doOnError(ex -> logger.warn("Timeout na API de histórico para {}: {}", ticker, ex.getMessage()))
                                 .onErrorReturn(new FiiIndicadorHistoricoDTO(Collections.emptyMap())))
@@ -256,7 +259,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
     }
 
     /** Espera passiva (polling leve) até uma chave aparecer no mapa, com timeout em ms. */
-    private static void waitForKey(Map<String, String> map, String key, int timeoutMs) {
+    private static void waitForKey(Map<String, ?> map, String key, int timeoutMs) {
         long deadline = System.nanoTime() + timeoutMs * 1_000_000L;
         while (System.nanoTime() < deadline) {
             if (map.containsKey(key)) return;
@@ -268,7 +271,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
     /**
      * Versão melhorada do waitForKey com logging detalhado e tratamento de timeout.
      */
-    private static void waitForKeyWithTimeout(Map<String, String> map, String key, int timeoutMs, 
+    private static void waitForKeyWithTimeout(Map<String, ?> map, String key, int timeoutMs,
                                             String ticker, String correlationId) {
         int waited = 0;
         final int checkInterval = 200;

@@ -10,8 +10,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Componente especialista em interagir com as APIs externas de FIIs do Investidor10.
@@ -37,9 +40,9 @@ public class FiiApiScraper {
      * @return Um Mono (uma "promessa") contendo o DTO de histórico preenchido. Em caso de erro na chamada da API,
      * retorna um Mono com um DTO contendo um mapa vazio, garantindo que o fluxo reativo não seja quebrado.
      */
-    public Mono<FiiIndicadorHistoricoDTO> fetchHistorico(String url) {
+    public Mono<FiiIndicadorHistoricoDTO> fetchHistorico(String url, Map<String, String> headers) {
         logger.info("Chamando API de Histórico: {}", url);
-        return webClient.get().uri(url)
+        return prepareRequest(url, headers)
                 .retrieve()
                 .bodyToMono(FiiIndicadorHistoricoDTO.class)
                 .doOnError(e -> logger.error("Falha ao buscar histórico da API: {}", url, e))
@@ -54,9 +57,9 @@ public class FiiApiScraper {
      * @return Um Mono contendo o DTO de cotação preenchido. Em caso de erro, retorna um Mono com um
      * DTO contendo valores nulos para não interromper o fluxo de dados.
      */
-    public Mono<FiiCotacaoDTO> fetchCotacao(String url) {
+    public Mono<FiiCotacaoDTO> fetchCotacao(String url, Map<String, String> headers) {
         logger.info("Chamando API de Cotação: {}", url);
-        return webClient.get().uri(url)
+        return prepareRequest(url, headers)
                 .retrieve()
                 .bodyToMono(FiiCotacaoDTO.class)
                 .doOnError(e -> logger.error("Falha ao buscar cotação da API: {}", url, e))
@@ -72,9 +75,9 @@ public class FiiApiScraper {
      * @return Um Mono contendo a LISTA de DTOs de dividendo. Em caso de erro na chamada da API,
      * retorna um Mono com uma lista vazia, mantendo a integridade do fluxo reativo.
      */
-    public Mono<List<FiiDividendoDTO>> fetchDividendos(String url) {
+    public Mono<List<FiiDividendoDTO>> fetchDividendos(String url, Map<String, String> headers) {
         logger.info("Chamando API de Dividendos: {}", url);
-        return webClient.get().uri(url)
+        return prepareRequest(url, headers)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<FiiDividendoDTO>>() {})
                 .doOnNext(dividendos -> {
@@ -84,6 +87,40 @@ public class FiiApiScraper {
                 })
                 .doOnError(e -> logger.error("Falha ao buscar dividendos da API: {}", url, e))
                 .onErrorReturn(Collections.emptyList());
+    }
+
+    private WebClient.RequestHeadersSpec<?> prepareRequest(String url, Map<String, String> headers) {
+        WebClient.RequestHeadersSpec<?> request = webClient.get().uri(url);
+
+        if (headers == null || headers.isEmpty()) {
+            return request;
+        }
+
+        Map<String, String> headerCopy = new HashMap<>();
+        String cookieHeader = null;
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            if ("cookie".equalsIgnoreCase(entry.getKey())) {
+                cookieHeader = entry.getValue();
+            } else {
+                headerCopy.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        request = request.headers(h -> headerCopy.forEach(h::add));
+
+        if (cookieHeader != null) {
+            Arrays.stream(cookieHeader.split(";"))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .forEach(c -> {
+                        String[] parts = c.split("=", 2);
+                        if (parts.length == 2) {
+                            request.cookie(parts[0].trim(), parts[1].trim());
+                        }
+                    });
+        }
+
+        return request;
     }
 
 }
