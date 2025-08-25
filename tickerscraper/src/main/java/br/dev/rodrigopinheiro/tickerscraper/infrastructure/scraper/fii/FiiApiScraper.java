@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,12 +42,7 @@ public class FiiApiScraper {
      * retorna um Mono com um DTO contendo um mapa vazio, garantindo que o fluxo reativo não seja quebrado.
      */
     public Mono<FiiIndicadorHistoricoDTO> fetchHistorico(String url, Map<String, String> headers) {
-        logger.info("Chamando API de Histórico: {}", url);
-        return prepareRequest(url, headers)
-                .retrieve()
-                .bodyToMono(FiiIndicadorHistoricoDTO.class)
-                .doOnError(e -> logger.error("Falha ao buscar histórico da API: {}", url, e))
-                .onErrorReturn(new FiiIndicadorHistoricoDTO(Collections.emptyMap()));
+        return fetch(url, new ParameterizedTypeReference<FiiIndicadorHistoricoDTO>() {}, headers);
     }
 
     /**
@@ -58,12 +54,7 @@ public class FiiApiScraper {
      * DTO contendo valores nulos para não interromper o fluxo de dados.
      */
     public Mono<FiiCotacaoDTO> fetchCotacao(String url, Map<String, String> headers) {
-        logger.info("Chamando API de Cotação: {}", url);
-        return prepareRequest(url, headers)
-                .retrieve()
-                .bodyToMono(FiiCotacaoDTO.class)
-                .doOnError(e -> logger.error("Falha ao buscar cotação da API: {}", url, e))
-                .onErrorReturn(new FiiCotacaoDTO(null, null));
+        return fetch(url, new ParameterizedTypeReference<FiiCotacaoDTO>() {}, headers);
     }
 
     /**
@@ -76,17 +67,37 @@ public class FiiApiScraper {
      * retorna um Mono com uma lista vazia, mantendo a integridade do fluxo reativo.
      */
     public Mono<List<FiiDividendoDTO>> fetchDividendos(String url, Map<String, String> headers) {
-        logger.info("Chamando API de Dividendos: {}", url);
-        return prepareRequest(url, headers)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<FiiDividendoDTO>>() {})
+        return fetch(url, new ParameterizedTypeReference<List<FiiDividendoDTO>>() {}, headers)
                 .doOnNext(dividendos -> {
                     if (!dividendos.isEmpty()) {
                         logger.debug("Processados {} dividendos da API", dividendos.size());
                     }
-                })
-                .doOnError(e -> logger.error("Falha ao buscar dividendos da API: {}", url, e))
-                .onErrorReturn(Collections.emptyList());
+                });
+    }
+
+    private <T> Mono<T> fetch(String url, ParameterizedTypeReference<T> typeRef, Map<String, String> headers) {
+        logger.info("Chamando API: {}", url);
+        return prepareRequest(url, headers)
+                .retrieve()
+                .bodyToMono(typeRef)
+                .doOnError(e -> logger.error("Falha ao buscar dados da API: {}", url, e))
+                .onErrorReturn(defaultValue(typeRef));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T defaultValue(ParameterizedTypeReference<T> typeRef) {
+        if (typeRef.getType().equals(FiiIndicadorHistoricoDTO.class)) {
+            return (T) new FiiIndicadorHistoricoDTO(Collections.emptyMap());
+        }
+        if (typeRef.getType().equals(FiiCotacaoDTO.class)) {
+            return (T) new FiiCotacaoDTO(null, null);
+        }
+
+        if (typeRef.getType() instanceof ParameterizedType parameterized && parameterized.getRawType() == List.class) {
+            return (T) Collections.emptyList();
+        }
+
+        return null;
     }
 
     private WebClient.RequestHeadersSpec<?> prepareRequest(String url, Map<String, String> headers) {
