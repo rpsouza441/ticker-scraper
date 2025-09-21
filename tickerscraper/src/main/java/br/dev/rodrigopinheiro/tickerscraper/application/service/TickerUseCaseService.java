@@ -39,7 +39,7 @@ public class TickerUseCaseService implements TickerUseCasePort {
     private final FiiApiMapper fiiMapper;
     private final EtfApiMapper etfMapper;
 
-    // TODO: Adicionar EtfUseCasePort e BdrUseCasePort quando criados
+    // TODO: Adicionar BdrUseCasePort quando criado
 
 
      public Mono<AtivoResponseDTO> obterAtivo(String ticker) {
@@ -128,8 +128,13 @@ public class TickerUseCaseService implements TickerUseCasePort {
                     .doOnNext(fiiData -> log.info("Dados de FII {} salvos no banco após classificação", ticker))
                     .map(fiiData -> tipo);
                 
+            case ETF -> 
+                etfUseCase.getTickerData(ticker)
+                    .doOnNext(etfData -> log.info("Dados de ETF {} salvos no banco após classificação", ticker))
+                    .map(etfData -> tipo);
+                
             // Para tipos não implementados, apenas retorna o tipo sem scraping
-            case ETF, ETF_BDR, BDR_NAO_PATROCINADO, BDR_PATROCINADO -> {
+            case ETF_BDR, BDR_NAO_PATROCINADO, BDR_PATROCINADO -> {
                 log.warn("Scraping não implementado para tipo {}, apenas classificação salva", tipo);
                 yield Mono.just(tipo);
             }
@@ -158,9 +163,9 @@ public class TickerUseCaseService implements TickerUseCasePort {
                 fiiUseCase.getTickerData(ticker)
                     .map(fiiData -> AtivoResponseDTO.fromFii(ticker, tipo, fiiMapper.toResponse(fiiData)));
                 
-            // TODO: Implementar quando os UseCases existirem
             case ETF -> 
-                Mono.error(new UnsupportedOperationException("ETF UseCase ainda não implementado"));
+                etfUseCase.getTickerData(ticker)
+                    .map(etfData -> AtivoResponseDTO.fromEtf(ticker, tipo, etfMapper.toResponseDto(etfData)));
                 
             case ETF_BDR -> 
                 Mono.error(new UnsupportedOperationException("ETF BDR UseCase ainda não implementado"));

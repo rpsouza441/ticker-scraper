@@ -22,7 +22,8 @@ public class AtivoResponseDTO {
     // Dados específicos (apenas um será preenchido)
     private AcaoResponseDTO dadosAcao;
     private FiiResponseDTO dadosFii;
-    // TODO: Adicionar EtfResponseDTO e BdrResponseDTO
+    private EtfResponseDTO dadosEtf;
+    // TODO: Adicionar BdrResponseDTO
     
     // Dados financeiros básicos (sempre preenchidos)
     private BigDecimal cotacao;
@@ -85,6 +86,25 @@ public class AtivoResponseDTO {
             .cotacao(fiiData.cotacao())
             .variacao(fiiData.variacao12M())
             .volume(0L) // FII não tem volume na estrutura atual
+            .classificacao(ClassificacaoInfo.builder()
+                .metodo("BANCO_DADOS")
+                .confianca("ALTA")
+                .build())
+            .build();
+    }
+    
+    /**
+     * Factory method para criar resposta de ETF
+     */
+    public static AtivoResponseDTO fromEtf(String ticker, TipoAtivoFinanceiroVariavel tipo, EtfResponseDTO etfData) {
+        return AtivoResponseDTO.builder()
+            .ticker(ticker)
+            .tipoAtivo(tipo)
+            .nomeEmpresa(etfData.nomeEtf())
+            .dataAtualizacao(etfData.dataAtualizacao())
+            .dadosEtf(etfData)
+            .cotacao(etfData.valorAtual())
+            .variacao(etfData.variacao12M())
             .classificacao(ClassificacaoInfo.builder()
                 .metodo("BANCO_DADOS")
                 .confianca("ALTA")
