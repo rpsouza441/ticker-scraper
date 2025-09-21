@@ -1,9 +1,11 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.AcaoRawDataResponse;
+import br.dev.rodrigopinheiro.tickerscraper.application.dto.EtfRawDataResponse;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.FiiRawDataResponse;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.ProcessingStatus;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.etf.dto.EtfDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -32,6 +34,7 @@ import java.util.Map;
  * @since 1.0
  * @see org.mapstruct.Mapper
  * @see br.dev.rodrigopinheiro.tickerscraper.application.dto.AcaoRawDataResponse
+ * @see br.dev.rodrigopinheiro.tickerscraper.application.dto.EtfRawDataResponse
  * @see br.dev.rodrigopinheiro.tickerscraper.application.dto.FiiRawDataResponse
  */
 @Mapper(componentModel = "spring")
@@ -333,5 +336,121 @@ public interface RawDataMapper {
      */
     default FiiRawDataResponse createFailedFiiResponse(String ticker, String source, String error) {
         return FiiRawDataResponse.failed(ticker, source, error);
+    }
+    
+    /**
+     * Converte EtfDadosFinanceirosDTO (infraestrutura) para EtfRawDataResponse (application).
+     * Utiliza MapStruct para mapeamento declarativo com métodos auxiliares para lógica complexa.
+     * 
+     * @param infraDto DTO de infraestrutura com dados coletados
+     * @return DTO da application estruturado
+     */
+    default EtfRawDataResponse toEtfRawDataResponse(EtfDadosFinanceirosDTO infraDto) {
+        if (infraDto == null) {
+            return createFailedEtfResponse("UNKNOWN", "SCRAPER", "DTO de infraestrutura nulo");
+        }
+        
+        String ticker = infraDto.infoHeader() != null ? infraDto.infoHeader().ticker() : "UNKNOWN";
+        Map<String, Object> rawData = buildEtfRawDataMap(infraDto);
+        ProcessingStatus status = determineEtfProcessingStatus(infraDto);
+        Map<String, String> metadata = buildEtfMetadata(infraDto);
+        
+        return new EtfRawDataResponse(
+                ticker,
+                rawData,
+                "PLAYWRIGHT_SCRAPER",
+                LocalDateTime.now(),
+                status,
+                metadata
+        );
+    }
+    
+    /**
+     * Constrói mapa de dados brutos para ETF a partir do DTO de infraestrutura.
+     * 
+     * <p>Método auxiliar do MapStruct que extrai e organiza dados específicos de ETF
+     * de diferentes seções do DTO em um mapa chave-valor estruturado. Inclui dados
+     * de header e cards com informações financeiras do ETF.</p>
+     * 
+     * @param infraDto DTO de infraestrutura do ETF
+     * @return Mapa com dados brutos organizados por categoria
+     */
+    @Named("buildEtfRawDataMap")
+    default Map<String, Object> buildEtfRawDataMap(EtfDadosFinanceirosDTO infraDto) {
+        Map<String, Object> rawData = Collections.synchronizedMap(new HashMap<>());
+        
+        if (infraDto == null) return rawData;
+        
+        // Converter dados do header
+        if (infraDto.infoHeader() != null) {
+            rawData.put("ticker", infraDto.infoHeader().ticker());
+            rawData.put("nomeEtf", infraDto.infoHeader().nomeEtf());
+        }
+        
+        // Converter dados dos cards
+        if (infraDto.infoCards() != null) {
+            rawData.put("valorAtual", infraDto.infoCards().valorAtual());
+            rawData.put("capitalizacao", infraDto.infoCards().capitalizacao());
+            rawData.put("variacao12M", infraDto.infoCards().variacao12M());
+            rawData.put("variacao60M", infraDto.infoCards().variacao60M());
+            rawData.put("dy", infraDto.infoCards().dy());
+        }
+        
+        return rawData;
+    }
+    
+    /**
+     * Determina status de processamento baseado na completude dos dados do ETF.
+     * 
+     * <p>Método auxiliar do MapStruct que analisa a qualidade e completude
+     * dos dados específicos de ETF para determinar o status apropriado.</p>
+     * 
+     * @param infraDto DTO de infraestrutura do ETF
+     * @return Status de processamento (SUCCESS, PARTIAL, FAILED)
+     */
+    @Named("determineEtfProcessingStatus")
+    default ProcessingStatus determineEtfProcessingStatus(EtfDadosFinanceirosDTO infraDto) {
+        if (infraDto == null) return ProcessingStatus.FAILED;
+        
+        Map<String, Object> rawData = buildEtfRawDataMap(infraDto);
+        return determineProcessingStatus(rawData);
+    }
+    
+    /**
+     * Constrói metadados descritivos sobre os dados coletados do ETF.
+     * 
+     * <p>Método auxiliar do MapStruct que gera informações estatísticas específicas
+     * de ETF, incluindo completude de seções específicas.</p>
+     * 
+     * @param infraDto DTO de infraestrutura do ETF
+     * @return Mapa com metadados descritivos específicos de ETF
+     */
+    @Named("buildEtfMetadata")
+    default Map<String, String> buildEtfMetadata(EtfDadosFinanceirosDTO infraDto) {
+        if (infraDto == null) {
+            return Map.of("total_fields", "0");
+        }
+        
+        Map<String, Object> rawData = buildEtfRawDataMap(infraDto);
+        return Map.of(
+            "total_fields", String.valueOf(rawData.size()),
+            "has_header", String.valueOf(infraDto.infoHeader() != null),
+            "has_cards", String.valueOf(infraDto.infoCards() != null)
+        );
+    }
+    
+    /**
+     * Cria resposta de falha padronizada para operações de ETF.
+     * 
+     * <p>Método de conveniência que encapsula a criação de respostas de erro
+     * para operações de scraping de ETFs que falharam completamente.</p>
+     * 
+     * @param ticker Código do ETF
+     * @param source Fonte da operação (ex: "SCRAPER")
+     * @param error Mensagem de erro descritiva
+     * @return Resposta de falha estruturada para ETF
+     */
+    default EtfRawDataResponse createFailedEtfResponse(String ticker, String source, String error) {
+        return EtfRawDataResponse.failed(ticker, source, error);
     }
 }

@@ -22,6 +22,11 @@ public class IndicadorParser {
     private static final Pattern PADRAO_NUMERO = Pattern.compile("-?\\d+(\\.\\d+)?");
     private static final String[] PADROES_TAXA_ANUAL = {" % a.a", " % ao ano", "% a.a", "% ao ano"};
     
+    // Constantes para multiplicadores de escala
+    private static final BigDecimal MILHAO = new BigDecimal("1000000");
+    private static final BigDecimal BILHAO = new BigDecimal("1000000000");
+    private static final BigDecimal TRILHAO = new BigDecimal("1000000000000");
+    
     /**
      * Limpa uma string de indicadores, removendo R$, %, e espaços nas extremidades.
      * O resultado é retornado como uma String limpa.
@@ -72,8 +77,9 @@ public class IndicadorParser {
     }
 
     /**
-     * Converte uma String (ex: "R$ 4,78", "79,97%", "1.234.567.000") para um BigDecimal.
+     * Converte uma String (ex: "R$ 4,78", "79,97%", "1.234.567.000", "R$ 10,00 T", "9,78 B") para um BigDecimal.
      * Este método deve ser usado para TODOS os valores numéricos.
+     * Suporta sufixos de escala: M (milhões), B (bilhões), T (trilhões).
      *
      * @param raw A string bruta extraída do HTML.
      * @return O valor como um BigDecimal. Retorna BigDecimal.ZERO se a entrada for nula, vazia ou inválida.
@@ -88,12 +94,10 @@ public class IndicadorParser {
                     if (contemPadraoTaxaAnual(s)) {
                         // Extrai apenas a parte numérica antes do "%"
                         String numericPart = extrairParteNumericaAntesDe(s, SIMBOLO_PERCENTUAL);
-                        return limparTextoNumerico(numericPart);
+                        return processarComSufixoEscala(numericPart);
                     }
-                    return limparTextoNumerico(s);
+                    return processarComSufixoEscala(s);
                 })
-                .filter(s -> PADRAO_NUMERO.matcher(s).matches())
-                .map(s -> converterParaBigDecimal(s))
                 .orElse(BigDecimal.ZERO);
     }
 
@@ -129,10 +133,52 @@ public class IndicadorParser {
     }
 
     /**
-     * Converte uma string para BigDecimal com tratamento de exceção.
-     *
-     * @param valor A string a ser convertida.
-     * @return O BigDecimal correspondente ou BigDecimal.ZERO em caso de erro.
+     * Processa uma string que pode conter sufixos de escala (M, B, T) e retorna o BigDecimal correspondente.
+     * 
+     * @param texto A string a ser processada.
+     * @return O valor como BigDecimal com a escala aplicada.
+     */
+    private static BigDecimal processarComSufixoEscala(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return BigDecimal.ZERO;
+        }
+        
+        // Primeiro, identifica o multiplicador baseado no sufixo
+        String textoOriginalUpper = texto.toUpperCase().trim();
+        BigDecimal multiplicador = BigDecimal.ONE;
+        String textoParaLimpeza = texto;
+        
+        if (textoOriginalUpper.endsWith(" T") || textoOriginalUpper.endsWith("T")) {
+            multiplicador = TRILHAO;
+            // Remove o sufixo antes de limpar
+            textoParaLimpeza = texto.replaceAll("(?i)\\s*T\\s*$", "").trim();
+        } else if (textoOriginalUpper.endsWith(" B") || textoOriginalUpper.endsWith("B")) {
+            multiplicador = BILHAO;
+            // Remove o sufixo antes de limpar
+            textoParaLimpeza = texto.replaceAll("(?i)\\s*B\\s*$", "").trim();
+        } else if (textoOriginalUpper.endsWith(" M") || textoOriginalUpper.endsWith("M")) {
+            multiplicador = MILHAO;
+            // Remove o sufixo antes de limpar
+            textoParaLimpeza = texto.replaceAll("(?i)\\s*M\\s*$", "").trim();
+        }
+        
+        // Agora limpa o texto sem o sufixo
+        String textoLimpo = limparTextoNumerico(textoParaLimpeza);
+        
+        // Valida se o texto limpo é um número válido
+        if (!PADRAO_NUMERO.matcher(textoLimpo).matches()) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal valor = converterParaBigDecimal(textoLimpo);
+        return valor.multiply(multiplicador);
+    }
+
+    /**
+     * Converte uma string limpa para BigDecimal.
+     * 
+     * @param valor A string já limpa e validada.
+     * @return O valor como BigDecimal.
      */
     private static BigDecimal converterParaBigDecimal(String valor) {
         try {

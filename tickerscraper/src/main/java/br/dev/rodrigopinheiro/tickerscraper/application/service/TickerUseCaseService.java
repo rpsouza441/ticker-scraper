@@ -3,8 +3,10 @@ package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AtivoResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.EtfApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.FiiApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.input.EtfUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.FiiUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.TickerUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerClassificationException;
@@ -32,9 +34,12 @@ public class TickerUseCaseService implements TickerUseCasePort {
     // UseCases existentes
     private final AcaoUseCasePort acaoUseCase;
     private final FiiUseCasePort fiiUseCase;
+    private final EtfUseCasePort etfUseCase;
     private final AcaoApiMapper acaoMapper;
     private final FiiApiMapper fiiMapper;
-    // TODO: Adicionar EtfUseCasePort e BdrUseCasePort quando criadosø
+    private final EtfApiMapper etfMapper;
+
+    // TODO: Adicionar EtfUseCasePort e BdrUseCasePort quando criados
 
 
      public Mono<AtivoResponseDTO> obterAtivo(String ticker) {
