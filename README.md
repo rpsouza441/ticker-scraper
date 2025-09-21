@@ -2,7 +2,7 @@
 
 ## 📋 Descrição
 
-O **Ticker Scraper** é uma aplicação Spring Boot desenvolvida para realizar scraping de dados de **Fundos de Investimento Imobiliário (FIIs)** e **Ações** do mercado financeiro brasileiro. A aplicação utiliza arquitetura hexagonal (ports and adapters) e oferece APIs REST para consulta de dados financeiros estruturados.
+O **Ticker Scraper** é uma aplicação Spring Boot desenvolvida para realizar scraping de dados de **Fundos de Investimento Imobiliário (FIIs)**, **Ações**, **ETFs** e **BDRs** do mercado financeiro brasileiro. A aplicação utiliza arquitetura hexagonal (ports and adapters) e oferece APIs REST para consulta de dados financeiros estruturados, incluindo um **endpoint unificado** que detecta automaticamente o tipo de ativo.
 
 ## 🏗️ Arquitetura
 
@@ -53,6 +53,13 @@ O projeto segue os princípios da **Arquitetura Hexagonal**, organizando o códi
 ## 📊 Funcionalidades
 
 ### APIs Disponíveis
+
+#### 🎯 Endpoint Unificado (Recomendado)
+- `GET /api/v1/ticker/{ticker}` - **Endpoint unificado para qualquer tipo de ativo**
+  - Detecta automaticamente o tipo (Ação, FII, ETF, BDR)
+  - Retorna dados estruturados no formato unificado
+  - Suporte a cache inteligente e circuit breaker
+- `GET /api/v1/ticker/{ticker}/classificacao` - Classificação do tipo de ativo
 
 #### Fundos de Investimento Imobiliário (FIIs)
 - `GET /fii/get-{ticker}` - Dados processados de um FII
@@ -143,6 +150,17 @@ java -jar target/tickerscraper-0.0.1-SNAPSHOT.jar
 - Métricas: `http://localhost:8080/actuator/metrics`
 
 ## 📝 Exemplos de Uso
+
+### 🎯 Endpoint Unificado (Recomendado)
+```bash
+# Consultar qualquer tipo de ativo (detecta automaticamente)
+curl -X GET "http://localhost:8080/api/v1/ticker/PETR4"
+curl -X GET "http://localhost:8080/api/v1/ticker/HGLG11"
+curl -X GET "http://localhost:8080/api/v1/ticker/BOVA11"
+
+# Verificar apenas a classificação do ativo
+curl -X GET "http://localhost:8080/api/v1/ticker/PETR4/classificacao"
+```
 
 ### Consultar dados de um FII
 ```bash
