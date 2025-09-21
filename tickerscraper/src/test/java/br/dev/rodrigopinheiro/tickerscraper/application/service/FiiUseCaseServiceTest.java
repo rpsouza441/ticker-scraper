@@ -270,6 +270,13 @@ class FiiUseCaseServiceTest {
         FiiDadosFinanceirosDTO raw = createMockScrapedData();
         FundoImobiliario savedFii = createMockFii();
         
+        // Configurar ObjectMapper mock para não falhar na serialização
+        try {
+            when(objectMapper.writeValueAsString(any())).thenReturn("{\"test\":\"data\"}");
+        } catch (Exception e) {
+            // Mock não deve lançar exceção
+        }
+        
         // Garantir que o mock retorna um objeto válido
         when(repositoryPort.saveReplacingDividends(eq(domain), any(), anyString())).thenReturn(savedFii);
         
@@ -279,6 +286,7 @@ class FiiUseCaseServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result).isEqualTo(savedFii);
+        assertThat(result.getTicker()).isEqualTo(savedFii.getTicker());
         verify(repositoryPort).saveReplacingDividends(eq(domain), any(), anyString());
     }
     

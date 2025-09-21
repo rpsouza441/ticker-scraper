@@ -2,6 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.FiiDividendoResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.FiiResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.FundoImobiliarioEntity;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.FiiDividendo;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.FundoImobiliario;
 import org.mapstruct.Mapper;
@@ -16,6 +17,7 @@ public interface FiiApiMapper {
 
     @Mappings({
             @Mapping(source = "ticker",                  target = "ticker"),
+            @Mapping(source = "tipoAtivo",               target = "tipoAtivo"),
             @Mapping(source = "nomeEmpresa",             target = "nomeEmpresa"),
             @Mapping(source = "razaoSocial",             target = "razaoSocial"),
             @Mapping(source = "cnpj",                    target = "cnpj"),
@@ -38,9 +40,40 @@ public interface FiiApiMapper {
             @Mapping(source = "vacancia",                target = "vacancia"),
             @Mapping(source = "numeroDeCotistas",        target = "numeroDeCotistas"),
             @Mapping(source = "cotasEmitidas",           target = "cotasEmitidas"),
+            @Mapping(source = "dataAtualizacao",         target = "dataAtualizacao"),
             @Mapping(source = "fiiDividendos",           target = "dividendos")
     })
     FiiResponseDTO toResponse(FundoImobiliario domain);
+
+    @Mappings({
+            @Mapping(source = "ticker",                  target = "ticker"),
+            @Mapping(source = "tipoAtivo",               target = "tipoAtivo"),
+            @Mapping(source = "nomeEmpresa",             target = "nomeEmpresa"),
+            @Mapping(source = "razaoSocial",             target = "razaoSocial"),
+            @Mapping(source = "cnpj",                    target = "cnpj"),
+            @Mapping(source = "publicoAlvo",             target = "publicoAlvo"),
+            @Mapping(source = "mandato",                 target = "mandato"),
+            @Mapping(source = "segmento",                target = "segmento"),
+            @Mapping(source = "tipoDeFundo",             target = "tipoDeFundo"),
+            @Mapping(source = "prazoDeDuracao",          target = "prazoDeDuracao"),
+            @Mapping(source = "tipoDeGestao",            target = "tipoDeGestao"),
+            @Mapping(source = "taxaDeAdministracao",     target = "taxaDeAdministracao"),
+            @Mapping(source = "ultimoRendimento",        target = "ultimoRendimento"),
+            @Mapping(source = "cotacao",                 target = "cotacao"),
+            @Mapping(source = "variacao12M",             target = "variacao12M"),
+            @Mapping(source = "valorDeMercado",          target = "valorDeMercado"),
+            @Mapping(source = "pvp",                     target = "pvp"),
+            @Mapping(source = "dividendYield",           target = "dividendYield"),
+            @Mapping(source = "liquidezDiaria",          target = "liquidezDiaria"),
+            @Mapping(source = "valorPatrimonial",        target = "valorPatrimonial"),
+            @Mapping(source = "valorPatrimonialPorCota", target = "valorPatrimonialPorCota"),
+            @Mapping(source = "vacancia",                target = "vacancia"),
+            @Mapping(source = "numeroDeCotistas",        target = "numeroDeCotistas"),
+            @Mapping(source = "cotasEmitidas",           target = "cotasEmitidas"),
+            @Mapping(source = "dataAtualizacao",         target = "dataAtualizacao"),
+            @Mapping(source = "fiiDividendos",           target = "dividendos")
+    })
+    FiiResponseDTO toResponseDto(FundoImobiliarioEntity entity);
 
     @Mappings({
             @Mapping(source = "mes",   target = "mes",   qualifiedByName = "ymToMMYYYY"),

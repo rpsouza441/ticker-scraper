@@ -33,6 +33,9 @@ out/
 *.iws
 *.ipr
 
+#Trae IDE
+.trae
+
 # VS Code (caso use como editor alternativo)
 .vscode/
 

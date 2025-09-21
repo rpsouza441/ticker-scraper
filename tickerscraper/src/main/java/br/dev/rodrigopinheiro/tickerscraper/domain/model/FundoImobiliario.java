@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
+
 public class FundoImobiliario {
 
     private String ticker;
@@ -32,6 +34,7 @@ public class FundoImobiliario {
     private Long cotasEmitidas;
     private List<FiiDividendo> fiiDividendos = new ArrayList<>();
     private LocalDateTime dataAtualizacao;
+    private TipoAtivo tipoAtivo = TipoAtivo.FII;
 
 
     public void setTicker(String ticker) {
@@ -263,5 +266,13 @@ public class FundoImobiliario {
 
     public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
         this.dataAtualizacao = dataAtualizacao;
+    }
+
+    public TipoAtivo getTipoAtivo() {
+        return tipoAtivo;
+    }
+
+    public void setTipoAtivo(TipoAtivo tipoAtivo) {
+        this.tipoAtivo = tipoAtivo;
     }
 }

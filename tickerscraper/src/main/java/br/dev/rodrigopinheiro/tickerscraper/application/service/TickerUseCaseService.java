@@ -1,0 +1,189 @@
+package br.dev.rodrigopinheiro.tickerscraper.application.service;
+
+
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AtivoResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.FiiApiMapper;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.input.FiiUseCasePort;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.input.TickerUseCasePort;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerClassificationException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.BrapiHttpClient;
+
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TickerUseCaseService implements TickerUseCasePort {
+    
+    private final TickerDatabaseStrategy databaseStrategy;
+    private final BrapiResponseClassifier brapiClassifier;
+    private final TickerClassificationCacheService classificationCache;
+    private final BrapiHttpClient brapiClient;
+    
+    // UseCases existentes
+    private final AcaoUseCasePort acaoUseCase;
+    private final FiiUseCasePort fiiUseCase;
+    private final AcaoApiMapper acaoMapper;
+    private final FiiApiMapper fiiMapper;
+    // TODO: Adicionar EtfUseCasePort e BdrUseCasePort quando criadosø
+
+
+     public Mono<AtivoResponseDTO> obterAtivo(String ticker) {
+        log.info("Iniciando busca para ticker: {}", ticker);
+        
+        return classificarTicker(ticker)
+            .flatMap(tipo -> delegarParaUseCaseEspecifico(ticker, tipo))
+            .doOnSuccess(response -> log.info("Busca concluída para ticker {}: tipo={}", 
+                ticker, response.getTipoAtivo()))
+            .doOnError(error -> log.error("Erro ao buscar ticker {}: {}", ticker, error.getMessage()));
+    }
+    
+     @Override
+    public Mono<TipoAtivoFinanceiroVariavel> classificarTicker(String ticker) {
+        if (ticker == null || ticker.trim().isEmpty()) {
+            return Mono.error(new TickerClassificationException(ticker, "Ticker não pode ser vazio"));
+        }
+        
+        String tickerNormalizado = ticker.trim().toUpperCase();
+        
+        // 1. Verificar cache primeiro
+        var tipoCache = classificationCache.get(tickerNormalizado);
+        if (tipoCache.isPresent()) {
+            log.debug("Classificação encontrada no cache: {} -> {}", tickerNormalizado, tipoCache.get());
+            return Mono.just(tipoCache.get());
+        }
+        
+        // 2. Classificação Heurística
+        TipoAtivoFinanceiroVariavel tipoHeuristico = 
+            TipoAtivoFinanceiroVariavel.classificarPorSufixo(tickerNormalizado);
+        
+        // 3. Se não é ambíguo, usar heurística e cachear
+        if (tipoHeuristico != TipoAtivoFinanceiroVariavel.DESCONHECIDO) {
+            classificationCache.put(tickerNormalizado, tipoHeuristico);
+            log.info("Ticker {} classificado por heurística: {}", tickerNormalizado, tipoHeuristico);
+            return Mono.just(tipoHeuristico);
+        }
+        
+        // 4. Consultar banco primeiro
+        return databaseStrategy.verificarTickerNoBanco(tickerNormalizado)
+            .flatMap(resultado -> {
+                if (resultado.isEncontrado()) {
+                    classificationCache.put(tickerNormalizado, resultado.getTipo());
+                    log.info("Ticker {} classificado por dados do banco (evitou API Brapi): {}", 
+                        tickerNormalizado, resultado.getTipo());
+                    return Mono.just(resultado.getTipo());
+                }
+                
+                // 5. Consultar API Brapi apenas se não há dados no banco
+                log.debug("Nenhum dado encontrado no banco para {}, consultando API Brapi", tickerNormalizado);
+                return consultarApiEClassificar(tickerNormalizado);
+            })
+            .onErrorResume(error -> {
+                log.error("Erro na classificação de {}: {}", tickerNormalizado, error.getMessage());
+                return Mono.error(new TickerClassificationException(tickerNormalizado, error));
+            });
+    }
+
+ /**
+     * Consulta API Brapi, classifica resposta e faz scraping para salvar no banco
+     */
+    private Mono<TipoAtivoFinanceiroVariavel> consultarApiEClassificar(String ticker) {
+        log.debug("Consultando API Brapi para classificar ticker: {}", ticker);
+        
+        return brapiClient.getQuote(ticker)
+            .map(brapiClassifier::classificarPorResposta)
+            .doOnNext(tipo -> {
+                classificationCache.put(ticker, tipo);
+                log.info("Ticker {} classificado via API Brapi: {}", ticker, tipo);
+            })
+            .flatMap(tipo -> {
+                // Após classificar, fazer scraping para salvar os dados no banco
+                log.debug("Fazendo scraping de {} para salvar no banco após classificação", ticker);
+                return fazerScrapingERetornarTipo(ticker, tipo);
+            })
+            .onErrorResume(error -> {
+                log.warn("Erro ao consultar API Brapi para {}: {}", ticker, error.getMessage());
+                // Retorna tipo padrão em caso de erro
+                var tipoDefault = TipoAtivoFinanceiroVariavel.ACAO_ON;
+                classificationCache.put(ticker, tipoDefault);
+                return Mono.just(tipoDefault);
+            });
+    }
+    
+    /**
+     * Faz scraping dos dados e salva no banco, retornando o tipo
+     */
+    private Mono<TipoAtivoFinanceiroVariavel> fazerScrapingERetornarTipo(String ticker, TipoAtivoFinanceiroVariavel tipo) {
+        return switch (tipo) {
+            case ACAO_ON, ACAO_PN, ACAO_PNA, ACAO_PNB, ACAO_PNC, ACAO_PND, UNIT,
+                 DIREITO_SUBSCRICAO_ON, DIREITO_SUBSCRICAO_PN,
+                 RECIBO_SUBSCRICAO_ON, RECIBO_SUBSCRICAO_PN -> 
+                acaoUseCase.getTickerData(ticker)
+                    .doOnNext(acaoData -> log.info("Dados de ação {} salvos no banco após classificação", ticker))
+                    .map(acaoData -> tipo);
+                
+            case FII -> 
+                fiiUseCase.getTickerData(ticker)
+                    .doOnNext(fiiData -> log.info("Dados de FII {} salvos no banco após classificação", ticker))
+                    .map(fiiData -> tipo);
+                
+            // Para tipos não implementados, apenas retorna o tipo sem scraping
+            case ETF, ETF_BDR, BDR_NAO_PATROCINADO, BDR_PATROCINADO -> {
+                log.warn("Scraping não implementado para tipo {}, apenas classificação salva", tipo);
+                yield Mono.just(tipo);
+            }
+            
+            default -> {
+                log.warn("Tipo desconhecido {}, retornando sem scraping", tipo);
+                yield Mono.just(tipo);
+            }
+        };
+    }
+    
+    /**
+     * Delega para UseCase específico baseado no tipo
+     */
+    private Mono<AtivoResponseDTO> delegarParaUseCaseEspecifico(String ticker, TipoAtivoFinanceiroVariavel tipo) {
+        log.debug("Delegando ticker {} para UseCase do tipo: {}", ticker, tipo);
+        
+        return switch (tipo) {
+            case ACAO_ON, ACAO_PN, ACAO_PNA, ACAO_PNB, ACAO_PNC, ACAO_PND, UNIT,
+                 DIREITO_SUBSCRICAO_ON, DIREITO_SUBSCRICAO_PN,
+                 RECIBO_SUBSCRICAO_ON, RECIBO_SUBSCRICAO_PN -> 
+                acaoUseCase.getTickerData(ticker)
+                    .map(acaoData -> AtivoResponseDTO.fromAcao(ticker, tipo, acaoMapper.toResponseDto(acaoData)));
+                
+            case FII -> 
+                fiiUseCase.getTickerData(ticker)
+                    .map(fiiData -> AtivoResponseDTO.fromFii(ticker, tipo, fiiMapper.toResponse(fiiData)));
+                
+            // TODO: Implementar quando os UseCases existirem
+            case ETF -> 
+                Mono.error(new UnsupportedOperationException("ETF UseCase ainda não implementado"));
+                
+            case ETF_BDR -> 
+                Mono.error(new UnsupportedOperationException("ETF BDR UseCase ainda não implementado"));
+                
+            case BDR_NAO_PATROCINADO, BDR_PATROCINADO -> 
+                Mono.error(new UnsupportedOperationException("BDR UseCase ainda não implementado"));
+            
+            default -> 
+                Mono.error(new TickerNotFoundException(
+                    ticker, 
+                    "CLASSIFICATION_SERVICE", 
+                    ticker, 
+                    List.of("Verifique se o ticker está correto ou se o tipo de ativo é suportado")
+                ));
+        };
+    }
+    
+}

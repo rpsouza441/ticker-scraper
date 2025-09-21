@@ -1,5 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -27,6 +28,11 @@ public class AcaoEntity {
 
     @Column(name = "ticker", unique = true, nullable = false)
     private String ticker;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_ativo", length = 20, nullable = false)
+    @Builder.Default
+    private TipoAtivo tipoAtivo = TipoAtivo.DESCONHECIDO;
 
     @Column(name = "nome_empresa")
     private String nomeEmpresa;

@@ -1,5 +1,5 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model;
-
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -55,6 +55,7 @@ public class Acao {
     private BigDecimal cagrReceitasCincoAnos;
     private BigDecimal cagrLucrosCincoAnos;
     private LocalDateTime dataAtualizacao;
+    private TipoAtivo tipoAtivo = TipoAtivo.DESCONHECIDO;
 
     public Acao() {
     }
@@ -513,5 +514,13 @@ public class Acao {
 
     public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
         this.dataAtualizacao = dataAtualizacao;
+    }
+
+    public TipoAtivo getTipoAtivo() {
+        return tipoAtivo;
+    }
+
+    public void setTipoAtivo(TipoAtivo tipoAtivo) {
+        this.tipoAtivo = tipoAtivo;
     }
 }

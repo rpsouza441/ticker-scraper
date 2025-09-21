@@ -7,6 +7,7 @@ import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PagedResult;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.FundoImobiliario;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,11 @@ public class FiiRepositoryAdapter implements FiiRepositoryPort {
     @Override
     public Optional<FundoImobiliario> findByTicker(String ticker) {
         return jpa.findByTicker(ticker).map(mapper::toDomain);
+    }
+
+    @Override
+    public boolean existsByTicker(String ticker) {
+        return jpa.existsByTicker(ticker);
     }
 
     @Override
@@ -113,5 +119,25 @@ public class FiiRepositoryAdapter implements FiiRepositoryPort {
     @Override
     public Optional<String> findRawJsonByTicker(String ticker) {
         return jpa.findByTicker(ticker).map(FundoImobiliarioEntity::getDadosBrutosJson);
+    }
+
+    @Override
+    public List<FundoImobiliario> findByTipoAtivo(TipoAtivo tipoAtivo) {
+        return jpa.findByTipoAtivo(tipoAtivo).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public PagedResult<FundoImobiliario> findByTipoAtivo(TipoAtivo tipoAtivo, PageQuery query) {
+        Pageable pageable = PageRequest.of(query.pageNumber(), query.pageSize());
+        Page<FundoImobiliarioEntity> page = jpa.findByTipoAtivo(tipoAtivo, pageable);
+        List<FundoImobiliario> content = page.getContent().stream().map(mapper::toDomain).toList();
+        return new PagedResult<>(content, page.getTotalElements(), page.getTotalPages(), page.getNumber());
+    }
+
+    @Override
+    public long countByTipoAtivo(TipoAtivo tipoAtivo) {
+        return jpa.countByTipoAtivo(tipoAtivo);
     }
 }

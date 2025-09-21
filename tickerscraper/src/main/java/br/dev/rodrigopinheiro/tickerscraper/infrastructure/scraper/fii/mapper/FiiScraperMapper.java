@@ -14,13 +14,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-@Mapper(componentModel = "spring", uses = { IndicadorParser.class })
+@Mapper(componentModel = "spring", uses={IndicadorParser.class})
 public interface FiiScraperMapper {
 
     // -------- DTO → Domain (FundoImobiliario) --------
     @Mappings({
             // Header
             @Mapping(source = "infoHeader.ticker",      target = "ticker",      qualifiedByName = "limpezaComUpperCase"),
+            @Mapping(target = "tipoAtivo", constant = "FII"),
             @Mapping(source = "infoHeader.nomeEmpresa", target = "nomeEmpresa"),
 
             // Sobre (strings diretas)
@@ -53,7 +54,10 @@ public interface FiiScraperMapper {
             @Mapping(target = "cotasEmitidas",           expression = "java(toLong(pickAtual(dados.infoHistorico(), \"COTAS EMITIDAS\", \"quote_count\")))"),
 
             // Dividendos (lista)
-            @Mapping(source = "dividendos", target = "fiiDividendos")
+            @Mapping(source = "dividendos", target = "fiiDividendos"),
+            
+            // Data de atualização
+            @Mapping(target = "dataAtualizacao", expression = "java(java.time.LocalDateTime.now())")
     })
     FundoImobiliario toDomain(FiiDadosFinanceirosDTO dados);
     

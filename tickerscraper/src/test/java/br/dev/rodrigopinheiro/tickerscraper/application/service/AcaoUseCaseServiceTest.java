@@ -273,6 +273,13 @@ class AcaoUseCaseServiceTest {
         AcaoDadosFinanceirosDTO raw = createMockScrapedData();
         Acao savedAcao = createMockAcao();
         
+        // Configurar ObjectMapper mock para não falhar na serialização
+        try {
+            when(objectMapper.writeValueAsString(any())).thenReturn("{\"test\":\"data\"}");
+        } catch (Exception e) {
+            // Mock não deve lançar exceção
+        }
+        
         // Garantir que o mock retorna um objeto válido
         when(repositoryPort.save(any(Acao.class), anyString())).thenReturn(savedAcao);
         
@@ -282,6 +289,7 @@ class AcaoUseCaseServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result).isEqualTo(savedAcao);
+        assertThat(result.getTicker()).isEqualTo(savedAcao.getTicker());
         verify(repositoryPort).save(eq(domain), anyString());
     }
     

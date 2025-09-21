@@ -67,15 +67,15 @@ public class AcaoSeleniumScraperAdapter extends AbstractScraperAdapter<AcaoDados
                 // Configurar opções do Chrome
                 ChromeOptions options = createChromeOptions();
                 
-                // 🔄 Inicializar driver com retry
+                //  Inicializar driver com retry
                 driver = retryManager.createWebDriverWithRetry(options);
                 logger.debug("ChromeDriver inicializado com sucesso para ticker: {}", ticker);
                 
-                // 🔄 Configurar DevTools com retry
+                //  Configurar DevTools com retry
                 devTools = retryManager.setupDevToolsWithRetry(driver);
                 logger.debug("DevTools configurado com sucesso para ticker: {}", ticker);
                 
-                // 🔄 Navegar para a página com retry
+                //  Navegar para a página com retry
                 retryManager.loadPageWithRetry(driver, url);
                 logger.debug("Página carregada com sucesso para ticker: {}", ticker);
                 

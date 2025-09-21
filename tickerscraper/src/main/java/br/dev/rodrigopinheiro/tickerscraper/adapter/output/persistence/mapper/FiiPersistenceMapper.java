@@ -17,6 +17,7 @@ public interface FiiPersistenceMapper {
     // ------- Entity -> Domain -------
     @Mappings({
             @Mapping(source = "ticker",                  target = "ticker"),
+            @Mapping(source = "tipoAtivo",               target = "tipoAtivo"),
             @Mapping(source = "nomeEmpresa",             target = "nomeEmpresa"),
             @Mapping(source = "razaoSocial",             target = "razaoSocial"),
             @Mapping(source = "cnpj",                    target = "cnpj"),
@@ -57,6 +58,7 @@ public interface FiiPersistenceMapper {
             @Mapping(target = "dadosBrutosJson",  ignore = true),
             @Mapping(target = "dataAtualizacao",  ignore = true),
             @Mapping(source = "ticker",                  target = "ticker"),
+            @Mapping(source = "tipoAtivo",               target = "tipoAtivo"),
             @Mapping(source = "nomeEmpresa",             target = "nomeEmpresa"),
             @Mapping(source = "razaoSocial",             target = "razaoSocial"),
             @Mapping(source = "cnpj",                    target = "cnpj"),

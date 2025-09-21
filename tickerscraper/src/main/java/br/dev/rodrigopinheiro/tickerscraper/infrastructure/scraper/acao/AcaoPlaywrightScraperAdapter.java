@@ -62,7 +62,7 @@ public class AcaoPlaywrightScraperAdapter extends AbstractScraperAdapter<AcaoDad
     }
     
     /**
-     * Método de fallback quando o Circuit Breaker está aberto ou há falhas.
+     * Métod de fallback quando o Circuit Breaker está aberto ou há falhas.
      * Utiliza Selenium como alternativa ao Playwright.
      */
     public Mono<AcaoDadosFinanceirosDTO> fallbackToSelenium(String ticker, Exception ex) {
@@ -86,7 +86,7 @@ public class AcaoPlaywrightScraperAdapter extends AbstractScraperAdapter<AcaoDad
             ctxRef.set(ctx);
             pageRef.set(page);
 
-            // Navegar e validar usando método da classe base
+            // Navegar e validar usando métod da classe base
             navigateAndValidate(page, url, ticker);
 
             // Esperar seletores essenciais com fallbacks
@@ -94,7 +94,7 @@ public class AcaoPlaywrightScraperAdapter extends AbstractScraperAdapter<AcaoDad
             boolean hasCardsElements = waitForAnySelector(page, CARDS_SELECTORS, 10_000, ticker, url);
             boolean hasIndicatorsElements = waitForAnySelector(page, INDICATORS_SELECTORS, 10_000, ticker, url);
             
-            // Validar elementos essenciais usando método da classe base
+            // Validar elementos essenciais usando métod da classe base
             if (!hasEssentialElements && !hasCardsElements && !hasIndicatorsElements) {
                 logger.error("Nenhum elemento essencial encontrado para ticker {} - possível ticker inexistente", ticker);
                 

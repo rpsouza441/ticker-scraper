@@ -1,12 +1,14 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadorFundamentalistaDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
+import org.mapstruct.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +22,7 @@ public interface AcaoScraperMapper {
     @Mappings({
             //Mapeando InfoHeader
             @Mapping(source = "infoHeader.ticker", target = "ticker", qualifiedByName = "limpezaComUpperCase"),
+            @Mapping(source = "infoHeader.ticker", target = "tipoAtivo", qualifiedByName = "classificarTipoAtivo"),
             @Mapping(source = "infoHeader.nomeEmpresa", target ="nomeEmpresa"),
 
             //Mapeando InfoCards
@@ -75,7 +78,10 @@ public interface AcaoScraperMapper {
             @Mapping(target = "passivosAtivos", expression = "java(getIndicatorValueAsBigDecimal(dados, \"PASSIVOS / ATIVOS\"))"),
             @Mapping(target = "liquidezCorrente", expression = "java(getIndicatorValueAsBigDecimal(dados, \"LIQUIDEZ CORRENTE\"))"),
             @Mapping(target = "cagrReceitasCincoAnos", expression = "java(getIndicatorValueAsBigDecimal(dados, \"CAGR RECEITAS 5 ANOS\"))"),
-            @Mapping(target = "cagrLucrosCincoAnos", expression = "java(getIndicatorValueAsBigDecimal(dados, \"CAGR LUCROS 5 ANOS\"))")
+            @Mapping(target = "cagrLucrosCincoAnos", expression = "java(getIndicatorValueAsBigDecimal(dados, \"CAGR LUCROS 5 ANOS\"))"),
+            
+            // Data de atualização
+            @Mapping(target = "dataAtualizacao", expression = "java(java.time.LocalDateTime.now())")
 
     })
     Acao toDomain(AcaoDadosFinanceirosDTO dados);
@@ -100,5 +106,12 @@ public interface AcaoScraperMapper {
         return IndicadorParser.parseBigdecimal(indicador.valor());
     }
 
+    @Named("classificarTipoAtivo")
+    default TipoAtivo classificarTipoAtivo(String ticker) {
+        if (ticker == null || ticker.trim().isEmpty()) {
+            return TipoAtivo.DESCONHECIDO;
+        }
+        return TipoAtivo.classificarPorHeuristica(ticker.trim().toUpperCase());
+    }
 
 }

@@ -7,6 +7,7 @@ import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PagedResult;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Acao;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +30,11 @@ public class AcaoRepositoryAdapter implements AcaoRepositoryPort {
     @Override
     public Optional<Acao> findByTicker(String ticker) {
         return jpa.findByTicker(ticker).map(mapper::toDomain);
+    }
+
+    @Override
+    public boolean existsByTicker(String ticker) {
+        return jpa.existsByTicker(ticker);
     }
 
     @Override
@@ -64,5 +70,25 @@ public class AcaoRepositoryAdapter implements AcaoRepositoryPort {
         Page<AcaoEntity> page = jpa.findAll(pageable);
         List<Acao> content = page.getContent().stream().map(mapper::toDomain).toList();
         return new PagedResult<>(content, page.getTotalElements(), page.getTotalPages(), page.getNumber());
+    }
+
+    @Override
+    public List<Acao> findByTipoAtivo(TipoAtivo tipoAtivo) {
+        return jpa.findByTipoAtivo(tipoAtivo).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public PagedResult<Acao> findByTipoAtivo(TipoAtivo tipoAtivo, PageQuery query) {
+        Pageable pageable = PageRequest.of(query.pageNumber(), query.pageSize());
+        Page<AcaoEntity> page = jpa.findByTipoAtivo(tipoAtivo, pageable);
+        List<Acao> content = page.getContent().stream().map(mapper::toDomain).toList();
+        return new PagedResult<>(content, page.getTotalElements(), page.getTotalPages(), page.getNumber());
+    }
+
+    @Override
+    public long countByTipoAtivo(TipoAtivo tipoAtivo) {
+        return jpa.countByTipoAtivo(tipoAtivo);
     }
 }

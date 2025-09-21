@@ -1,11 +1,13 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record FiiResponseDTO(
         String ticker,
+        TipoAtivo tipoAtivo,
         String nomeEmpresa,
         String razaoSocial,
         String cnpj,

@@ -1,9 +1,11 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import java.math.BigDecimal;
 
 public record AcaoResponseDTO(
         String ticker,
+        TipoAtivo tipoAtivo,
         String nomeEmpresa,
         String setor,
         String segmento,

@@ -37,6 +37,7 @@ logging:
     org.hibernate.SQL: ${LOG_SQL_LEVEL:DEBUG}
     org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_BIND_LEVEL:TRACE}
     root: ${ROOT_LOG_LEVEL:INFO}
+
   pattern:
     console: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%X{correlationId:-NO-CORRELATION}] [%-5level] %logger{36} - %msg%n"
     file: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%X{correlationId:-NO-CORRELATION}] [%-5level] %logger{36} - %msg%n"
@@ -48,6 +49,32 @@ logging:
 # Configurações específicas do Scraper
 scraper:
   network-capture-timeout-ms: ${SCRAPER_NETWORK_CAPTURE_TIMEOUT_MS:10000}
+
+ticker:
+  classification:
+    cache:
+      enabled: true
+      max-size: 1000
+      ttl-hours: 1
+    brapi:
+      fallback-enabled: true
+      timeout-seconds: 10
+    database:
+      parallel-queries: true
+
+# Configurações da API Brapi
+brapi:
+  base-url: ${BRAPI_BASE_URL:https://brapi.dev/api}
+  token: ${BRAPI_TOKEN:iteQeqeCUg9u8kW8W7xRXm}
+  connect-timeout: ${BRAPI_CONNECT_TIMEOUT:2s}
+  read-timeout: ${BRAPI_READ_TIMEOUT:2s}
+  retry:
+    max-attempts: ${BRAPI_RETRY_MAX_ATTEMPTS:3}
+    initial-delay: ${BRAPI_RETRY_INITIAL_DELAY:200ms}
+    multiplier: ${BRAPI_RETRY_MULTIPLIER:2.0}
+    max-delay: ${BRAPI_RETRY_MAX_DELAY:800ms}
+    jitter: ${BRAPI_RETRY_JITTER:0.1}
+
   selenium:
     retry:
       # Configurações para inicialização do WebDriver

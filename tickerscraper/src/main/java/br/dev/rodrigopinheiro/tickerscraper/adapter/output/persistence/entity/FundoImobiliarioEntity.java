@@ -1,5 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
@@ -29,6 +30,11 @@ public class FundoImobiliarioEntity {
     @NaturalId
     @Column(name = "ticker", nullable = false)
     private String ticker;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_ativo", length = 20, nullable = false)
+    @Builder.Default
+    private TipoAtivo tipoAtivo = TipoAtivo.FII;
 
     @Column(name = "internal_id", nullable = false)
     private Long internalId;
