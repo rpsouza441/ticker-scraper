@@ -62,18 +62,7 @@ public class TickerUseCaseService implements TickerUseCasePort {
             return Mono.just(tipoCache.get());
         }
         
-        // 2. Classificação Heurística
-        TipoAtivoFinanceiroVariavel tipoHeuristico = 
-            TipoAtivoFinanceiroVariavel.classificarPorSufixo(tickerNormalizado);
-        
-        // 3. Se não é ambíguo, usar heurística e cachear
-        if (tipoHeuristico != TipoAtivoFinanceiroVariavel.DESCONHECIDO) {
-            classificationCache.put(tickerNormalizado, tipoHeuristico);
-            log.info("Ticker {} classificado por heurística: {}", tickerNormalizado, tipoHeuristico);
-            return Mono.just(tipoHeuristico);
-        }
-        
-        // 4. Consultar banco primeiro
+        // 2. Consultar banco de dados
         return databaseStrategy.verificarTickerNoBanco(tickerNormalizado)
             .flatMap(resultado -> {
                 if (resultado.isEncontrado()) {
@@ -83,7 +72,7 @@ public class TickerUseCaseService implements TickerUseCasePort {
                     return Mono.just(resultado.getTipo());
                 }
                 
-                // 5. Consultar API Brapi apenas se não há dados no banco
+                // 3. Consultar API Brapi apenas se não há dados no banco
                 log.debug("Nenhum dado encontrado no banco para {}, consultando API Brapi", tickerNormalizado);
                 return consultarApiEClassificar(tickerNormalizado);
             })
@@ -110,12 +99,10 @@ public class TickerUseCaseService implements TickerUseCasePort {
                 log.debug("Fazendo scraping de {} para salvar no banco após classificação", ticker);
                 return fazerScrapingERetornarTipo(ticker, tipo);
             })
-            .onErrorResume(error -> {
-                log.warn("Erro ao consultar API Brapi para {}: {}", ticker, error.getMessage());
-                // Retorna tipo padrão em caso de erro
-                var tipoDefault = TipoAtivoFinanceiroVariavel.ACAO_ON;
-                classificationCache.put(ticker, tipoDefault);
-                return Mono.just(tipoDefault);
+            .onErrorMap(TickerNotFoundException.class, ex -> {
+                log.warn("Ticker {} não encontrado na API Brapi: {}", ticker, ex.getMessage());
+                return new TickerNotFoundException(ticker, "API_BRAPI", ticker, 
+                    List.of("Verifique se o ticker está correto"));
             });
     }
     

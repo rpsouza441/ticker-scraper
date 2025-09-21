@@ -39,6 +39,7 @@ public enum TipoAtivoFinanceiroVariavel {
      * @param ticker Código do ticker (ex: PETR3, SAPR11)
      * @return Tipo do ativo ou DESCONHECIDO se ambíguo
      */
+    @Deprecated
     public static TipoAtivoFinanceiroVariavel classificarPorSufixo(String ticker) {
         if (ticker == null || ticker.trim().isEmpty()) {
             return DESCONHECIDO;

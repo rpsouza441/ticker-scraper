@@ -12,8 +12,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Handler global para tratamento centralizado de exceções da aplicação.
@@ -29,18 +33,14 @@ public class GlobalExceptionHandler {
         logger.warn("[{}] Timeout no scraping: ticker={}, url={}, timeout={}s", 
                    getCorrelationId(), ex.getTicker(), ex.getUrl(), ex.getTimeout().getSeconds());
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Timeout durante o scraping. Tente novamente em alguns minutos.")
-                .ticker(ex.getTicker())
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
-                    "timeout_seconds", ex.getTimeout().getSeconds(),
-                    "operation", ex.getOperation()
-                ))
-                .build();
+        
+        Map<String, Object> details = Map.of(
+            "timeout_seconds", ex.getTimeout().getSeconds(),
+            "operation", ex.getOperation()
+        );
+        
+        ErrorResponse error = createDomainErrorResponse(ex, 
+            "Timeout durante o scraping. Tente novamente em alguns minutos.", details);
         
         return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body(error);
     }
@@ -49,21 +49,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAntiBotDetected(AntiBotDetectedException ex, WebRequest request) {
         logger.error("[{}] Anti-bot detectado: ticker={}, reason={}, method={}", 
                     getCorrelationId(), ex.getTicker(), ex.getDetectionReason(), ex.getDetectionMethod());
-        
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Acesso temporariamente bloqueado. Tente novamente mais tarde.")
-                .ticker(ex.getTicker())
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
-                    "detection_reason", ex.getDetectionReason(),
-                    "detection_method", ex.getDetectionMethod(),
-                    "try_alternative", ex.shouldTryAlternativeMethod()
-                ))
-                .build();
-        
+    
+            Map<String, Object> details = Map.of(
+            "detection_reason", ex.getDetectionReason(),
+            "detection_method", ex.getDetectionMethod(),
+            "try_alternative", ex.shouldTryAlternativeMethod()
+        );
+    
+    ErrorResponse error = createDomainErrorResponse(ex, 
+        "Acesso temporariamente bloqueado. Tente novamente mais tarde.", details);
+    
+
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(error);
     }
     
@@ -72,20 +68,16 @@ public class GlobalExceptionHandler {
         logger.error("[{}] Erro de parsing: ticker={}, selector={}, expected={}", 
                     getCorrelationId(), ex.getTicker(), ex.getSelector(), ex.getExpectedData(), ex);
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Falha ao processar dados do site. A estrutura pode ter mudado.")
-                .ticker(ex.getTicker())
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
+      
+        Map<String,Object> details= Map.of(
                     "selector", ex.getSelector(),
                     "expected_data", ex.getExpectedData(),
                     "actual_content", ex.getActualContent() != null ? ex.getActualContent() : "null"
-                ))
-                .build();
-        
+                );
+         
+        ErrorResponse error = createDomainErrorResponse(ex, 
+        "Falha ao processar dados do site. A estrutura pode ter mudado.", details);
+    
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
     
@@ -94,19 +86,13 @@ public class GlobalExceptionHandler {
         logger.warn("[{}] Rate limit excedido: ticker={}, requests={}, retry_after={}", 
                    getCorrelationId(), ex.getTicker(), ex.getRequestCount(), ex.getRetryAfter());
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Muitas requisições. Aguarde antes de tentar novamente.")
-                .ticker(ex.getTicker())
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
+        Map<String,Object> details= Map.of(
                     "request_count", ex.getRequestCount(),
                     "retry_after", ex.getRetryAfter().toString(),
                     "wait_seconds", ex.getWaitTime().getSeconds()
-                ))
-                .build();
+                );
+        ErrorResponse error = createDomainErrorResponse(ex, 
+        "Muitas requisições. Aguarde antes de tentar novamente.", details);
         
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .header("Retry-After", String.valueOf(ex.getWaitTime().getSeconds()))
@@ -117,21 +103,61 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleTickerNotFound(TickerNotFoundException ex, WebRequest request) {
         logger.info("[{}] Ticker não encontrado: {}", getCorrelationId(), ex.getTicker());
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Ticker não encontrado.")
-                .ticker(ex.getTicker())
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
+
+        Map<String,Object> details= Map.of(
                     "search_attempted", ex.getSearchAttempted(),
                     "suggestions", ex.getSimilarTickers(),
                     "has_suggestions", ex.hasSuggestions()
-                ))
-                .build();
+                );
+        ErrorResponse error = createDomainErrorResponse(ex, 
+        "Ticker não encontrado.", details);
         
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    
+    @ExceptionHandler(TickerClassificationException.class)
+    public ResponseEntity<ErrorResponse> handleTickerClassification(TickerClassificationException ex, WebRequest request) {
+        logger.warn("[{}] Erro na classificação de ticker: {}", getCorrelationId(), ex.getMessage());
+        
+        // Extrair ticker da mensagem de erro (formato: "Erro ao classificar ticker 'TICKER': motivo")
+        String ticker = extractTickerFromMessage(ex.getMessage());
+                
+        Map<String, Object> details = createDetailsMap(
+            "CLASSIFICATION",
+            "Verifique se o ticker está no formato correto (ex: PETR4, SAPR11)",
+            Map.of()
+        );
+        
+        ErrorResponse error = createGenericErrorResponse(
+            "TICKER_CLASSIFICATION_ERROR",
+            "Erro ao classificar o ticker. Verifique se o código está correto.",
+            ticker,
+            details
+        );
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+    
+    @ExceptionHandler(UnsupportedOperationException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedOperation(UnsupportedOperationException ex, WebRequest request) {
+        logger.info("[{}] Operação não suportada: {}", getCorrelationId(), ex.getMessage());
+        
+        // Tentar extrair ticker da mensagem se possível
+        String ticker = extractTickerFromMessage(ex.getMessage());
+        
+        Map<String,Object> details= Map.of(
+                    "error_type", "UNSUPPORTED_OPERATION",
+                    "suggestion", "Este tipo de ativo ainda não é suportado pela API"
+                );
+        
+        ErrorResponse error = createGenericErrorResponse(
+            "OPERATION_NOT_SUPPORTED",
+            "Operação não suportada para este tipo de ativo.",
+            ticker,
+            details
+        );
+        
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(error);
     }
     
     @ExceptionHandler(WebDriverInitializationException.class)
@@ -139,17 +165,13 @@ public class GlobalExceptionHandler {
         logger.error("[{}] Falha na inicialização do WebDriver: driver={}, message={}", 
                     getCorrelationId(), ex.getDriverType(), ex.getMessage());
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Falha na inicialização do navegador. Tente novamente.")
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
+ 
+        Map<String,Object> details= Map.of(
                     "driver_type", ex.getDriverType(),
                     "error_category", "WEBDRIVER_INIT"
-                ))
-                .build();
+                );
+        ErrorResponse error = createDomainErrorResponse(ex, 
+        "Falha na inicialização do navegador. Tente novamente.", details);
         
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
@@ -159,19 +181,13 @@ public class GlobalExceptionHandler {
         logger.warn("[{}] Falha na captura de rede: ticker={}, captured={}/{} URLs", 
                    getCorrelationId(), ex.getTicker(), ex.getCapturedUrls(), ex.getExpectedUrls());
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Falha na captura de dados de rede. Alguns dados podem estar incompletos.")
-                .ticker(ex.getTicker())
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
+        Map<String,Object> details= Map.of(
                     "captured_urls", ex.getCapturedUrls(),
                     "expected_urls", ex.getExpectedUrls(),
                     "capture_rate", String.format("%.1f%%", (ex.getCapturedUrls() * 100.0) / ex.getExpectedUrls())
-                ))
-                .build();
+                );
+        ErrorResponse error = createDomainErrorResponse(ex, 
+        "Falha na captura de dados de rede. Alguns dados podem estar incompletos.", details);
         
         return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).body(error);
     }
@@ -181,85 +197,136 @@ public class GlobalExceptionHandler {
         logger.error("[{}] Estrutura HTML inválida: ticker={}, expected={}", 
                     getCorrelationId(), ex.getTicker(), ex.getExpectedElement());
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Estrutura da página alterada. A funcionalidade pode estar temporariamente indisponível.")
-                .ticker(ex.getTicker())
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
+
+        Map<String,Object> details= Map.of(
                     "expected_element", ex.getExpectedElement() != null ? ex.getExpectedElement() : "unknown",
                     "actual_content", ex.getActualContent() != null ? ex.getActualContent() : "null",
                     "url", ex.getUrl() != null ? ex.getUrl() : "unknown"
-                ))
-                .build();
+                );
+        ErrorResponse error = createDomainErrorResponse(ex, 
+        "Estrutura da página alterada. A funcionalidade pode estar temporariamente indisponível.", details);
         
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
     
-    @ExceptionHandler(br.dev.rodrigopinheiro.tickerscraper.domain.exception.AsyncRequestTimeoutException.class)
-    public ResponseEntity<ErrorResponse> handleAsyncRequestTimeout(br.dev.rodrigopinheiro.tickerscraper.domain.exception.AsyncRequestTimeoutException ex, WebRequest request) {
+    @ExceptionHandler(AsyncRequestTimeoutException.class)
+    public ResponseEntity<ErrorResponse> handleAsyncRequestTimeout(AsyncRequestTimeoutException ex, WebRequest request) {
         logger.warn("[{}] Timeout em operação assíncrona: ticker={}, operation={}, timeout={}s, requestId={}", 
                    getCorrelationId(), ex.getTicker(), ex.getOperation(), ex.getTimeout().getSeconds(), ex.getRequestId());
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code(ex.getErrorCode())
-                .message("Operação assíncrona excedeu o tempo limite. Tente novamente em alguns minutos.")
-                .ticker(ex.getTicker())
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(ex.isRetryable())
-                .details(Map.of(
+            Map<String,Object> details= Map.of(
                     "operation", ex.getOperation(),
                     "timeout_seconds", ex.getTimeout().getSeconds(),
                     "request_id", ex.getRequestId() != null ? ex.getRequestId() : "unknown",
                     "recommended_retry_delay_seconds", ex.getRecommendedRetryDelay().getSeconds()
-                ))
-                .build();
+                );
+        ErrorResponse error = createDomainErrorResponse(ex, 
+        "Operação assíncrona excedeu o tempo limite. Tente novamente em alguns minutos.", details);  
         
         return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
                 .header("Retry-After", String.valueOf(ex.getRecommendedRetryDelay().getSeconds()))
                 .body(error);
     }
     
-    @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestTimeoutException.class)
-    public ResponseEntity<ErrorResponse> handleSpringAsyncTimeout(org.springframework.web.context.request.async.AsyncRequestTimeoutException ex, WebRequest request) {
-        logger.warn("[{}] Timeout de requisição assíncrona do Spring: {}", getCorrelationId(), ex.getMessage());
-        
-        ErrorResponse error = ErrorResponse.builder()
-                .code("SPRING_ASYNC_TIMEOUT")
-                .message("Requisição assíncrona excedeu o tempo limite. Tente novamente.")
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(true)
-                .details(Map.of(
-                    "timeout_type", "SPRING_ASYNC",
-                    "recommended_action", "Retry with shorter timeout or check server load"
-                ))
-                .build();
-        
-        return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
-                .header("Retry-After", "30")
-                .body(error);
-    }
     
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         logger.error("[{}] Erro não tratado: {}", getCorrelationId(), ex.getMessage(), ex);
+    
+        String ticker = extractTickerFromMessage(ex.getMessage());
+        Map<String, Object> details = createDetailsMap(
+            "GENERIC_ERROR", 
+            "Verifique os logs para mais detalhes", 
+            Map.of("exceptionType", ex.getClass().getSimpleName())
+        );
         
-        ErrorResponse error = ErrorResponse.builder()
-                .code("INTERNAL_ERROR")
-                .message("Erro interno do servidor. Tente novamente mais tarde.")
-                .correlationId(getCorrelationId())
-                .timestamp(LocalDateTime.now())
-                .retryable(true)
-                .build();
-        
+        ErrorResponse error = createGenericErrorResponse(
+            "INTERNAL_ERROR",
+            "Erro interno do servidor. Tente novamente mais tarde.",
+            ticker,
+            details
+        );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
     
     private String getCorrelationId() {
         return CorrelationIdInterceptor.getCurrentCorrelationId();
     }
+    
+    /**
+     * Extrai ticker de mensagens de erro com múltiplos padrões
+     */
+    private String extractTickerFromMessage(String message) {
+        if (message == null) return null;
+        
+        // Padrão 1: ticker 'TICKER'
+        Pattern pattern1 = Pattern.compile("ticker '([^']+)'");
+        Matcher matcher1 = pattern1.matcher(message);
+        if (matcher1.find()) {
+            return matcher1.group(1);
+        }
+        
+        // Padrão 2: ticker: TICKER
+        Pattern pattern2 = Pattern.compile("ticker:?\\s+([A-Z0-9]{4,6})");
+        Matcher matcher2 = pattern2.matcher(message);
+        if (matcher2.find()) {
+            return matcher2.group(1);
+        }
+        
+        // Padrão 3: TICKER no início da mensagem
+        Pattern pattern3 = Pattern.compile("^([A-Z0-9]{4,6})\\s");
+        Matcher matcher3 = pattern3.matcher(message);
+        if (matcher3.find()) {
+            return matcher3.group(1);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Cria ErrorResponse base para exceções de domínio que estendem ScrapingException
+     */
+    private ErrorResponse.Builder createBaseErrorResponse(
+        String code, String message, String ticker, boolean retryable) {
+        return ErrorResponse.builder()
+            .code(code)
+            .message(message)
+            .ticker(ticker)
+            .correlationId(getCorrelationId())
+            .timestamp(LocalDateTime.now())
+            .retryable(retryable);
+    }
+
+    /**
+     * Cria ErrorResponse para exceções de domínio específicas
+     */
+    private ErrorResponse createDomainErrorResponse(
+        ScrapingException ex, String message, Map<String, Object> details) {
+        return createBaseErrorResponse(ex.getErrorCode(), message, ex.getTicker(), ex.isRetryable())
+            .details(details)
+            .build();
+    }
+
+    /**
+     * Cria ErrorResponse para exceções genéricas
+     */
+    private ErrorResponse createGenericErrorResponse(
+        String code, String message, String ticker, Map<String, Object> details) {
+        return createBaseErrorResponse(code, message, ticker, true)
+            .details(details)
+            .build();
+    }
+    /**
+     * Cria map de detalhes com campos base + específicos
+     */
+    private Map<String, Object> createDetailsMap(String errorType, String suggestion, Map<String, Object> specific) {
+        Map<String, Object> details = new HashMap<>();
+        if (errorType != null) details.put("error_type", errorType);
+        if (suggestion != null) details.put("suggestion", suggestion);
+        if (specific != null) details.putAll(specific);
+        return details;
+    }
+
+   
+
 }

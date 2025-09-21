@@ -2,6 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.exception.NetworkCaptureException;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.dto.BrapiQuoteResponse;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.dto.BrapiErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,7 +116,22 @@ public class BrapiHttpClient {
                 String.format("API Brapi retornou status %d", response.statusCode()));
         }
         
-        return objectMapper.readValue(response.body(), BrapiQuoteResponse.class);
+        String responseBody = response.body();
+        
+        // Verificar se é uma resposta de erro da API
+        if (responseBody.contains("\"error\":true")) {
+            try {
+                BrapiErrorResponse errorResponse = objectMapper.readValue(responseBody, BrapiErrorResponse.class);
+                if (errorResponse.isTickerNotFound()) {
+                    throw new NetworkCaptureException(ticker, 
+                        String.format("API Brapi retornou erro: %s", errorResponse.message()));
+                }
+            } catch (Exception e) {
+                log.warn("Erro ao parsear resposta de erro da API Brapi: {}", e.getMessage());
+            }
+        }
+        
+        return objectMapper.readValue(responseBody, BrapiQuoteResponse.class);
     }
     
     private String buildUrl(String ticker) {
