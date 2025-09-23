@@ -52,7 +52,7 @@ out/
 *.mv.db
 *.db
 *.sqlite
-*.sql
+
 
 # OS files
 .DS_Store
