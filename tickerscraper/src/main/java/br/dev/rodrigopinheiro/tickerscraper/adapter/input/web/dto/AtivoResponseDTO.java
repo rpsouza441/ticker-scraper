@@ -12,18 +12,18 @@ import java.time.LocalDateTime;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AtivoResponseDTO {
-    
+
     private String ticker;
     private TipoAtivoFinanceiroVariavel tipoAtivo;
     private String nomeEmpresa;
     private LocalDateTime dataAtualizacao;
     private ClassificacaoInfo classificacao;
-    
+
     // Dados específicos (apenas um será preenchido)
     private AcaoResponseDTO dadosAcao;
     private FiiResponseDTO dadosFii;
     private EtfResponseDTO dadosEtf;
-    // TODO: Adicionar BdrResponseDTO
+    private BdrResponseDTO dadosBdr;
     
     // Dados financeiros básicos (sempre preenchidos)
     private BigDecimal cotacao;
@@ -105,6 +105,30 @@ public class AtivoResponseDTO {
             .dadosEtf(etfData)
             .cotacao(etfData.valorAtual())
             .variacao(etfData.variacao12M())
+            .classificacao(ClassificacaoInfo.builder()
+                .metodo("BANCO_DADOS")
+                .confianca("ALTA")
+                .build())
+            .build();
+    }
+
+    /**
+     * Factory method para criar resposta de BDR.
+     */
+    public static AtivoResponseDTO fromBdr(String ticker, TipoAtivoFinanceiroVariavel tipo, BdrResponseDTO bdrData) {
+        Long volumeMedio = null;
+        if (bdrData.indicadores() != null && bdrData.indicadores().volumeMedio() != null) {
+            volumeMedio = bdrData.indicadores().volumeMedio().longValue();
+        }
+        return AtivoResponseDTO.builder()
+            .ticker(ticker)
+            .tipoAtivo(tipo)
+            .nomeEmpresa(bdrData.nomeEmpresa() != null ? bdrData.nomeEmpresa() : bdrData.nomeAcaoOriginal())
+            .dataAtualizacao(LocalDateTime.now())
+            .dadosBdr(bdrData)
+            .cotacao(bdrData.precoAtual())
+            .variacaoPercentual(bdrData.variacaoDia())
+            .volume(volumeMedio)
             .classificacao(ClassificacaoInfo.builder()
                 .metodo("BANCO_DADOS")
                 .confianca("ALTA")

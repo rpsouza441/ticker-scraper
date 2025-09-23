@@ -3,9 +3,11 @@ package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AtivoResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.BdrApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.EtfApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.FiiApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.input.BdrUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.EtfUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.FiiUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.TickerUseCasePort;
@@ -35,14 +37,12 @@ public class TickerUseCaseService implements TickerUseCasePort {
     private final AcaoUseCasePort acaoUseCase;
     private final FiiUseCasePort fiiUseCase;
     private final EtfUseCasePort etfUseCase;
+    private final BdrUseCasePort bdrUseCase;
     private final AcaoApiMapper acaoMapper;
     private final FiiApiMapper fiiMapper;
     private final EtfApiMapper etfMapper;
-
-    // TODO: Adicionar BdrUseCasePort quando criado
-
-
-     public Mono<AtivoResponseDTO> obterAtivo(String ticker) {
+    private final BdrApiMapper bdrMapper;
+    public Mono<AtivoResponseDTO> obterAtivo(String ticker) {
         log.info("Iniciando busca para ticker: {}", ticker);
         
         return classificarTicker(ticker)
@@ -51,8 +51,7 @@ public class TickerUseCaseService implements TickerUseCasePort {
                 ticker, response.getTipoAtivo()))
             .doOnError(error -> log.error("Erro ao buscar ticker {}: {}", ticker, error.getMessage()));
     }
-    
-     @Override
+    @Override
     public Mono<TipoAtivoFinanceiroVariavel> classificarTicker(String ticker) {
         if (ticker == null || ticker.trim().isEmpty()) {
             return Mono.error(new TickerClassificationException(ticker, "Ticker não pode ser vazio"));
@@ -87,7 +86,7 @@ public class TickerUseCaseService implements TickerUseCasePort {
             });
     }
 
- /**
+    /**
      * Consulta API Brapi, classifica resposta e faz scraping para salvar no banco
      */
     private Mono<TipoAtivoFinanceiroVariavel> consultarApiEClassificar(String ticker) {
@@ -134,10 +133,14 @@ public class TickerUseCaseService implements TickerUseCasePort {
                     .map(etfData -> tipo);
                 
             // Para tipos não implementados, apenas retorna o tipo sem scraping
-            case ETF_BDR, BDR_NAO_PATROCINADO, BDR_PATROCINADO -> {
+            case ETF_BDR -> {
                 log.warn("Scraping não implementado para tipo {}, apenas classificação salva", tipo);
                 yield Mono.just(tipo);
             }
+            case BDR_NAO_PATROCINADO, BDR_PATROCINADO ->
+                bdrUseCase.getTickerData(ticker)
+                    .doOnNext(bdr -> log.info("Dados de BDR {} salvos no banco após classificação", ticker))
+                    .map(ignored -> tipo);
             
             default -> {
                 log.warn("Tipo desconhecido {}, retornando sem scraping", tipo);
@@ -170,8 +173,9 @@ public class TickerUseCaseService implements TickerUseCasePort {
             case ETF_BDR -> 
                 Mono.error(new UnsupportedOperationException("ETF BDR UseCase ainda não implementado"));
                 
-            case BDR_NAO_PATROCINADO, BDR_PATROCINADO -> 
-                Mono.error(new UnsupportedOperationException("BDR UseCase ainda não implementado"));
+            case BDR_NAO_PATROCINADO, BDR_PATROCINADO ->
+                bdrUseCase.getTickerData(ticker)
+                    .map(bdr -> AtivoResponseDTO.fromBdr(ticker, tipo, bdrMapper.toResponse(bdr)));
             
             default -> 
                 Mono.error(new TickerNotFoundException(

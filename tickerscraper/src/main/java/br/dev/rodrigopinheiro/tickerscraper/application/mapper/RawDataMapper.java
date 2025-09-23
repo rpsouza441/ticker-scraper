@@ -1,10 +1,16 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.AcaoRawDataResponse;
+import br.dev.rodrigopinheiro.tickerscraper.application.dto.BdrRawDataResponse;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.EtfRawDataResponse;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.FiiRawDataResponse;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.ProcessingStatus;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrDadosFinanceirosDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrDemonstrativoDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrDividendosDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrHtmlMetadataDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrIndicadoresDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.etf.dto.EtfDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
 import org.mapstruct.Mapper;
@@ -14,6 +20,7 @@ import org.mapstruct.Named;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -266,7 +273,7 @@ public interface RawDataMapper {
         if (infraDto == null) {
             return Map.of("total_fields", "0", "apis_captured", "0");
         }
-        
+
         Map<String, Object> rawData = buildFiiRawDataMap(infraDto);
         return Map.of(
             "total_fields", String.valueOf(rawData.size()),
@@ -277,6 +284,119 @@ public interface RawDataMapper {
             "has_cotacao", String.valueOf(infraDto.cotacao() != null),
             "has_dividendos", String.valueOf(infraDto.dividendos() != null),
             "has_historico", String.valueOf(infraDto.infoHistorico() != null)
+        );
+    }
+
+    /**
+     * Converte dados de infraestrutura de BDR para DTO de resposta bruta.
+     */
+    default BdrRawDataResponse toBdrRawDataResponse(BdrDadosFinanceirosDTO infraDto) {
+        if (infraDto == null) {
+            return createFailedBdrResponse("UNKNOWN", "SCRAPER", "DTO de infraestrutura nulo");
+        }
+
+        Map<String, Object> rawData = buildBdrRawDataMap(infraDto);
+        Map<String, String> metadata = buildBdrMetadata(infraDto, rawData);
+        ProcessingStatus status = determineProcessingStatus(rawData);
+
+        Map<String, String> apiPayloads = infraDto.rawJson() == null ? Map.of() : new LinkedHashMap<>(infraDto.rawJson());
+
+        return new BdrRawDataResponse(
+                infraDto.ticker(),
+                infraDto.investidorId(),
+                rawData,
+                apiPayloads,
+                "PLAYWRIGHT_SCRAPER",
+                LocalDateTime.now(),
+                status,
+                metadata
+        );
+    }
+
+    @Named("buildBdrRawDataMap")
+    default Map<String, Object> buildBdrRawDataMap(BdrDadosFinanceirosDTO infraDto) {
+        Map<String, Object> rawData = Collections.synchronizedMap(new LinkedHashMap<>());
+        if (infraDto == null) {
+            return rawData;
+        }
+
+        rawData.put("ticker", infraDto.ticker());
+        rawData.put("investidorId", infraDto.investidorId());
+
+        if (infraDto.cotacoes() != null) {
+            rawData.put("cotacoes", Map.of(
+                    "moeda", infraDto.cotacoes().moeda(),
+                    "serie", infraDto.cotacoes().serie()
+            ));
+        }
+
+        if (infraDto.dividendos() != null) {
+            rawData.put("dividendos", Map.of(
+                    "itens", infraDto.dividendos().dividendos()
+            ));
+        }
+
+        if (infraDto.indicadores() != null) {
+            BdrIndicadoresDTO ind = infraDto.indicadores();
+            Map<String, Object> indicadores = new LinkedHashMap<>();
+            indicadores.put("monetarios", ind.indicadoresMonetarios());
+            indicadores.put("percentuais", ind.indicadoresPercentuais());
+            indicadores.put("simples", ind.indicadoresSimples());
+            indicadores.put("paridade", ind.paridade());
+            indicadores.put("moedaPadrao", ind.moedaPadrao());
+            rawData.put("indicadores", indicadores);
+        }
+
+        rawData.put("dre", convertDemonstrativo(infraDto.dre()));
+        rawData.put("balancoPatrimonial", convertDemonstrativo(infraDto.balancoPatrimonial()));
+        rawData.put("fluxoDeCaixa", convertDemonstrativo(infraDto.fluxoDeCaixa()));
+
+        if (infraDto.htmlMetadata() != null) {
+            BdrHtmlMetadataDTO meta = infraDto.htmlMetadata();
+            Map<String, Object> metadata = new LinkedHashMap<>();
+            metadata.put("titulo", meta.titulo());
+            metadata.put("descricao", meta.descricao());
+            metadata.put("metaTags", meta.metaTags());
+            rawData.put("htmlMetadata", metadata);
+        }
+
+        return rawData;
+    }
+
+    default Map<String, Object> convertDemonstrativo(BdrDemonstrativoDTO demonstrativo) {
+        if (demonstrativo == null) {
+            return Map.of();
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("tipo", demonstrativo.tipo());
+        result.put("raw", demonstrativo.raw() != null ? demonstrativo.raw().toString() : null);
+        return result;
+    }
+
+    default Map<String, String> buildBdrMetadata(BdrDadosFinanceirosDTO infraDto, Map<String, Object> rawData) {
+        if (infraDto == null) {
+            return Map.of("total_fields", "0");
+        }
+        BdrDividendosDTO dividendos = infraDto.dividendos();
+        return Map.of(
+                "total_fields", String.valueOf(rawData.size()),
+                "has_cotacoes", String.valueOf(infraDto.cotacoes() != null && !infraDto.cotacoes().serie().isEmpty()),
+                "has_dividendos", String.valueOf(dividendos != null && dividendos.dividendos() != null && !dividendos.dividendos().isEmpty()),
+                "has_indicadores", String.valueOf(infraDto.indicadores() != null && !infraDto.indicadores().indicadoresMonetarios().isEmpty()),
+                "payload_count", String.valueOf(infraDto.rawJson() != null ? infraDto.rawJson().size() : 0)
+        );
+    }
+
+    default BdrRawDataResponse createFailedBdrResponse(String ticker, String source, String error) {
+        return new BdrRawDataResponse(
+                ticker,
+                null,
+                Map.of(),
+                Map.of(),
+                source,
+                LocalDateTime.now(),
+                ProcessingStatus.FAILED,
+                Map.of("error_message", error)
         );
     }
     

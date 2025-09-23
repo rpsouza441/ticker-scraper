@@ -2,6 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.output.BdrRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.TipoAtivoResult;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
@@ -21,7 +22,7 @@ public class TickerDatabaseStrategy {
 
     private final AcaoRepositoryPort acaoRepository;
     private final FiiRepositoryPort fiiRepository;
-    // TODO: Adicionar EtfRepositoryPort e BdrRepositoryPort quando criados
+    private final BdrRepositoryPort bdrRepository;
     
     /**
      * Verifica se ticker existe no banco e retorna o tipo
@@ -33,7 +34,7 @@ public class TickerDatabaseStrategy {
         Mono<Boolean> existeAcao = verificarExistencia(acaoRepository::existsByTicker, ticker);
         Mono<Boolean> existeFii = verificarExistencia(fiiRepository::existsByTicker, ticker);
         Mono<Boolean> existeEtf = Mono.just(false); // TODO: implementar quando EtfRepository existir
-        Mono<Boolean> existeBdr = Mono.just(false); // TODO: implementar quando BdrRepository existir
+        Mono<Boolean> existeBdr = verificarExistencia(bdrRepository::existsByTicker, ticker);
         
         return Mono.zip(existeAcao, existeFii, existeEtf, existeBdr)
             .map(tuple -> determinarTipo(ticker, tuple))
