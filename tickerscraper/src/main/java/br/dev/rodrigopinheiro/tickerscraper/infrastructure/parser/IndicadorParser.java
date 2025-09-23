@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.math.RoundingMode;
 
 /**
  * Classe utilitária para processamento e normalização de textos extraídos de HTML,
@@ -186,6 +188,122 @@ public class IndicadorParser {
         } catch (NumberFormatException e) {
             logger.error("Erro ao converter '{}' para BigDecimal: {}", valor, e.getMessage());
             return BigDecimal.ZERO;
+        }
+    }
+
+    /**
+     * Representação simplificada da paridade de um BDR.
+     */
+    public record ParidadeBdrInfo(BigDecimal quantidadeBdr,
+                                  BigDecimal quantidadeAcoes,
+                                  BigDecimal fatorConversao,
+                                  String moedaReferencia,
+                                  String descricaoOriginal) {}
+
+    /**
+     * Faz o parsing de um valor monetário retornando um BigDecimal se possível.
+     */
+    public static Optional<BigDecimal> parseValorMonetario(String raw) {
+        if (raw == null) {
+            return Optional.empty();
+        }
+        String texto = raw.replace("US$", "")
+                .replace("R$", "")
+                .replace("$", "")
+                .replaceAll("(?i)[A-Z]{3}", "")
+                .trim();
+
+        if (texto.isEmpty() || !texto.matches(".*\\d.*")) {
+            return Optional.empty();
+        }
+
+        BigDecimal valor = parseBigdecimal(texto);
+        return Optional.ofNullable(valor);
+    }
+
+    /**
+     * Tenta extrair uma moeda a partir de um texto.
+     */
+    public static Optional<String> extrairMoeda(String raw) {
+        if (raw == null) {
+            return Optional.empty();
+        }
+        if (raw.contains("R$")) {
+            return Optional.of("BRL");
+        }
+        if (raw.contains("US$")) {
+            return Optional.of("USD");
+        }
+        Matcher matcher = Pattern.compile("(?i)\\b([A-Z]{3})\\b").matcher(raw.replace("$", ""));
+        if (matcher.find()) {
+            return Optional.of(matcher.group(1).toUpperCase());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Converte percentuais representados como string para decimal (ex: "12,5%" -> 0.125).
+     */
+    public static Optional<BigDecimal> parsePercentualParaDecimal(String raw) {
+        if (raw == null || !raw.contains("%")) {
+            return Optional.empty();
+        }
+        String texto = raw.replace("%", "")
+                .replace("a.a", "")
+                .replace("ao ano", "")
+                .trim();
+        if (texto.isEmpty() || !texto.matches(".*\\d.*")) {
+            return Optional.empty();
+        }
+        BigDecimal valor = parseBigdecimal(texto);
+        return Optional.of(valor.divide(BigDecimal.valueOf(100), 8, RoundingMode.HALF_UP));
+    }
+
+    /**
+     * Faz o parsing de paridade textual, retornando a razão entre BDR e ação original.
+     */
+    public static Optional<ParidadeBdrInfo> parseParidadeBdr(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Optional.empty();
+        }
+        Pattern pattern = Pattern.compile("(?i)([0-9.,]+)\\s*BDR.*?=\\s*([0-9.,]+)");
+        Matcher matcher = pattern.matcher(raw);
+        if (!matcher.find()) {
+            return Optional.empty();
+        }
+        String bdrTexto = matcher.group(1);
+        String acaoTexto = matcher.group(2);
+        if (!bdrTexto.matches(".*\\d.*") || !acaoTexto.matches(".*\\d.*")) {
+            return Optional.empty();
+        }
+        BigDecimal quantidadeBdr = parseBigdecimal(bdrTexto);
+        BigDecimal quantidadeAcao = parseBigdecimal(acaoTexto);
+        if (quantidadeBdr == null || quantidadeAcao == null ||
+                quantidadeBdr.compareTo(BigDecimal.ZERO) <= 0 ||
+                quantidadeAcao.compareTo(BigDecimal.ZERO) <= 0) {
+            return Optional.empty();
+        }
+        BigDecimal fator = quantidadeAcao.divide(quantidadeBdr, 8, RoundingMode.HALF_UP);
+        String moeda = extrairMoeda(raw).orElse(null);
+        return Optional.of(new ParidadeBdrInfo(quantidadeBdr, quantidadeAcao, fator, moeda, raw.trim()));
+    }
+
+    /**
+     * Faz parsing seguro de números representados como texto.
+     */
+    public static Optional<Double> safeParseDouble(String raw) {
+        if (raw == null) {
+            return Optional.empty();
+        }
+        String texto = limparTextoNumerico(raw);
+        if (texto.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Double.parseDouble(texto));
+        } catch (NumberFormatException e) {
+            logger.debug("Não foi possível converter '{}' para double: {}", raw, e.getMessage());
+            return Optional.empty();
         }
     }
 
