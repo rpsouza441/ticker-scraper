@@ -3,8 +3,6 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Entity
 @Table(name = "bdr_fc_year")
 @Getter
@@ -25,15 +23,27 @@ public class BdrFcYearEntity {
     @Column(name = "ano")
     private Integer ano;
 
-    @Column(name = "fluxo_operacional", precision = 19, scale = 2)
-    private BigDecimal fluxoCaixaOperacional;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "valor", column = @Column(name = "fco_val", precision = 30, scale = 6)),
+            @AttributeOverride(name = "quality", column = @Column(name = "fco_qual")),
+            @AttributeOverride(name = "raw", column = @Column(name = "fco_raw"))
+    })
+    private QualityValueEmbeddable fluxoCaixaOperacional;
 
-    @Column(name = "fluxo_investimento", precision = 19, scale = 2)
-    private BigDecimal fluxoCaixaInvestimento;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "valor", column = @Column(name = "fci_val", precision = 30, scale = 6)),
+            @AttributeOverride(name = "quality", column = @Column(name = "fci_qual")),
+            @AttributeOverride(name = "raw", column = @Column(name = "fci_raw"))
+    })
+    private QualityValueEmbeddable fluxoCaixaInvestimento;
 
-    @Column(name = "fluxo_financiamento", precision = 19, scale = 2)
-    private BigDecimal fluxoCaixaFinanciamento;
-
-    @Column(name = "caixa_final", precision = 19, scale = 2)
-    private BigDecimal caixaFinal;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "valor", column = @Column(name = "fcf_val", precision = 30, scale = 6)),
+            @AttributeOverride(name = "quality", column = @Column(name = "fcf_qual")),
+            @AttributeOverride(name = "raw", column = @Column(name = "fcf_raw"))
+    })
+    private QualityValueEmbeddable fluxoCaixaFinanciamento;
 }

@@ -3,9 +3,11 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.b
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrBpYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrDreYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrFcYearEntity;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.QualityValueEmbeddable;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.BpYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.DreYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.FcYear;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.QualityValue;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -54,4 +56,8 @@ public interface BdrFinancialStatementMapper {
     List<BdrFcYearEntity> toFcEntityList(List<FcYear> source);
 
     List<FcYear> toFcDomainList(List<BdrFcYearEntity> source);
+
+    QualityValueEmbeddable toEntity(QualityValue value);
+
+    QualityValue toDomain(QualityValueEmbeddable value);
 }

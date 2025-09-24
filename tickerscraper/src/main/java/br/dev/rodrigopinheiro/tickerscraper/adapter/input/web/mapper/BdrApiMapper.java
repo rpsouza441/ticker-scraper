@@ -47,4 +47,6 @@ public interface BdrApiMapper {
     BdrBpYearResponseDTO toResponse(BpYear year);
 
     BdrFcYearResponseDTO toResponse(FcYear year);
+
+    BdrFcValueResponseDTO toResponse(QualityValue value);
 }
