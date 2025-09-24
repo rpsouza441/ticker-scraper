@@ -19,7 +19,7 @@ public class Bdr {
     private String financialsCurrency;
     private BigDecimal cotacao;
     private BigDecimal variacao12;
-    private MarketCap marketCap;
+    private BdrMarketCap marketCap;
     private ParidadeBdr paridade;
     private CurrentIndicators currentIndicators;
     private List<PricePoint> priceSeries;
@@ -112,11 +112,11 @@ public class Bdr {
         this.variacao12 = variacao12;
     }
 
-    public MarketCap getMarketCap() {
+    public BdrMarketCap getMarketCap() {
         return marketCap;
     }
 
-    public void setMarketCap(MarketCap marketCap) {
+    public void setMarketCap(BdrMarketCap marketCap) {
         this.marketCap = marketCap;
     }
 

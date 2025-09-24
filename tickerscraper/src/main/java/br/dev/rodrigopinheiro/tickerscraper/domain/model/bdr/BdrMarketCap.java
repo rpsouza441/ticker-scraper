@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 /**
  * Representação de auditoria para o market cap de um BDR.
  */
-public class MarketCap {
+public class BdrMarketCap {
 
     private BigDecimal value;
     private String currency;

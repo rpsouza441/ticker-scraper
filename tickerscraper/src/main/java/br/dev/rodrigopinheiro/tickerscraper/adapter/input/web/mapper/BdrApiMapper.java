@@ -53,6 +53,7 @@ public interface BdrApiMapper {
 
     BdrPricePointResponseDTO toPricePointResponse(PricePoint pricePoint);
 
+
     BdrDividendYearResponseDTO toDividendYearResponse(DividendYear year);
 
     BdrHistoricalIndicatorResponseDTO toHistoricalIndicatorResponse(HistoricalIndicator indicator);
@@ -69,4 +70,5 @@ public interface BdrApiMapper {
         }
         return new BdrFcValueResponseDTO(value.getValor(), value.getQuality(), value.getRaw());
     }
+
 }

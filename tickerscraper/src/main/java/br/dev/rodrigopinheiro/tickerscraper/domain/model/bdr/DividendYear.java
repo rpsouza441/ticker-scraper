@@ -7,6 +7,7 @@ public class DividendYear {
     private Integer ano;
     private BigDecimal totalDividendo;
     private BigDecimal dividendYield;
+    private String currency;
 
     public Integer getAno() {
         return ano;
@@ -30,5 +31,13 @@ public class DividendYear {
 
     public void setDividendYield(BigDecimal dividendYield) {
         this.dividendYield = dividendYield;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 }

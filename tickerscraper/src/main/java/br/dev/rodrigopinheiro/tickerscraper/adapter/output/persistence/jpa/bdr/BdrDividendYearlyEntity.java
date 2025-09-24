@@ -30,4 +30,7 @@ public class BdrDividendYearlyEntity {
 
     @Column(name = "dividend_yield", precision = 19, scale = 6)
     private BigDecimal dividendYield;
+
+    @Column(name = "currency")
+    private String currency;
 }

@@ -1,9 +1,12 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.bdr;
 
+
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.AuditedBigDecimalEmbeddable;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrBpYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrDreYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrFcYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.QualityValueEmbeddable;
+
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.BpYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.DreYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.FcYear;
@@ -20,6 +23,7 @@ public interface BdrFinancialStatementMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "bdr", ignore = true)
     BdrDreYearEntity toDreEntity(DreYear year);
+
 
     @InheritInverseConfiguration(name = "toDreEntity")
     DreYear toDreDomain(BdrDreYearEntity entity);
@@ -42,6 +46,7 @@ public interface BdrFinancialStatementMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "bdr", ignore = true)
     BdrFcYearEntity toFcEntity(FcYear year);
+
 
     @InheritInverseConfiguration(name = "toFcEntity")
     FcYear toFcDomain(BdrFcYearEntity entity);
@@ -70,5 +75,6 @@ public interface BdrFinancialStatementMapper {
         qualityValue.setQuality(value.getQuality());
         qualityValue.setRaw(value.getRaw());
         return qualityValue;
+
     }
 }
