@@ -27,7 +27,8 @@ public interface BdrJpaRepository extends JpaRepository<BdrEntity, Long> {
             "bpYears",
             "fcYears",
             "currentIndicators",
-            "paridade"
+            "paridade",
+            "marketCap"
     })
     @Query("""
             select distinct b
@@ -44,7 +45,8 @@ public interface BdrJpaRepository extends JpaRepository<BdrEntity, Long> {
             "bpYears",
             "fcYears",
             "currentIndicators",
-            "paridade"
+            "paridade",
+            "marketCap"
     })
     @Override
     Page<BdrEntity> findAll(Pageable pageable);
@@ -57,7 +59,8 @@ public interface BdrJpaRepository extends JpaRepository<BdrEntity, Long> {
             "bpYears",
             "fcYears",
             "currentIndicators",
-            "paridade"
+            "paridade",
+            "marketCap"
     })
     List<BdrEntity> findByTipoAtivo(TipoAtivo tipoAtivo);
 
@@ -69,7 +72,8 @@ public interface BdrJpaRepository extends JpaRepository<BdrEntity, Long> {
             "bpYears",
             "fcYears",
             "currentIndicators",
-            "paridade"
+            "paridade",
+            "marketCap"
     })
     Page<BdrEntity> findByTipoAtivo(TipoAtivo tipoAtivo, Pageable pageable);
 

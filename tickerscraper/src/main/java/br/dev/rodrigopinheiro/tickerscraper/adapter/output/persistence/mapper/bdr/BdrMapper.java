@@ -16,7 +16,8 @@ import java.util.List;
                 BdrHistoricalIndicatorMapper.class,
                 BdrFinancialStatementMapper.class,
                 BdrCurrentIndicatorsMapper.class,
-                BdrParidadeMapper.class
+                BdrParidadeMapper.class,
+                BdrMarketCapMapper.class
         })
 public interface BdrMapper {
 
@@ -40,6 +41,7 @@ public interface BdrMapper {
             @Mapping(source = "fcYears", target = "fcYears"),
             @Mapping(source = "currentIndicators", target = "currentIndicators"),
             @Mapping(source = "paridade", target = "paridade"),
+            @Mapping(source = "marketCap", target = "marketCap"),
             @Mapping(source = "updatedAt", target = "updatedAt")
     })
     BdrEntity toEntity(Bdr bdr);
@@ -65,7 +67,8 @@ public interface BdrMapper {
             @Mapping(target = "bpYears", ignore = true),
             @Mapping(target = "fcYears", ignore = true),
             @Mapping(target = "currentIndicators", ignore = true),
-            @Mapping(target = "paridade", ignore = true)
+            @Mapping(target = "paridade", ignore = true),
+            @Mapping(target = "marketCap", ignore = true)
     })
     void updateEntity(Bdr source, @MappingTarget BdrEntity target);
 
@@ -78,6 +81,7 @@ public interface BdrMapper {
         replaceFcYears(source, target);
         replaceCurrentIndicators(source, target);
         replaceParidade(source, target);
+        replaceMarketCap(source, target);
     }
 
     default void replacePriceSeries(Bdr source, BdrEntity target) {
@@ -198,6 +202,17 @@ public interface BdrMapper {
         target.setParidade(entity);
     }
 
+    default void replaceMarketCap(Bdr source, BdrEntity target) {
+        BdrMarketCap marketCap = source.getMarketCap();
+        if (marketCap == null) {
+            target.setMarketCap(null);
+            return;
+        }
+        BdrMarketCapEntity entity = toMarketCapEntity(marketCap);
+        entity.setBdr(target);
+        target.setMarketCap(entity);
+    }
+
     List<BdrPriceSeriesEntity> toPriceSeriesEntities(List<PricePoint> source);
 
     List<BdrDividendYearlyEntity> toDividendYearEntities(List<DividendYear> source);
@@ -213,6 +228,8 @@ public interface BdrMapper {
     BdrCurrentIndicatorsEntity toCurrentIndicatorsEntity(CurrentIndicators indicators);
 
     BdrParidadeEntity toParidadeEntity(ParidadeBdr paridade);
+
+    BdrMarketCapEntity toMarketCapEntity(BdrMarketCap marketCap);
 
     @AfterMapping
     default void wireParents(@MappingTarget BdrEntity entity) {
@@ -269,6 +286,9 @@ public interface BdrMapper {
         }
         if (entity.getParidade() != null) {
             entity.getParidade().setBdr(entity);
+        }
+        if (entity.getMarketCap() != null) {
+            entity.getMarketCap().setBdr(entity);
         }
     }
 }
