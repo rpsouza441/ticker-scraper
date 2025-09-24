@@ -22,15 +22,16 @@ public class BdrDividendYearlyEntity {
     @JoinColumn(name = "bdr_id")
     private BdrEntity bdr;
 
-    @Column(name = "ano")
-    private Integer ano;
+    @Column(name = "year")
+    private Integer year;
 
-    @Column(name = "total_dividendo", precision = 19, scale = 6)
-    private BigDecimal totalDividendo;
+    @Column(name = "valor", precision = 19, scale = 6)
+    private BigDecimal valor;
 
     @Column(name = "dividend_yield", precision = 19, scale = 6)
     private BigDecimal dividendYield;
 
-    @Column(name = "currency")
-    private String currency;
+    @Builder.Default
+    @Column(name = "currency", nullable = false)
+    private String currency = "USD";
 }

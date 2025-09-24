@@ -15,8 +15,8 @@ public interface BdrDividendYearMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "bdr", ignore = true),
-            @Mapping(source = "ano", target = "ano"),
-            @Mapping(source = "totalDividendo", target = "totalDividendo"),
+            @Mapping(source = "year", target = "year"),
+            @Mapping(source = "valor", target = "valor"),
             @Mapping(source = "dividendYield", target = "dividendYield"),
             @Mapping(source = "currency", target = "currency")
     })
