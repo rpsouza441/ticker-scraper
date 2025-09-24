@@ -223,6 +223,7 @@ public class BdrScraperMapper {
             return List.of();
         }
         Map<Integer, BigDecimal> acumuladoPorAno = new TreeMap<>();
+        Map<Integer, String> currencyPorAno = new HashMap<>();
         for (BdrDividendoItemDTO item : dividendos.dividendos()) {
             if (item == null || item.valor() == null) {
                 continue;
@@ -232,12 +233,16 @@ public class BdrScraperMapper {
                 continue;
             }
             acumuladoPorAno.merge(ano, item.valor(), BigDecimal::add);
+            if (currencyPorAno.get(ano) == null && item.moeda() != null) {
+                currencyPorAno.put(ano, item.moeda());
+            }
         }
         return acumuladoPorAno.entrySet().stream()
                 .map(entry -> {
                     DividendYear year = new DividendYear();
                     year.setAno(entry.getKey());
                     year.setTotalDividendo(entry.getValue().setScale(4, RoundingMode.HALF_UP));
+                    year.setCurrency(currencyPorAno.get(entry.getKey()));
                     return year;
                 })
                 .collect(Collectors.toList());

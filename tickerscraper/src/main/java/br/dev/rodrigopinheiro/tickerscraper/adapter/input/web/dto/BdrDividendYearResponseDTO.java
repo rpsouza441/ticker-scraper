@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public record BdrDividendYearResponseDTO(
         Integer ano,
         BigDecimal totalDividendo,
-        BigDecimal dividendYield
+        BigDecimal dividendYield,
+        String currency
 ) {
 }
