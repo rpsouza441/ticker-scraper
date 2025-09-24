@@ -1,43 +1,53 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 public class ParidadeBdr {
 
-    private BigDecimal fatorConversao;
-    private String tickerOriginal;
-    private String bolsaOrigem;
-    private String moedaOrigem;
+    private Integer ratio;
+    private ParidadeMethod method;
+    private BigDecimal confidence;
+    private Instant lastVerifiedAt;
+    private String raw;
 
-    public BigDecimal getFatorConversao() {
-        return fatorConversao;
+    public Integer getRatio() {
+        return ratio;
     }
 
-    public void setFatorConversao(BigDecimal fatorConversao) {
-        this.fatorConversao = fatorConversao;
+    public void setRatio(Integer ratio) {
+        this.ratio = ratio;
     }
 
-    public String getTickerOriginal() {
-        return tickerOriginal;
+    public ParidadeMethod getMethod() {
+        return method;
     }
 
-    public void setTickerOriginal(String tickerOriginal) {
-        this.tickerOriginal = tickerOriginal;
+    public void setMethod(ParidadeMethod method) {
+        this.method = method;
     }
 
-    public String getBolsaOrigem() {
-        return bolsaOrigem;
+    public BigDecimal getConfidence() {
+        return confidence;
     }
 
-    public void setBolsaOrigem(String bolsaOrigem) {
-        this.bolsaOrigem = bolsaOrigem;
+    public void setConfidence(BigDecimal confidence) {
+        this.confidence = confidence;
     }
 
-    public String getMoedaOrigem() {
-        return moedaOrigem;
+    public Instant getLastVerifiedAt() {
+        return lastVerifiedAt;
     }
 
-    public void setMoedaOrigem(String moedaOrigem) {
-        this.moedaOrigem = moedaOrigem;
+    public void setLastVerifiedAt(Instant lastVerifiedAt) {
+        this.lastVerifiedAt = lastVerifiedAt;
+    }
+
+    public String getRaw() {
+        return raw;
+    }
+
+    public void setRaw(String raw) {
+        this.raw = raw;
     }
 }

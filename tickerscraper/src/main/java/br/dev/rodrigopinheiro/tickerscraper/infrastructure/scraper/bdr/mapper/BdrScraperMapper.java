@@ -209,11 +209,30 @@ public class BdrScraperMapper {
             return null;
         }
         ParidadeBdr paridade = new ParidadeBdr();
-        paridade.setFatorConversao(info.fatorConversao());
-        paridade.setMoedaOrigem(info.moedaReferencia());
-        paridade.setTickerOriginal(info.descricaoOriginal());
-        paridade.setBolsaOrigem(info.moedaReferencia());
+        paridade.setRatio(calculateRatio(info));
+        paridade.setMethod(ParidadeMethod.SOURCE_HTML);
+        paridade.setLastVerifiedAt(Instant.now());
+        paridade.setRaw(info.descricaoOriginal());
         return paridade;
+    }
+
+    private Integer calculateRatio(IndicadorParser.ParidadeBdrInfo info) {
+        if (info.quantidadeBdr() == null || info.quantidadeAcoes() == null) {
+            return null;
+        }
+        if (info.quantidadeAcoes().compareTo(BigDecimal.ZERO) == 0) {
+            return null;
+        }
+        BigDecimal ratio = info.quantidadeBdr().divide(info.quantidadeAcoes(), 8, RoundingMode.HALF_UP);
+        BigDecimal normalized = ratio.stripTrailingZeros();
+        if (normalized.scale() <= 0) {
+            try {
+                return normalized.intValueExact();
+            } catch (ArithmeticException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private List<PricePoint> mapPriceSeries(BdrCotacoesDTO cotacoes) {

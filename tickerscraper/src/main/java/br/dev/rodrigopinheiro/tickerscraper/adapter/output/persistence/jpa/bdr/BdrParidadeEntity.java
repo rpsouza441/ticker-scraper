@@ -1,9 +1,11 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.ParidadeMethod;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Entity
 @Table(name = "bdr_paridade")
@@ -22,15 +24,19 @@ public class BdrParidadeEntity {
     @JoinColumn(name = "bdr_id", unique = true)
     private BdrEntity bdr;
 
-    @Column(name = "fator_conversao", precision = 19, scale = 6)
-    private BigDecimal fatorConversao;
+    @Column(name = "value")
+    private Integer ratio;
 
-    @Column(name = "ticker_original")
-    private String tickerOriginal;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "method")
+    private ParidadeMethod method;
 
-    @Column(name = "bolsa_origem")
-    private String bolsaOrigem;
+    @Column(name = "confidence", precision = 4, scale = 3)
+    private BigDecimal confidence;
 
-    @Column(name = "moeda_origem")
-    private String moedaOrigem;
+    @Column(name = "last_verified_at")
+    private Instant lastVerifiedAt;
+
+    @Column(name = "raw", columnDefinition = "TEXT")
+    private String raw;
 }
