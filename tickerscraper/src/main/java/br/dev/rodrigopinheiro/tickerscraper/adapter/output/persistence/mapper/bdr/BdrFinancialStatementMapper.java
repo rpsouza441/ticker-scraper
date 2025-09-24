@@ -17,6 +17,7 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -30,9 +31,27 @@ public interface BdrFinancialStatementMapper {
     @InheritInverseConfiguration(name = "toDreEntity")
     DreYear toDreDomain(BdrDreYearEntity entity);
 
-    List<BdrDreYearEntity> toDreEntityList(List<DreYear> source);
+    default List<BdrDreYearEntity> toDreEntityList(List<DreYear> source) {
+        if (source == null) {
+            return null;
+        }
+        List<BdrDreYearEntity> target = new ArrayList<>(source.size());
+        for (DreYear year : source) {
+            target.add(toDreEntity(year));
+        }
+        return target;
+    }
 
-    List<DreYear> toDreDomainList(List<BdrDreYearEntity> source);
+    default List<DreYear> toDreDomainList(List<BdrDreYearEntity> source) {
+        if (source == null) {
+            return null;
+        }
+        List<DreYear> target = new ArrayList<>(source.size());
+        for (BdrDreYearEntity entity : source) {
+            target.add(toDreDomain(entity));
+        }
+        return target;
+    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "bdr", ignore = true)
@@ -41,9 +60,27 @@ public interface BdrFinancialStatementMapper {
     @InheritInverseConfiguration(name = "toBpEntity")
     BpYear toBpDomain(BdrBpYearEntity entity);
 
-    List<BdrBpYearEntity> toBpEntityList(List<BpYear> source);
+    default List<BdrBpYearEntity> toBpEntityList(List<BpYear> source) {
+        if (source == null) {
+            return null;
+        }
+        List<BdrBpYearEntity> target = new ArrayList<>(source.size());
+        for (BpYear year : source) {
+            target.add(toBpEntity(year));
+        }
+        return target;
+    }
 
-    List<BpYear> toBpDomainList(List<BdrBpYearEntity> source);
+    default List<BpYear> toBpDomainList(List<BdrBpYearEntity> source) {
+        if (source == null) {
+            return null;
+        }
+        List<BpYear> target = new ArrayList<>(source.size());
+        for (BdrBpYearEntity entity : source) {
+            target.add(toBpDomain(entity));
+        }
+        return target;
+    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "bdr", ignore = true)
@@ -53,9 +90,27 @@ public interface BdrFinancialStatementMapper {
     @InheritInverseConfiguration(name = "toFcEntity")
     FcYear toFcDomain(BdrFcYearEntity entity);
 
-    List<BdrFcYearEntity> toFcEntityList(List<FcYear> source);
+    default List<BdrFcYearEntity> toFcEntityList(List<FcYear> source) {
+        if (source == null) {
+            return null;
+        }
+        List<BdrFcYearEntity> target = new ArrayList<>(source.size());
+        for (FcYear year : source) {
+            target.add(toFcEntity(year));
+        }
+        return target;
+    }
 
-    List<FcYear> toFcDomainList(List<BdrFcYearEntity> source);
+    default List<FcYear> toFcDomainList(List<BdrFcYearEntity> source) {
+        if (source == null) {
+            return null;
+        }
+        List<FcYear> target = new ArrayList<>(source.size());
+        for (BdrFcYearEntity entity : source) {
+            target.add(toFcDomain(entity));
+        }
+        return target;
+    }
 
     default QualityMetricEmbeddable toEmbeddable(DreYear.Metric metric) {
         if (metric == null) {

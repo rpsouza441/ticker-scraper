@@ -1,6 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrBpYearResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AuditedValueResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrCurrentIndicatorsResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrDividendYearResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrDreYearResponseDTO;
@@ -10,6 +11,7 @@ import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrHistoricalI
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrParidadeResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrPricePointResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrQualityMetricResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.Bdr;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.BpYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.CurrentIndicators;
@@ -20,6 +22,7 @@ import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.HistoricalIndicator
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.ParidadeBdr;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.PricePoint;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.QualityValue;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.AuditedValue;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -65,6 +68,20 @@ public interface BdrApiMapper {
     BdrBpYearResponseDTO toBpYearResponse(BpYear year);
 
     BdrFcYearResponseDTO toFcYearResponse(FcYear year);
+
+    default BdrQualityMetricResponseDTO toQualityMetricResponse(DreYear.Metric metric) {
+        if (metric == null) {
+            return null;
+        }
+        return new BdrQualityMetricResponseDTO(metric.getValue(), metric.getQuality(), metric.getRaw());
+    }
+
+    default AuditedValueResponseDTO toAuditedValueResponse(AuditedValue value) {
+        if (value == null) {
+            return null;
+        }
+        return new AuditedValueResponseDTO(value.getValue(), value.getQuality(), value.getRaw());
+    }
 
     default BdrFcValueResponseDTO toFcValueResponse(QualityValue value) {
         if (value == null) {
