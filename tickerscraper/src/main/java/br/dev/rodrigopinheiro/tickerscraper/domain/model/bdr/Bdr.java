@@ -5,7 +5,6 @@ import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 public class Bdr {
 
@@ -29,8 +28,6 @@ public class Bdr {
     private List<BpYear> bpYears;
     private List<FcYear> fcYears;
     private Instant updatedAt;
-    private Map<String, Object> rawJson;
-    private String rawJsonHash;
 
     public String getTicker() {
         return ticker;
@@ -190,22 +187,6 @@ public class Bdr {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public Map<String, Object> getRawJson() {
-        return rawJson;
-    }
-
-    public void setRawJson(Map<String, Object> rawJson) {
-        this.rawJson = rawJson;
-    }
-
-    public String getRawJsonHash() {
-        return rawJsonHash;
-    }
-
-    public void setRawJsonHash(String rawJsonHash) {
-        this.rawJsonHash = rawJsonHash;
     }
 
     private String normalizeCurrency(String value) {

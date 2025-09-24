@@ -72,7 +72,6 @@ public class BdrScraperMapper {
 
         // Metadados adicionais
         bdr.setUpdatedAt(Optional.ofNullable(raw.updatedAt()).orElseGet(Instant::now));
-        bdr.setRawJson(raw.rawJson() == null ? Map.of() : new LinkedHashMap<>(raw.rawJson()));
 
         return bdr;
     }
