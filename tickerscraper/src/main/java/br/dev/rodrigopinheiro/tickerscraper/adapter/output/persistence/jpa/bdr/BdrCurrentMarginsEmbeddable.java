@@ -15,8 +15,8 @@ public class BdrCurrentMarginsEmbeddable {
     @Column(name = "margem_bruta", precision = 19, scale = 6)
     private BigDecimal margemBruta;
 
-    @Column(name = "margem_ebit", precision = 19, scale = 6)
-    private BigDecimal margemEbit;
+    @Column(name = "margem_operacional", precision = 19, scale = 6)
+    private BigDecimal margemOperacional;
 
     @Column(name = "margem_liquida", precision = 19, scale = 6)
     private BigDecimal margemLiquida;
