@@ -51,4 +51,6 @@ public interface BdrApiMapper {
     BdrBpYearResponseDTO toResponse(BpYear year);
 
     BdrFcYearResponseDTO toResponse(FcYear year);
+
+    AuditedValueResponseDTO toResponse(AuditedValue value);
 }

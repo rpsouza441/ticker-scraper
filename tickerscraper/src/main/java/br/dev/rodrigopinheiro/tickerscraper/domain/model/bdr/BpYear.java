@@ -1,15 +1,12 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr;
 
-import java.math.BigDecimal;
-
 public class BpYear {
 
     private Integer ano;
-    private BigDecimal ativosTotais;
-    private BigDecimal passivosTotais;
-    private BigDecimal patrimonioLiquido;
-    private BigDecimal caixaEDisponibilidades;
-    private BigDecimal dividaBruta;
+    private AuditedValue ativosTotais;
+    private AuditedValue passivosTotais;
+    private AuditedValue dividaLongoPrazo;
+    private AuditedValue pl;
 
     public Integer getAno() {
         return ano;
@@ -19,43 +16,35 @@ public class BpYear {
         this.ano = ano;
     }
 
-    public BigDecimal getAtivosTotais() {
+    public AuditedValue getAtivosTotais() {
         return ativosTotais;
     }
 
-    public void setAtivosTotais(BigDecimal ativosTotais) {
+    public void setAtivosTotais(AuditedValue ativosTotais) {
         this.ativosTotais = ativosTotais;
     }
 
-    public BigDecimal getPassivosTotais() {
+    public AuditedValue getPassivosTotais() {
         return passivosTotais;
     }
 
-    public void setPassivosTotais(BigDecimal passivosTotais) {
+    public void setPassivosTotais(AuditedValue passivosTotais) {
         this.passivosTotais = passivosTotais;
     }
 
-    public BigDecimal getPatrimonioLiquido() {
-        return patrimonioLiquido;
+    public AuditedValue getDividaLongoPrazo() {
+        return dividaLongoPrazo;
     }
 
-    public void setPatrimonioLiquido(BigDecimal patrimonioLiquido) {
-        this.patrimonioLiquido = patrimonioLiquido;
+    public void setDividaLongoPrazo(AuditedValue dividaLongoPrazo) {
+        this.dividaLongoPrazo = dividaLongoPrazo;
     }
 
-    public BigDecimal getCaixaEDisponibilidades() {
-        return caixaEDisponibilidades;
+    public AuditedValue getPl() {
+        return pl;
     }
 
-    public void setCaixaEDisponibilidades(BigDecimal caixaEDisponibilidades) {
-        this.caixaEDisponibilidades = caixaEDisponibilidades;
-    }
-
-    public BigDecimal getDividaBruta() {
-        return dividaBruta;
-    }
-
-    public void setDividaBruta(BigDecimal dividaBruta) {
-        this.dividaBruta = dividaBruta;
+    public void setPl(AuditedValue pl) {
+        this.pl = pl;
     }
 }
