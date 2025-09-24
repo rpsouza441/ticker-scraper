@@ -130,6 +130,22 @@ public class BdrEntity {
     )
     private BdrParidadeEntity paridade;
 
+    @OneToOne(
+            mappedBy = "bdr",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private BdrMarketCapEntity marketCap;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "raw_json", columnDefinition = "JSONB")
+    private String rawJson;
+
+    @Column(name = "raw_json_hash", length = 128)
+    private String rawJsonHash;
+
+
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 }
