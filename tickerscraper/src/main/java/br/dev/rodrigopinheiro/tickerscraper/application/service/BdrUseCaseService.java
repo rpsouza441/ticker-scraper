@@ -15,13 +15,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HexFormat;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -74,29 +69,7 @@ public class BdrUseCaseService extends AbstractTickerUseCaseService<BdrDadosFina
 
     @Override
     protected Bdr saveDomain(Bdr domain, BdrDadosFinanceirosDTO raw) {
-        String auditJson = null;
-        String rawHash = null;
-        try {
-            auditJson = serialize(raw);
-            rawHash = computeHash(raw.rawJson());
-        } catch (Exception ignored) {
-        }
-        return repository.saveReplacingChildren(domain, auditJson, rawHash);
-    }
-
-    @Override
-    protected Mono<BdrDadosFinanceirosDTO> readRawFromStore(String ticker) {
-        return Mono.fromCallable(() -> repository.findRawJsonByTicker(ticker))
-                .flatMap(optional -> optional
-                        .map(json -> {
-                            try {
-                                return Mono.just(deserialize(json));
-                            } catch (Exception e) {
-                                return Mono.<BdrDadosFinanceirosDTO>error(e);
-                            }
-                        })
-                        .orElseGet(Mono::empty))
-                .subscribeOn(Schedulers.boundedElastic());
+        return repository.saveReplacingChildren(domain);
     }
 
     @Override
@@ -114,19 +87,4 @@ public class BdrUseCaseService extends AbstractTickerUseCaseService<BdrDadosFina
         return rawDataMapper.createFailedBdrResponse(ticker, source, error);
     }
 
-    private String computeHash(Map<String, String> rawJson) throws NoSuchAlgorithmException {
-        if (rawJson == null || rawJson.isEmpty()) {
-            return null;
-        }
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        rawJson.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> {
-                    digest.update(entry.getKey().getBytes(StandardCharsets.UTF_8));
-                    if (entry.getValue() != null) {
-                        digest.update(entry.getValue().getBytes(StandardCharsets.UTF_8));
-                    }
-                });
-        return HexFormat.of().formatHex(digest.digest());
-    }
 }
