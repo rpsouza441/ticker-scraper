@@ -1,8 +1,10 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.bdr;
 
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.AuditedBigDecimalEmbeddable;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrBpYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrDreYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrFcYearEntity;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.AuditedValue;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.BpYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.DreYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.FcYear;
@@ -41,6 +43,10 @@ public interface BdrFinancialStatementMapper {
     List<BdrBpYearEntity> toBpEntityList(List<BpYear> source);
 
     List<BpYear> toBpDomainList(List<BdrBpYearEntity> source);
+
+    AuditedBigDecimalEmbeddable toEntity(AuditedValue value);
+
+    AuditedValue toDomain(AuditedBigDecimalEmbeddable embeddable);
 
     @Mappings({
             @Mapping(target = "id", ignore = true),
