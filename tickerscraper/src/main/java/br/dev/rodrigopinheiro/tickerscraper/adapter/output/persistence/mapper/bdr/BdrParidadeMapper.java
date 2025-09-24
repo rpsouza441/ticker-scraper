@@ -13,7 +13,11 @@ public interface BdrParidadeMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "bdr", ignore = true),
-            @Mapping(source = "ratio", target = "value")
+            @Mapping(source = "ratio", target = "value"),
+            @Mapping(source = "method", target = "method"),
+            @Mapping(source = "confidence", target = "confidence"),
+            @Mapping(source = "lastVerifiedAt", target = "lastVerifiedAt"),
+            @Mapping(source = "raw", target = "raw")
     })
     BdrParidadeEntity toEntity(ParidadeBdr paridade);
 

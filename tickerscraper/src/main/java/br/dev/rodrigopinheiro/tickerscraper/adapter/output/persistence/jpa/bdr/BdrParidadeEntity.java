@@ -1,5 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr;
 
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.converter.ParidadeMethodAttributeConverter;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.ParidadeMethod;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,7 +28,7 @@ public class BdrParidadeEntity {
     @Column(name = "value")
     private Integer value;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ParidadeMethodAttributeConverter.class)
     @Column(name = "method", columnDefinition = "paridade_method_enum")
     private ParidadeMethod method;
 
