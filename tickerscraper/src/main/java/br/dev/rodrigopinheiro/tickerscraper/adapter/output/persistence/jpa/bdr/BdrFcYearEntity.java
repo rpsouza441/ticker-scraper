@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "bdr_fc_year")
+@Table(name = "bdr_fc_yearly")
 @Getter
 @Setter
 @Builder
@@ -20,13 +20,13 @@ public class BdrFcYearEntity {
     @JoinColumn(name = "bdr_id")
     private BdrEntity bdr;
 
-    @Column(name = "ano")
+    @Column(name = "year")
     private Integer ano;
 
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "valor", column = @Column(name = "fco_val", precision = 30, scale = 6)),
-            @AttributeOverride(name = "quality", column = @Column(name = "fco_qual")),
+            @AttributeOverride(name = "quality", column = @Column(name = "fco_qual", columnDefinition = "quality_enum")),
             @AttributeOverride(name = "raw", column = @Column(name = "fco_raw"))
     })
     private QualityValueEmbeddable fluxoCaixaOperacional;
@@ -34,7 +34,7 @@ public class BdrFcYearEntity {
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "valor", column = @Column(name = "fci_val", precision = 30, scale = 6)),
-            @AttributeOverride(name = "quality", column = @Column(name = "fci_qual")),
+            @AttributeOverride(name = "quality", column = @Column(name = "fci_qual", columnDefinition = "quality_enum")),
             @AttributeOverride(name = "raw", column = @Column(name = "fci_raw"))
     })
     private QualityValueEmbeddable fluxoCaixaInvestimento;
@@ -42,7 +42,7 @@ public class BdrFcYearEntity {
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "valor", column = @Column(name = "fcf_val", precision = 30, scale = 6)),
-            @AttributeOverride(name = "quality", column = @Column(name = "fcf_qual")),
+            @AttributeOverride(name = "quality", column = @Column(name = "fcf_qual", columnDefinition = "quality_enum")),
             @AttributeOverride(name = "raw", column = @Column(name = "fcf_raw"))
     })
     private QualityValueEmbeddable fluxoCaixaFinanciamento;
