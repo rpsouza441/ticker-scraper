@@ -133,6 +133,14 @@ public class BdrEntity {
     )
     private BdrParidadeEntity paridade;
 
+    @OneToOne(
+            mappedBy = "bdr",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private BdrMarketCapEntity marketCap;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "raw_json", columnDefinition = "JSONB")
     private String rawJson;
