@@ -33,41 +33,29 @@ public class BdrEntity {
     @Builder.Default
     private TipoAtivo tipoAtivo = TipoAtivo.BDR;
 
-    @Column(name = "nome_empresa")
-    private String nomeEmpresa;
+    @Column(name = "investidor_id", length = 100)
+    private String investidorId;
 
-    @Column(name = "nome_acao_original")
-    private String nomeAcaoOriginal;
+    @Column(name = "nome_bdr")
+    private String nomeBdr;
 
-    @Column(name = "codigo_negociacao")
-    private String codigoNegociacao;
+    @Column(name = "setor")
+    private String setor;
 
-    @Column(name = "mercado")
-    private String mercado;
+    @Column(name = "industria")
+    private String industria;
 
-    @Column(name = "pais_negociacao")
-    private String paisDeNegociacao;
+    @Column(name = "price_currency", length = 3)
+    private String priceCurrency;
 
-    @Column(name = "moeda_referencia")
-    private String moedaDeReferencia;
+    @Column(name = "financials_currency", length = 3)
+    private String financialsCurrency;
 
-    @Column(name = "preco_atual", precision = 19, scale = 6)
-    private BigDecimal precoAtual;
+    @Column(name = "cotacao", precision = 19, scale = 6)
+    private BigDecimal cotacao;
 
-    @Column(name = "variacao_dia", precision = 19, scale = 6)
-    private BigDecimal variacaoDia;
-
-    @Column(name = "variacao_mes", precision = 19, scale = 6)
-    private BigDecimal variacaoMes;
-
-    @Column(name = "variacao_ano", precision = 19, scale = 6)
-    private BigDecimal variacaoAno;
-
-    @Column(name = "dividend_yield", precision = 19, scale = 6)
-    private BigDecimal dividendYield;
-
-    @Column(name = "preco_alvo", precision = 19, scale = 6)
-    private BigDecimal precoAlvo;
+    @Column(name = "variacao_12", precision = 19, scale = 6)
+    private BigDecimal variacao12;
 
     @OneToMany(
             mappedBy = "bdr",
@@ -152,6 +140,6 @@ public class BdrEntity {
     @Column(name = "raw_json_hash", length = 128)
     private String rawJsonHash;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 }

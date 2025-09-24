@@ -25,11 +25,14 @@ public interface BdrMapper {
             @Mapping(target = "id", ignore = true),
             @Mapping(source = "ticker", target = "ticker"),
             @Mapping(source = "tipoAtivo", target = "tipoAtivo"),
-            @Mapping(source = "nomeBdr", target = "nomeEmpresa"),
-            @Mapping(source = "setor", target = "mercado"),
-            @Mapping(source = "priceCurrency", target = "moedaDeReferencia"),
-            @Mapping(source = "cotacao", target = "precoAtual"),
-            @Mapping(source = "variacao12", target = "variacaoAno"),
+            @Mapping(source = "investidorId", target = "investidorId"),
+            @Mapping(source = "nomeBdr", target = "nomeBdr"),
+            @Mapping(source = "setor", target = "setor"),
+            @Mapping(source = "industria", target = "industria"),
+            @Mapping(source = "priceCurrency", target = "priceCurrency"),
+            @Mapping(source = "financialsCurrency", target = "financialsCurrency"),
+            @Mapping(source = "cotacao", target = "cotacao"),
+            @Mapping(source = "variacao12", target = "variacao12"),
             @Mapping(source = "priceSeries", target = "priceSeries"),
             @Mapping(source = "dividendYears", target = "dividendYears"),
             @Mapping(source = "historicalIndicators", target = "historicalIndicators"),
@@ -40,24 +43,12 @@ public interface BdrMapper {
             @Mapping(source = "paridade", target = "paridade"),
             @Mapping(source = "updatedAt", target = "updatedAt"),
             @Mapping(source = "rawJson", target = "rawJson", qualifiedByName = "mapToJson"),
-            @Mapping(source = "rawJsonHash", target = "rawJsonHash"),
-            @Mapping(target = "nomeAcaoOriginal", ignore = true),
-            @Mapping(target = "codigoNegociacao", ignore = true),
-            @Mapping(target = "paisDeNegociacao", ignore = true),
-            @Mapping(target = "variacaoDia", ignore = true),
-            @Mapping(target = "variacaoMes", ignore = true),
-            @Mapping(target = "dividendYield", ignore = true),
-            @Mapping(target = "precoAlvo", ignore = true)
+            @Mapping(source = "rawJsonHash", target = "rawJsonHash")
     })
     BdrEntity toEntity(Bdr bdr);
 
     @InheritInverseConfiguration
     @Mappings({
-            @Mapping(source = "nomeEmpresa", target = "nomeBdr"),
-            @Mapping(source = "mercado", target = "setor"),
-            @Mapping(source = "moedaDeReferencia", target = "priceCurrency"),
-            @Mapping(source = "precoAtual", target = "cotacao"),
-            @Mapping(source = "variacaoAno", target = "variacao12"),
             @Mapping(source = "priceSeries", target = "priceSeries"),
             @Mapping(source = "dividendYears", target = "dividendYears"),
             @Mapping(source = "historicalIndicators", target = "historicalIndicators"),
