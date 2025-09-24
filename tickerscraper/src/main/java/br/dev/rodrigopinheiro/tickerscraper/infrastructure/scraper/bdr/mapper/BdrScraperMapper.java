@@ -1,6 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.mapper;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.*;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.Quality;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.*;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -41,13 +43,15 @@ public class BdrScraperMapper {
         BdrHtmlMetadataDTO metadata = raw.htmlMetadata();
         if (metadata != null) {
             bdr.setNomeBdr(resolveCompanyName(metadata));
-            bdr.setSetor(getMetaTag(metadata, "og:site_name"));
         }
+
+        BdrIndicadoresDTO indicadores = raw.indicadores();
+        bdr.setSetor(resolveSetor(indicadores, metadata));
+        bdr.setIndustria(resolveIndustria(indicadores, metadata));
+
         bdr.setPriceCurrency(resolveCurrency(raw));
-        bdr.setFinancialsCurrency("USD");
 
         // Indicadores principais
-        BdrIndicadoresDTO indicadores = raw.indicadores();
         BigDecimal precoAtual = findMonetario(indicadores, "PRECO ATUAL", "PREÇO ATUAL", "ULTIMO PRECO", "ÚLTIMO PREÇO", "PRICE");
         BigDecimal variacaoAno = findPercentual(indicadores, "VARIACAO ANO", "VAR. ANO", "12M", "ANO");
 
@@ -57,6 +61,9 @@ public class BdrScraperMapper {
         // Indicadores correntes detalhados
         bdr.setCurrentIndicators(buildCurrentIndicators(indicadores));
 
+        // Market cap estruturado
+        bdr.setMarketCap(mapMarketCap(indicadores));
+
         // Paridade
         bdr.setParidade(mapParidade(indicadores.paridade()));
 
@@ -65,10 +72,13 @@ public class BdrScraperMapper {
         bdr.setDividendYears(mapDividendos(raw.dividendos()));
         bdr.setHistoricalIndicators(mapHistoricalIndicators(indicadores));
 
-        // Demonstrativos ainda não parseados – armazenados como listas vazias para futuras iterações
-        bdr.setDreYears(List.of());
-        bdr.setBpYears(List.of());
-        bdr.setFcYears(List.of());
+        // Séries anuais estruturadas
+        AtomicReference<String> financialCurrency = new AtomicReference<>();
+        bdr.setDreYears(mapDreYears(raw.dre(), financialCurrency));
+        bdr.setBpYears(mapBpYears(raw.balancoPatrimonial(), financialCurrency));
+        bdr.setFcYears(mapFcYears(raw.fluxoDeCaixa(), financialCurrency));
+
+        bdr.setFinancialsCurrency(resolveFinancialCurrency(financialCurrency.get(), indicadores, bdr.getPriceCurrency()));
 
         // Metadados adicionais
         bdr.setUpdatedAt(Optional.ofNullable(raw.updatedAt()).orElseGet(Instant::now));
@@ -109,6 +119,169 @@ public class BdrScraperMapper {
             return null;
         }
         return metadata.metaTags().get(key);
+    }
+
+    private String resolveSetor(BdrIndicadoresDTO indicadores, BdrHtmlMetadataDTO metadata) {
+        String fromApi = extractIndicatorText(indicadores, "SETOR", "SECTOR");
+        if (fromApi != null && !fromApi.isBlank()) {
+            return fromApi;
+        }
+        String fromMeta = extractMetaByKeyword(metadata, "setor", "sector");
+        if (fromMeta != null && !fromMeta.isBlank()) {
+            return fromMeta;
+        }
+        return parseDescriptionForLabel(metadata, "Setor");
+    }
+
+    private String resolveIndustria(BdrIndicadoresDTO indicadores, BdrHtmlMetadataDTO metadata) {
+        String fromApi = extractIndicatorText(indicadores, "INDUSTRIA", "INDUSTRY");
+        if (fromApi != null && !fromApi.isBlank()) {
+            return fromApi;
+        }
+        String fromMeta = extractMetaByKeyword(metadata, "industria", "industry");
+        if (fromMeta != null && !fromMeta.isBlank()) {
+            return fromMeta;
+        }
+        return parseDescriptionForLabel(metadata, "Indústria");
+    }
+
+    private String extractIndicatorText(BdrIndicadoresDTO indicadores, String... expectedNames) {
+        if (indicadores == null || indicadores.raw() == null) {
+            return null;
+        }
+        return findIndicatorNode(indicadores.raw(), expectedNames)
+                .map(this::extractIndicatorRawValue)
+                .map(value -> value == null ? null : value.trim())
+                .orElse(null);
+    }
+
+    private Optional<JsonNode> findIndicatorNode(JsonNode root, String... expectedNames) {
+        if (root == null || root.isNull()) {
+            return Optional.empty();
+        }
+        Set<String> expected = Arrays.stream(expectedNames)
+                .filter(Objects::nonNull)
+                .map(IndicadorParser::normalizar)
+                .collect(Collectors.toSet());
+        if (expected.isEmpty()) {
+            return Optional.empty();
+        }
+        return findIndicatorNodeRecursive(root, expected);
+    }
+
+    private Optional<JsonNode> findIndicatorNodeRecursive(JsonNode node, Set<String> expectedNames) {
+        if (node == null || node.isNull()) {
+            return Optional.empty();
+        }
+        if (node.isArray()) {
+            for (JsonNode item : node) {
+                Optional<JsonNode> candidate = findIndicatorNodeRecursive(item, expectedNames);
+                if (candidate.isPresent()) {
+                    return candidate;
+                }
+            }
+            return Optional.empty();
+        }
+        if (node.isObject()) {
+            String name = extractIndicatorName(node);
+            if (name != null && expectedNames.contains(IndicadorParser.normalizar(name))) {
+                return Optional.of(node);
+            }
+            Iterator<JsonNode> it = node.elements();
+            while (it.hasNext()) {
+                Optional<JsonNode> candidate = findIndicatorNodeRecursive(it.next(), expectedNames);
+                if (candidate.isPresent()) {
+                    return candidate;
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String extractIndicatorName(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        for (String field : List.of("nome", "label", "name", "title", "descricao", "description")) {
+            JsonNode value = node.get(field);
+            if (value != null && value.isTextual()) {
+                return value.asText();
+            }
+        }
+        return null;
+    }
+
+    private String extractIndicatorRawValue(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isTextual()) {
+            return node.asText();
+        }
+        for (String field : List.of("valor", "value", "texto", "text", "raw", "formatted")) {
+            JsonNode value = node.get(field);
+            if (value != null && value.isTextual()) {
+                return value.asText();
+            }
+            if (value != null && value.isNumber()) {
+                return value.asText();
+            }
+        }
+        if (node.isNumber()) {
+            return node.asText();
+        }
+        return null;
+    }
+
+    private String extractMetaByKeyword(BdrHtmlMetadataDTO metadata, String... keywords) {
+        if (metadata == null || metadata.metaTags() == null || metadata.metaTags().isEmpty()) {
+            return null;
+        }
+        Map<String, String> tags = metadata.metaTags();
+        for (Map.Entry<String, String> entry : tags.entrySet()) {
+            String key = entry.getKey();
+            if (key == null) {
+                continue;
+            }
+            String lower = key.toLowerCase(Locale.ROOT);
+            for (String keyword : keywords) {
+                if (keyword != null && lower.contains(keyword.toLowerCase(Locale.ROOT))) {
+                    return entry.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    private String parseDescriptionForLabel(BdrHtmlMetadataDTO metadata, String label) {
+        if (metadata == null) {
+            return null;
+        }
+        String description = metadata.descricao();
+        if (description == null || description.isBlank() || label == null || label.isBlank()) {
+            return null;
+        }
+        Pattern pattern = Pattern.compile("(?i)" + Pattern.quote(label) + "\\s*:?\\s*([^|\\n]+)");
+        Matcher matcher = pattern.matcher(description);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
+    }
+
+    private String resolveFinancialCurrency(String resolved,
+                                            BdrIndicadoresDTO indicadores,
+                                            String priceCurrency) {
+        if (resolved != null && !resolved.isBlank()) {
+            return resolved;
+        }
+        if (indicadores != null && indicadores.moedaPadrao() != null && !indicadores.moedaPadrao().isBlank()) {
+            return indicadores.moedaPadrao();
+        }
+        if (priceCurrency != null && !priceCurrency.isBlank()) {
+            return priceCurrency;
+        }
+        return "USD";
     }
 
     private String resolveCurrency(BdrDadosFinanceirosDTO raw) {
@@ -213,6 +386,34 @@ public class BdrScraperMapper {
         return margens;
     }
 
+    private BdrMarketCap mapMarketCap(BdrIndicadoresDTO indicadores) {
+        if (indicadores == null) {
+            return null;
+        }
+        BigDecimal value = findMonetario(indicadores, "VALOR DE MERCADO", "MARKET CAP");
+        Optional<JsonNode> node = indicadores.raw() == null
+                ? Optional.empty()
+                : findIndicatorNode(indicadores.raw(), "VALOR DE MERCADO", "MARKET CAP");
+        String raw = node.map(this::extractIndicatorRawValue).orElse(null);
+        if (value == null && raw != null) {
+            value = IndicadorParser.parseValorMonetario(raw).orElse(null);
+        }
+        if (value == null && raw == null) {
+            return null;
+        }
+        BdrMarketCap marketCap = new BdrMarketCap();
+        marketCap.setValue(value);
+        String currency = node.map(n -> resolveCurrencyFromNode(n).orElse(null))
+                .orElseGet(() -> IndicadorParser.extrairMoeda(raw).orElse(indicadores.moedaPadrao()));
+        if (currency != null) {
+            marketCap.setCurrency(currency);
+        }
+        String quality = node.map(n -> extractQuality(n).orElse(null)).orElse(null);
+        marketCap.setQuality(quality != null ? quality : "api_historico_indicadores");
+        marketCap.setRaw(raw);
+        return marketCap;
+    }
+
     private ParidadeBdr mapParidade(IndicadorParser.ParidadeBdrInfo info) {
         if (info == null) {
             return null;
@@ -220,6 +421,9 @@ public class BdrScraperMapper {
         ParidadeBdr paridade = new ParidadeBdr();
         paridade.setRatio(calculateRatio(info));
         paridade.setMethod(ParidadeMethod.SOURCE_HTML);
+        if (paridade.getRatio() != null) {
+            paridade.setConfidence(BigDecimal.ONE);
+        }
         paridade.setLastVerifiedAt(Instant.now());
         paridade.setRaw(info.descricaoOriginal());
         return paridade;
@@ -268,30 +472,44 @@ public class BdrScraperMapper {
     }
 
     private List<DividendYear> mapDividendos(BdrDividendosDTO dividendos) {
-        if (dividendos == null || dividendos.dividendos() == null || dividendos.dividendos().isEmpty()) {
+        if (dividendos == null) {
             return List.of();
         }
         Map<Integer, BigDecimal> acumuladoPorAno = new TreeMap<>();
         Map<Integer, String> currencyPorAno = new HashMap<>();
-        for (BdrDividendoItemDTO item : dividendos.dividendos()) {
-            if (item == null || item.valor() == null) {
-                continue;
-            }
-            Integer ano = extractYear(item.periodo());
-            if (ano == null) {
-                continue;
-            }
-            acumuladoPorAno.merge(ano, item.valor(), BigDecimal::add);
-            if (currencyPorAno.get(ano) == null && item.moeda() != null) {
-                currencyPorAno.put(ano, item.moeda());
+        if (dividendos.dividendos() != null) {
+            for (BdrDividendoItemDTO item : dividendos.dividendos()) {
+                if (item == null || item.valor() == null) {
+                    continue;
+                }
+                Integer ano = extractYear(item.periodo());
+                if (ano == null) {
+                    continue;
+                }
+                acumuladoPorAno.merge(ano, item.valor(), BigDecimal::add);
+                if (currencyPorAno.get(ano) == null && item.moeda() != null) {
+                    currencyPorAno.put(ano, item.moeda());
+                }
             }
         }
-        return acumuladoPorAno.entrySet().stream()
-                .map(entry -> {
+
+        Map<Integer, BigDecimal> dividendYieldPorAno = extractDividendYieldByYear(dividendos.raw());
+
+        Set<Integer> anos = new TreeSet<>();
+        anos.addAll(acumuladoPorAno.keySet());
+        anos.addAll(dividendYieldPorAno.keySet());
+
+        return anos.stream()
+                .map(ano -> {
                     DividendYear year = new DividendYear();
-                    year.setYear(entry.getKey());
-                    year.setValor(entry.getValue().setScale(4, RoundingMode.HALF_UP));
-                    year.setCurrency(currencyPorAno.getOrDefault(entry.getKey(), "USD"));
+                    year.setYear(ano);
+                    BigDecimal total = acumuladoPorAno.get(ano);
+                    if (total != null) {
+                        year.setValor(total.setScale(4, RoundingMode.HALF_UP));
+                    }
+                    year.setDividendYield(dividendYieldPorAno.get(ano));
+                    String currency = currencyPorAno.getOrDefault(ano, "USD");
+                    year.setCurrency(currency == null ? null : currency.trim().toUpperCase(Locale.ROOT));
                     return year;
                 })
                 .collect(Collectors.toList());
@@ -308,11 +526,474 @@ public class BdrScraperMapper {
         return null;
     }
 
+    private Map<Integer, BigDecimal> extractDividendYieldByYear(JsonNode raw) {
+        if (raw == null || raw.isNull()) {
+            return Map.of();
+        }
+        SeriesStructure structure = extractSeriesStructure(raw);
+        if (structure.datasets().isEmpty()) {
+            return Map.of();
+        }
+        Map<Integer, BigDecimal> yields = new HashMap<>();
+        for (JsonNode dataset : structure.datasets()) {
+            String label = extractIndicatorName(dataset);
+            if (label == null) {
+                continue;
+            }
+            String normalized = IndicadorParser.normalizar(label);
+            if (!matchesIndicator(normalized, "DIVIDEND YIELD", "YIELD", "DY")) {
+                continue;
+            }
+            Map<Integer, ValueWithMeta> values = parseDataset(dataset, structure.years());
+            for (Map.Entry<Integer, ValueWithMeta> entry : values.entrySet()) {
+                ValueWithMeta meta = entry.getValue();
+                if (meta == null || meta.value() == null) {
+                    continue;
+                }
+                BigDecimal yield = parseDividendYieldValue(meta);
+                if (yield != null) {
+                    yields.put(entry.getKey(), yield);
+                }
+            }
+        }
+        return yields;
+    }
+
+    private List<DreYear> mapDreYears(BdrDemonstrativoDTO dre,
+                                      AtomicReference<String> currencyRef) {
+        if (dre == null || dre.raw() == null) {
+            return List.of();
+        }
+        SeriesStructure structure = extractSeriesStructure(dre.raw());
+        if (structure.datasets().isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, DreYear> years = new TreeMap<>();
+        for (JsonNode dataset : structure.datasets()) {
+            String label = extractIndicatorName(dataset);
+            if (label == null) {
+                continue;
+            }
+            String normalized = IndicadorParser.normalizar(label);
+            Map<Integer, ValueWithMeta> values = parseDataset(dataset, structure.years());
+            for (Map.Entry<Integer, ValueWithMeta> entry : values.entrySet()) {
+                DreYear year = years.computeIfAbsent(entry.getKey(), key -> {
+                    DreYear y = new DreYear();
+                    y.setAno(key);
+                    return y;
+                });
+                ValueWithMeta meta = entry.getValue();
+                updateCurrencyReference(currencyRef, meta.currency());
+                if (matchesIndicator(normalized, "RECEITA TOTAL", "RECEITA LIQUIDA", "TOTAL REVENUE", "NET REVENUE", "REVENUE")) {
+                    year.setReceitaTotalUsd(toDreMetric(meta));
+                } else if (matchesIndicator(normalized, "LUCRO BRUTO", "GROSS PROFIT")) {
+                    year.setLucroBrutoUsd(toDreMetric(meta));
+                } else if (matchesIndicator(normalized, "EBITDA")) {
+                    year.setEbitdaUsd(toDreMetric(meta));
+                } else if (matchesIndicator(normalized, "EBIT", "OPERATING INCOME", "OPERATING PROFIT")) {
+                    year.setEbitUsd(toDreMetric(meta));
+                } else if (matchesIndicator(normalized, "LUCRO LIQUIDO", "NET INCOME", "LUCRO LIQUIDO AJUSTADO")) {
+                    year.setLucroLiquidoUsd(toDreMetric(meta));
+                }
+            }
+        }
+        return years.values().stream()
+                .sorted(Comparator.comparing(DreYear::getAno, Comparator.nullsLast(Integer::compareTo)))
+                .collect(Collectors.toList());
+    }
+
+    private List<BpYear> mapBpYears(BdrDemonstrativoDTO bp,
+                                    AtomicReference<String> currencyRef) {
+        if (bp == null || bp.raw() == null) {
+            return List.of();
+        }
+        SeriesStructure structure = extractSeriesStructure(bp.raw());
+        if (structure.datasets().isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, BpYear> years = new TreeMap<>();
+        for (JsonNode dataset : structure.datasets()) {
+            String label = extractIndicatorName(dataset);
+            if (label == null) {
+                continue;
+            }
+            String normalized = IndicadorParser.normalizar(label);
+            Map<Integer, ValueWithMeta> values = parseDataset(dataset, structure.years());
+            for (Map.Entry<Integer, ValueWithMeta> entry : values.entrySet()) {
+                BpYear year = years.computeIfAbsent(entry.getKey(), key -> {
+                    BpYear y = new BpYear();
+                    y.setAno(key);
+                    return y;
+                });
+                ValueWithMeta meta = entry.getValue();
+                updateCurrencyReference(currencyRef, meta.currency());
+                if (matchesIndicator(normalized, "ATIVOS TOTAIS", "TOTAL ASSETS")) {
+                    year.setAtivosTotais(toAuditedValue(meta));
+                } else if (matchesIndicator(normalized, "PASSIVOS TOTAIS", "TOTAL LIABILITIES")) {
+                    year.setPassivosTotais(toAuditedValue(meta));
+                } else if (matchesIndicator(normalized, "DIVIDA LONGO PRAZO", "DIVIDA DE LONGO PRAZO", "LONG TERM DEBT")) {
+                    year.setDividaLongoPrazo(toAuditedValue(meta));
+                } else if (matchesIndicator(normalized, "PATRIMONIO LIQUIDO", "EQUITY", "SHAREHOLDERS EQUITY")) {
+                    year.setPl(toAuditedValue(meta));
+                }
+            }
+        }
+        return years.values().stream()
+                .sorted(Comparator.comparing(BpYear::getAno, Comparator.nullsLast(Integer::compareTo)))
+                .collect(Collectors.toList());
+    }
+
+    private List<FcYear> mapFcYears(BdrDemonstrativoDTO fc,
+                                    AtomicReference<String> currencyRef) {
+        if (fc == null || fc.raw() == null) {
+            return List.of();
+        }
+        SeriesStructure structure = extractSeriesStructure(fc.raw());
+        if (structure.datasets().isEmpty()) {
+            return List.of();
+        }
+        Map<Integer, FcYear> years = new TreeMap<>();
+        for (JsonNode dataset : structure.datasets()) {
+            String label = extractIndicatorName(dataset);
+            if (label == null) {
+                continue;
+            }
+            String normalized = IndicadorParser.normalizar(label);
+            Map<Integer, ValueWithMeta> values = parseDataset(dataset, structure.years());
+            for (Map.Entry<Integer, ValueWithMeta> entry : values.entrySet()) {
+                FcYear year = years.computeIfAbsent(entry.getKey(), key -> {
+                    FcYear y = new FcYear();
+                    y.setAno(key);
+                    return y;
+                });
+                ValueWithMeta meta = entry.getValue();
+                updateCurrencyReference(currencyRef, meta.currency());
+                if (matchesIndicator(normalized, "FLUXO CAIXA OPERACIONAL", "OPERATING CASH FLOW", "CASH FROM OPERATIONS")) {
+                    year.setFluxoCaixaOperacional(toQualityValue(meta));
+                } else if (matchesIndicator(normalized, "FLUXO CAIXA INVESTIMENTO", "INVESTING CASH FLOW")) {
+                    year.setFluxoCaixaInvestimento(toQualityValue(meta));
+                } else if (matchesIndicator(normalized, "FLUXO CAIXA FINANCIAMENTO", "FINANCING CASH FLOW")) {
+                    year.setFluxoCaixaFinanciamento(toQualityValue(meta));
+                }
+            }
+        }
+        return years.values().stream()
+                .sorted(Comparator.comparing(FcYear::getAno, Comparator.nullsLast(Integer::compareTo)))
+                .collect(Collectors.toList());
+    }
+
+    private BigDecimal parseDividendYieldValue(ValueWithMeta meta) {
+        if (meta == null) {
+            return null;
+        }
+        if (meta.raw() != null) {
+            return IndicadorParser.parsePercentualParaDecimal(meta.raw())
+                    .orElseGet(() -> normalizeYield(meta.value()));
+        }
+        return normalizeYield(meta.value());
+    }
+
+    private BigDecimal normalizeYield(BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
+        if (value.compareTo(BigDecimal.ONE) > 0) {
+            return value.divide(BigDecimal.valueOf(100), 8, RoundingMode.HALF_UP);
+        }
+        return value;
+    }
+
+    private DreYear.Metric toDreMetric(ValueWithMeta meta) {
+        if (meta == null || meta.value() == null) {
+            return null;
+        }
+        DreYear.Metric metric = new DreYear.Metric();
+        metric.setValue(meta.value());
+        metric.setRaw(meta.raw());
+        metric.setQuality(meta.quality());
+        return metric;
+    }
+
+    private AuditedValue toAuditedValue(ValueWithMeta meta) {
+        if (meta == null || meta.value() == null) {
+            return null;
+        }
+        AuditedValue value = new AuditedValue();
+        value.setValue(meta.value());
+        value.setRaw(meta.raw());
+        value.setQuality(meta.quality());
+        return value;
+    }
+
+    private QualityValue toQualityValue(ValueWithMeta meta) {
+        if (meta == null || meta.value() == null) {
+            return null;
+        }
+        QualityValue value = new QualityValue();
+        value.setValue(meta.value());
+        value.setRaw(meta.raw());
+        value.setQuality(meta.quality());
+        return value;
+    }
+
+    private void updateCurrencyReference(AtomicReference<String> ref, String currency) {
+        if (ref == null || currency == null || currency.isBlank()) {
+            return;
+        }
+        ref.compareAndSet(null, currency.trim().toUpperCase(Locale.ROOT));
+    }
+
+    private boolean matchesIndicator(String normalizedCandidate, String... expected) {
+        if (normalizedCandidate == null || normalizedCandidate.isBlank() || expected == null) {
+            return false;
+        }
+        for (String option : expected) {
+            if (option == null) {
+                continue;
+            }
+            if (normalizedCandidate.equals(IndicadorParser.normalizar(option))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private SeriesStructure extractSeriesStructure(JsonNode raw) {
+        if (raw == null || raw.isNull()) {
+            return new SeriesStructure(List.of(), List.of());
+        }
+        JsonNode dataNode = raw.has("data") ? raw.get("data") : raw;
+        List<Integer> years = extractLabelYears(dataNode.get("labels"));
+        if (years.isEmpty() && dataNode.has("anos")) {
+            years = extractLabelYears(dataNode.get("anos"));
+        }
+        List<JsonNode> datasets = new ArrayList<>();
+        JsonNode datasetsNode = dataNode.get("datasets");
+        if (datasetsNode == null) {
+            datasetsNode = dataNode.get("series");
+        }
+        if (datasetsNode == null) {
+            datasetsNode = dataNode.get("dataset");
+        }
+        if (datasetsNode != null && datasetsNode.isArray()) {
+            datasetsNode.forEach(datasets::add);
+        } else if (datasetsNode != null && datasetsNode.isObject()) {
+            datasets.add(datasetsNode);
+        } else if (dataNode.isArray()) {
+            dataNode.forEach(datasets::add);
+        }
+        return new SeriesStructure(List.copyOf(years), List.copyOf(datasets));
+    }
+
+    private List<Integer> extractLabelYears(JsonNode labelsNode) {
+        if (labelsNode == null || !labelsNode.isArray()) {
+            return new ArrayList<>();
+        }
+        List<Integer> years = new ArrayList<>();
+        for (JsonNode label : labelsNode) {
+            Integer year = extractYear(label);
+            if (year != null) {
+                years.add(year);
+            }
+        }
+        return years;
+    }
+
+    private Map<Integer, ValueWithMeta> parseDataset(JsonNode dataset, List<Integer> labelYears) {
+        Map<Integer, ValueWithMeta> values = new LinkedHashMap<>();
+        if (dataset == null) {
+            return values;
+        }
+        List<JsonNode> nodes = extractValueNodes(dataset);
+        for (int i = 0; i < nodes.size(); i++) {
+            JsonNode node = nodes.get(i);
+            Integer year = null;
+            if (node != null && node.isObject()) {
+                year = extractYear(node.get("year"));
+                if (year == null) {
+                    year = extractYear(node.get("ano"));
+                }
+            }
+            if ((year == null || year == 0) && labelYears != null && i < labelYears.size()) {
+                year = labelYears.get(i);
+            }
+            if ((year == null || year == 0) && node != null) {
+                year = extractYear(node);
+            }
+            ValueWithMeta meta = toValueWithMeta(node, dataset);
+            if (year != null && meta != null && meta.value() != null) {
+                values.put(year, meta);
+            }
+        }
+        return values;
+    }
+
+    private List<JsonNode> extractValueNodes(JsonNode dataset) {
+        JsonNode dataNode = dataset == null ? null : dataset.get("data");
+        if (dataNode == null && dataset != null) {
+            dataNode = dataset.get("values");
+        }
+        if (dataNode == null && dataset != null) {
+            dataNode = dataset.get("serie");
+        }
+        if (dataNode == null && dataset != null) {
+            dataNode = dataset.get("itens");
+        }
+        if (dataNode == null) {
+            return List.of();
+        }
+        if (dataNode.isArray()) {
+            List<JsonNode> result = new ArrayList<>();
+            dataNode.forEach(result::add);
+            return result;
+        }
+        return List.of(dataNode);
+    }
+
+    private ValueWithMeta toValueWithMeta(JsonNode valueNode, JsonNode dataset) {
+        if (valueNode == null || valueNode.isNull()) {
+            return null;
+        }
+        BigDecimal value = null;
+        String raw = null;
+        Quality quality = Quality.UNKNOWN;
+        String currency = null;
+
+        if (valueNode.isNumber()) {
+            value = valueNode.decimalValue();
+        } else if (valueNode.isTextual()) {
+            raw = valueNode.asText();
+            value = IndicadorParser.parseValorMonetario(raw)
+                    .orElseGet(() -> IndicadorParser.safeParseDouble(raw).map(BigDecimal::valueOf).orElse(null));
+            if (value == null) {
+                value = IndicadorParser.parsePercentualParaDecimal(raw).orElse(null);
+            }
+        } else if (valueNode.isObject()) {
+            JsonNode rawNode = valueNode.get("raw");
+            if (rawNode == null) {
+                rawNode = valueNode.get("formatted");
+            }
+            if (rawNode != null && rawNode.isTextual()) {
+                raw = rawNode.asText();
+            }
+            JsonNode valueField = valueNode.get("value");
+            if (valueField == null) {
+                valueField = valueNode.get("valor");
+            }
+            if (valueField == null) {
+                valueField = valueNode.get("amount");
+            }
+            if (valueField != null) {
+                if (valueField.isNumber()) {
+                    value = valueField.decimalValue();
+                } else if (valueField.isTextual()) {
+                    String text = valueField.asText();
+                    raw = raw == null ? text : raw;
+                    value = IndicadorParser.parseValorMonetario(text)
+                            .orElseGet(() -> IndicadorParser.safeParseDouble(text).map(BigDecimal::valueOf).orElse(null));
+                    if (value == null) {
+                        value = IndicadorParser.parsePercentualParaDecimal(text).orElse(null);
+                    }
+                }
+            }
+            if (value == null && raw != null) {
+                value = IndicadorParser.parseValorMonetario(raw)
+                        .orElseGet(() -> IndicadorParser.safeParseDouble(raw).map(BigDecimal::valueOf).orElse(null));
+                if (value == null) {
+                    value = IndicadorParser.parsePercentualParaDecimal(raw).orElse(null);
+                }
+            }
+            if (currency == null) {
+                currency = resolveCurrencyFromNode(valueNode).orElse(null);
+            }
+            quality = extractQuality(valueNode)
+                    .map(Quality::fromValue)
+                    .orElse(Quality.UNKNOWN);
+        }
+
+        if (currency == null) {
+            currency = resolveCurrencyFromNode(dataset).orElse(null);
+        }
+        if (quality == Quality.UNKNOWN) {
+            quality = extractQuality(dataset)
+                    .map(Quality::fromValue)
+                    .orElse(Quality.UNKNOWN);
+        }
+        if (raw == null && !valueNode.isNumber()) {
+            raw = valueNode.toString();
+        }
+        if (value == null) {
+            return null;
+        }
+        return new ValueWithMeta(value, raw, quality, currency == null ? null : currency.trim().toUpperCase(Locale.ROOT));
+    }
+
+    private Optional<String> resolveCurrencyFromNode(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return Optional.empty();
+        }
+        for (String field : List.of("currency", "moeda", "moedaPadrao")) {
+            JsonNode value = node.get(field);
+            if (value != null && value.isTextual()) {
+                String text = value.asText();
+                if (!text.isBlank()) {
+                    return Optional.of(text.trim().toUpperCase(Locale.ROOT));
+                }
+            }
+        }
+        String raw = extractIndicatorRawValue(node);
+        if (raw != null) {
+            return IndicadorParser.extrairMoeda(raw);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> extractQuality(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return Optional.empty();
+        }
+        for (String field : List.of("quality", "qualidade")) {
+            JsonNode value = node.get(field);
+            if (value != null && value.isTextual()) {
+                return Optional.of(value.asText());
+            }
+        }
+        return Optional.empty();
+    }
+
+    private JsonNode extractHistoryArray(JsonNode raw) {
+        if (raw == null || raw.isNull()) {
+            return null;
+        }
+        if (raw.has("history")) {
+            return raw.get("history");
+        }
+        if (raw.has("data") && raw.get("data").has("history")) {
+            return raw.get("data").get("history");
+        }
+        if (raw.isArray()) {
+            for (JsonNode node : raw) {
+                JsonNode nested = extractHistoryArray(node);
+                if (nested != null) {
+                    return nested;
+                }
+            }
+        }
+        return null;
+    }
+
+    private record SeriesStructure(List<Integer> years, List<JsonNode> datasets) {
+    }
+
+    private record ValueWithMeta(BigDecimal value, String raw, Quality quality, String currency) {
+    }
+
+
     private List<HistoricalIndicator> mapHistoricalIndicators(BdrIndicadoresDTO indicadores) {
         if (indicadores == null || indicadores.raw() == null) {
             return List.of();
         }
-        JsonNode historyNode = indicadores.raw().get("history");
+        JsonNode historyNode = extractHistoryArray(indicadores.raw());
         if (historyNode == null || !historyNode.isArray() || historyNode.isEmpty()) {
             return List.of();
         }
@@ -340,6 +1021,7 @@ public class BdrScraperMapper {
             indicator.setPatrimonioPorAtivos(asBigDecimal(item.get("patrimonioPorAtivos")));
             history.add(indicator);
         }
+        history.sort(Comparator.comparing(HistoricalIndicator::getYear, Comparator.nullsLast(Integer::compareTo)));
         return history;
     }
 
