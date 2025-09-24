@@ -1,88 +1,114 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class CurrentIndicators {
 
-    private BigDecimal ultimoPreco;
-    private BigDecimal variacaoPercentualDia;
-    private BigDecimal variacaoPercentualMes;
-    private BigDecimal variacaoPercentualAno;
-    private BigDecimal dividendYield;
-    private BigDecimal precoLucro;
-    private BigDecimal precoValorPatrimonial;
-    private BigDecimal valorMercado;
-    private BigDecimal volumeMedio;
+    private BigDecimal pl;
+    private BigDecimal pvp;
+    private BigDecimal psr;
+    private BigDecimal pEbit;
+    private BigDecimal roe;
+    private CurrentMargins margens;
+    private BigDecimal vpa;
+    private BigDecimal lpa;
+    private BigDecimal patrimonioPorAtivos;
 
-    public BigDecimal getUltimoPreco() {
-        return ultimoPreco;
+    public BigDecimal getPl() {
+        return pl;
     }
 
-    public void setUltimoPreco(BigDecimal ultimoPreco) {
-        this.ultimoPreco = ultimoPreco;
+    public void setPl(BigDecimal pl) {
+        this.pl = pl;
     }
 
-    public BigDecimal getVariacaoPercentualDia() {
-        return variacaoPercentualDia;
+    public BigDecimal getPvp() {
+        return pvp;
     }
 
-    public void setVariacaoPercentualDia(BigDecimal variacaoPercentualDia) {
-        this.variacaoPercentualDia = variacaoPercentualDia;
+    public void setPvp(BigDecimal pvp) {
+        this.pvp = pvp;
     }
 
-    public BigDecimal getVariacaoPercentualMes() {
-        return variacaoPercentualMes;
+    public BigDecimal getPsr() {
+        return psr;
     }
 
-    public void setVariacaoPercentualMes(BigDecimal variacaoPercentualMes) {
-        this.variacaoPercentualMes = variacaoPercentualMes;
+    public void setPsr(BigDecimal psr) {
+        this.psr = psr;
     }
 
-    public BigDecimal getVariacaoPercentualAno() {
-        return variacaoPercentualAno;
+    public BigDecimal getPEbit() {
+        return pEbit;
     }
 
-    public void setVariacaoPercentualAno(BigDecimal variacaoPercentualAno) {
-        this.variacaoPercentualAno = variacaoPercentualAno;
+    public void setPEbit(BigDecimal pEbit) {
+        this.pEbit = pEbit;
     }
 
-    public BigDecimal getDividendYield() {
-        return dividendYield;
+    public BigDecimal getRoe() {
+        return roe;
     }
 
-    public void setDividendYield(BigDecimal dividendYield) {
-        this.dividendYield = dividendYield;
+    public void setRoe(BigDecimal roe) {
+        this.roe = roe;
     }
 
-    public BigDecimal getPrecoLucro() {
-        return precoLucro;
+    public CurrentMargins getMargens() {
+        return margens;
     }
 
-    public void setPrecoLucro(BigDecimal precoLucro) {
-        this.precoLucro = precoLucro;
+    public void setMargens(CurrentMargins margens) {
+        this.margens = margens;
     }
 
-    public BigDecimal getPrecoValorPatrimonial() {
-        return precoValorPatrimonial;
+    public BigDecimal getVpa() {
+        return vpa;
     }
 
-    public void setPrecoValorPatrimonial(BigDecimal precoValorPatrimonial) {
-        this.precoValorPatrimonial = precoValorPatrimonial;
+    public void setVpa(BigDecimal vpa) {
+        this.vpa = vpa;
     }
 
-    public BigDecimal getValorMercado() {
-        return valorMercado;
+    public BigDecimal getLpa() {
+        return lpa;
     }
 
-    public void setValorMercado(BigDecimal valorMercado) {
-        this.valorMercado = valorMercado;
+    public void setLpa(BigDecimal lpa) {
+        this.lpa = lpa;
     }
 
-    public BigDecimal getVolumeMedio() {
-        return volumeMedio;
+    public BigDecimal getPatrimonioPorAtivos() {
+        return patrimonioPorAtivos;
     }
 
-    public void setVolumeMedio(BigDecimal volumeMedio) {
-        this.volumeMedio = volumeMedio;
+    public void setPatrimonioPorAtivos(BigDecimal patrimonioPorAtivos) {
+        this.patrimonioPorAtivos = patrimonioPorAtivos;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CurrentIndicators that = (CurrentIndicators) o;
+        return Objects.equals(pl, that.pl)
+                && Objects.equals(pvp, that.pvp)
+                && Objects.equals(psr, that.psr)
+                && Objects.equals(pEbit, that.pEbit)
+                && Objects.equals(roe, that.roe)
+                && Objects.equals(margens, that.margens)
+                && Objects.equals(vpa, that.vpa)
+                && Objects.equals(lpa, that.lpa)
+                && Objects.equals(patrimonioPorAtivos, that.patrimonioPorAtivos);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pl, pvp, psr, pEbit, roe, margens, vpa, lpa, patrimonioPorAtivos);
     }
 }

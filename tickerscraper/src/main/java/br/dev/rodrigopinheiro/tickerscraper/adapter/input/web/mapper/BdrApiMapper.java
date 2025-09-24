@@ -36,6 +36,8 @@ public interface BdrApiMapper {
 
     BdrCurrentIndicatorsResponseDTO toResponse(CurrentIndicators indicators);
 
+    BdrCurrentMarginsResponseDTO toResponse(CurrentMargins margins);
+
     BdrPricePointResponseDTO toResponse(PricePoint pricePoint);
 
     BdrDividendYearResponseDTO toResponse(DividendYear year);

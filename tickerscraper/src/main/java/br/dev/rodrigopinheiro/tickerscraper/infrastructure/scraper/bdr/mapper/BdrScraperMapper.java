@@ -46,15 +46,12 @@ public class BdrScraperMapper {
         BdrIndicadoresDTO indicadores = raw.indicadores();
         BigDecimal precoAtual = findMonetario(indicadores, "PRECO ATUAL", "PREÇO ATUAL", "ULTIMO PRECO", "ÚLTIMO PREÇO", "PRICE");
         BigDecimal variacaoAno = findPercentual(indicadores, "VARIACAO ANO", "VAR. ANO", "12M", "ANO");
-        BigDecimal variacaoDia = findPercentual(indicadores, "VARIACAO DIA", "VAR. DIA", "DIA");
-        BigDecimal variacaoMes = findPercentual(indicadores, "VARIACAO MES", "VAR. MES", "30D", "MÊS");
-        BigDecimal dividendYield = findPercentual(indicadores, "DIVIDEND YIELD", "DY");
 
         bdr.setCotacao(precoAtual);
         bdr.setVariacao12(variacaoAno);
 
         // Indicadores correntes detalhados
-        bdr.setCurrentIndicators(buildCurrentIndicators(indicadores, precoAtual, variacaoDia, variacaoMes, variacaoAno, dividendYield));
+        bdr.setCurrentIndicators(buildCurrentIndicators(indicadores));
 
         // Paridade
         bdr.setParidade(mapParidade(indicadores.paridade()));
@@ -168,26 +165,41 @@ public class BdrScraperMapper {
         return null;
     }
 
-    private CurrentIndicators buildCurrentIndicators(BdrIndicadoresDTO indicadores,
-                                                     BigDecimal precoAtual,
-                                                     BigDecimal variacaoDia,
-                                                     BigDecimal variacaoMes,
-                                                     BigDecimal variacaoAno,
-                                                     BigDecimal dividendYield) {
+    private CurrentIndicators buildCurrentIndicators(BdrIndicadoresDTO indicadores) {
         if (indicadores == null) {
             return null;
         }
         CurrentIndicators current = new CurrentIndicators();
-        current.setUltimoPreco(precoAtual);
-        current.setVariacaoPercentualDia(variacaoDia);
-        current.setVariacaoPercentualMes(variacaoMes);
-        current.setVariacaoPercentualAno(variacaoAno);
-        current.setDividendYield(dividendYield);
-        current.setPrecoLucro(findSimpleDecimal(indicadores, "P/L", "P L", "PRICE TO EARNINGS"));
-        current.setPrecoValorPatrimonial(findSimpleDecimal(indicadores, "P/VP", "P VP", "PRICE TO BOOK"));
-        current.setValorMercado(findMonetario(indicadores, "VALOR DE MERCADO", "MARKET CAP"));
-        current.setVolumeMedio(findMonetario(indicadores, "VOLUME MEDIO", "VOLUME MÉDIO"));
+        current.setPl(findSimpleDecimal(indicadores, "P/L", "P L", "PRICE TO EARNINGS"));
+        current.setPvp(findSimpleDecimal(indicadores, "P/VP", "P VP", "PRICE TO BOOK"));
+        current.setPsr(findSimpleDecimal(indicadores, "P/S", "P SR", "PSR", "PRICE TO SALES"));
+        current.setPEbit(findSimpleDecimal(indicadores, "P/EBIT", "P EBIT"));
+        current.setRoe(findPercentual(indicadores, "ROE", "RETORNO SOBRE PATRIMONIO", "RETORNO SOBRE PATRIMÔNIO"));
+        current.setMargens(buildCurrentMargins(indicadores));
+        current.setVpa(findSimpleDecimal(indicadores, "VPA", "VALOR PATRIMONIAL POR AÇÃO"));
+        current.setLpa(findSimpleDecimal(indicadores, "LPA", "LUCRO POR AÇÃO"));
+        current.setPatrimonioPorAtivos(findSimpleDecimal(indicadores,
+                "PATRIMONIO/ATIVOS",
+                "PATRIMÔNIO/ATIVOS",
+                "PATRIMONIO ATIVOS",
+                "PATRIMONIO SOBRE ATIVOS"));
         return current;
+    }
+
+    private CurrentMargins buildCurrentMargins(BdrIndicadoresDTO indicadores) {
+        BigDecimal margemBruta = findPercentual(indicadores, "MARGEM BRUTA", "GROSS MARGIN");
+        BigDecimal margemEbit = findPercentual(indicadores, "MARGEM EBIT", "EBIT MARGIN");
+        BigDecimal margemLiquida = findPercentual(indicadores, "MARGEM LIQUIDA", "MARGEM LÍQUIDA", "NET MARGIN");
+
+        if (margemBruta == null && margemEbit == null && margemLiquida == null) {
+            return null;
+        }
+
+        CurrentMargins margens = new CurrentMargins();
+        margens.setMargemBruta(margemBruta);
+        margens.setMargemEbit(margemEbit);
+        margens.setMargemLiquida(margemLiquida);
+        return margens;
     }
 
     private ParidadeBdr mapParidade(IndicadorParser.ParidadeBdrInfo info) {

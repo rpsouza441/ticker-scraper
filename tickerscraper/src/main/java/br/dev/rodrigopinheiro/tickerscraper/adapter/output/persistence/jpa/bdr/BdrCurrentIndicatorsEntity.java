@@ -22,30 +22,30 @@ public class BdrCurrentIndicatorsEntity {
     @JoinColumn(name = "bdr_id", unique = true)
     private BdrEntity bdr;
 
-    @Column(name = "ultimo_preco", precision = 19, scale = 6)
-    private BigDecimal ultimoPreco;
+    @Column(name = "pl", precision = 19, scale = 6)
+    private BigDecimal pl;
 
-    @Column(name = "variacao_dia", precision = 19, scale = 6)
-    private BigDecimal variacaoPercentualDia;
+    @Column(name = "pvp", precision = 19, scale = 6)
+    private BigDecimal pvp;
 
-    @Column(name = "variacao_mes", precision = 19, scale = 6)
-    private BigDecimal variacaoPercentualMes;
+    @Column(name = "psr", precision = 19, scale = 6)
+    private BigDecimal psr;
 
-    @Column(name = "variacao_ano", precision = 19, scale = 6)
-    private BigDecimal variacaoPercentualAno;
+    @Column(name = "p_ebit", precision = 19, scale = 6)
+    private BigDecimal pEbit;
 
-    @Column(name = "dividend_yield", precision = 19, scale = 6)
-    private BigDecimal dividendYield;
+    @Column(name = "roe", precision = 19, scale = 6)
+    private BigDecimal roe;
 
-    @Column(name = "preco_lucro", precision = 19, scale = 6)
-    private BigDecimal precoLucro;
+    @Embedded
+    private BdrCurrentMarginsEmbeddable margens;
 
-    @Column(name = "preco_valor_patrimonial", precision = 19, scale = 6)
-    private BigDecimal precoValorPatrimonial;
+    @Column(name = "vpa", precision = 19, scale = 6)
+    private BigDecimal vpa;
 
-    @Column(name = "valor_mercado", precision = 19, scale = 2)
-    private BigDecimal valorMercado;
+    @Column(name = "lpa", precision = 19, scale = 6)
+    private BigDecimal lpa;
 
-    @Column(name = "volume_medio", precision = 19, scale = 2)
-    private BigDecimal volumeMedio;
+    @Column(name = "patrimonio_por_ativos", precision = 19, scale = 6)
+    private BigDecimal patrimonioPorAtivos;
 }
