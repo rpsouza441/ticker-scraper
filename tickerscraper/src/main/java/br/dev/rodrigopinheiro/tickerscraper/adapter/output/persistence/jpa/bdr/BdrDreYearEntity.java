@@ -3,10 +3,8 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Entity
-@Table(name = "bdr_dre_year")
+@Table(name = "bdr_dre_yearly")
 @Getter
 @Setter
 @Builder
@@ -22,21 +20,46 @@ public class BdrDreYearEntity {
     @JoinColumn(name = "bdr_id")
     private BdrEntity bdr;
 
-    @Column(name = "ano")
+    @Column(name = "year")
     private Integer ano;
 
-    @Column(name = "receita_liquida", precision = 19, scale = 2)
-    private BigDecimal receitaLiquida;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "value", column = @Column(name = "receita_total_val", precision = 30, scale = 6)),
+            @AttributeOverride(name = "quality", column = @Column(name = "receita_total_qual", columnDefinition = "quality_enum")),
+            @AttributeOverride(name = "raw", column = @Column(name = "receita_total_raw"))
+    })
+    private QualityMetricEmbeddable receitaTotalUsd;
 
-    @Column(name = "lucro_liquido", precision = 19, scale = 2)
-    private BigDecimal lucroLiquido;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "value", column = @Column(name = "lucro_bruto_val", precision = 30, scale = 6)),
+            @AttributeOverride(name = "quality", column = @Column(name = "lucro_bruto_qual", columnDefinition = "quality_enum")),
+            @AttributeOverride(name = "raw", column = @Column(name = "lucro_bruto_raw"))
+    })
+    private QualityMetricEmbeddable lucroBrutoUsd;
 
-    @Column(name = "ebitda", precision = 19, scale = 2)
-    private BigDecimal ebitda;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "value", column = @Column(name = "ebitda_val", precision = 30, scale = 6)),
+            @AttributeOverride(name = "quality", column = @Column(name = "ebitda_qual", columnDefinition = "quality_enum")),
+            @AttributeOverride(name = "raw", column = @Column(name = "ebitda_raw"))
+    })
+    private QualityMetricEmbeddable ebitdaUsd;
 
-    @Column(name = "ebit", precision = 19, scale = 2)
-    private BigDecimal ebit;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "value", column = @Column(name = "ebit_val", precision = 30, scale = 6)),
+            @AttributeOverride(name = "quality", column = @Column(name = "ebit_qual", columnDefinition = "quality_enum")),
+            @AttributeOverride(name = "raw", column = @Column(name = "ebit_raw"))
+    })
+    private QualityMetricEmbeddable ebitUsd;
 
-    @Column(name = "margem_liquida", precision = 19, scale = 6)
-    private BigDecimal margemLiquida;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "value", column = @Column(name = "lucro_liquido_val", precision = 30, scale = 6)),
+            @AttributeOverride(name = "quality", column = @Column(name = "lucro_liquido_qual", columnDefinition = "quality_enum")),
+            @AttributeOverride(name = "raw", column = @Column(name = "lucro_liquido_raw"))
+    })
+    private QualityMetricEmbeddable lucroLiquidoUsd;
 }

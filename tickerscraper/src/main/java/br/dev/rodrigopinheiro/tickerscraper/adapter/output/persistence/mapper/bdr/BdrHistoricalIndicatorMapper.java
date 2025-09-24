@@ -14,10 +14,7 @@ public interface BdrHistoricalIndicatorMapper {
 
     @Mappings({
             @Mapping(target = "id", ignore = true),
-            @Mapping(target = "bdr", ignore = true),
-            @Mapping(source = "nomeIndicador", target = "nomeIndicador"),
-            @Mapping(source = "ano", target = "ano"),
-            @Mapping(source = "valor", target = "valor")
+            @Mapping(target = "bdr", ignore = true)
     })
     BdrHistoricalIndicatorEntity toEntity(HistoricalIndicator indicator);
 

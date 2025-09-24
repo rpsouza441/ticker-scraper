@@ -14,6 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * Mapper responsável por converter o agregado de scraping de BDR ({@link BdrDadosFinanceirosDTO})
  * em objetos de domínio prontos para persistência.
@@ -46,15 +48,12 @@ public class BdrScraperMapper {
         BdrIndicadoresDTO indicadores = raw.indicadores();
         BigDecimal precoAtual = findMonetario(indicadores, "PRECO ATUAL", "PREÇO ATUAL", "ULTIMO PRECO", "ÚLTIMO PREÇO", "PRICE");
         BigDecimal variacaoAno = findPercentual(indicadores, "VARIACAO ANO", "VAR. ANO", "12M", "ANO");
-        BigDecimal variacaoDia = findPercentual(indicadores, "VARIACAO DIA", "VAR. DIA", "DIA");
-        BigDecimal variacaoMes = findPercentual(indicadores, "VARIACAO MES", "VAR. MES", "30D", "MÊS");
-        BigDecimal dividendYield = findPercentual(indicadores, "DIVIDEND YIELD", "DY");
 
         bdr.setCotacao(precoAtual);
         bdr.setVariacao12(variacaoAno);
 
         // Indicadores correntes detalhados
-        bdr.setCurrentIndicators(buildCurrentIndicators(indicadores, precoAtual, variacaoDia, variacaoMes, variacaoAno, dividendYield));
+        bdr.setCurrentIndicators(buildCurrentIndicators(indicadores));
 
         // Paridade
         bdr.setParidade(mapParidade(indicadores.paridade()));
@@ -168,26 +167,41 @@ public class BdrScraperMapper {
         return null;
     }
 
-    private CurrentIndicators buildCurrentIndicators(BdrIndicadoresDTO indicadores,
-                                                     BigDecimal precoAtual,
-                                                     BigDecimal variacaoDia,
-                                                     BigDecimal variacaoMes,
-                                                     BigDecimal variacaoAno,
-                                                     BigDecimal dividendYield) {
+    private CurrentIndicators buildCurrentIndicators(BdrIndicadoresDTO indicadores) {
         if (indicadores == null) {
             return null;
         }
         CurrentIndicators current = new CurrentIndicators();
-        current.setUltimoPreco(precoAtual);
-        current.setVariacaoPercentualDia(variacaoDia);
-        current.setVariacaoPercentualMes(variacaoMes);
-        current.setVariacaoPercentualAno(variacaoAno);
-        current.setDividendYield(dividendYield);
-        current.setPrecoLucro(findSimpleDecimal(indicadores, "P/L", "P L", "PRICE TO EARNINGS"));
-        current.setPrecoValorPatrimonial(findSimpleDecimal(indicadores, "P/VP", "P VP", "PRICE TO BOOK"));
-        current.setValorMercado(findMonetario(indicadores, "VALOR DE MERCADO", "MARKET CAP"));
-        current.setVolumeMedio(findMonetario(indicadores, "VOLUME MEDIO", "VOLUME MÉDIO"));
+        current.setPl(findSimpleDecimal(indicadores, "P/L", "P L", "PRICE TO EARNINGS"));
+        current.setPvp(findSimpleDecimal(indicadores, "P/VP", "P VP", "PRICE TO BOOK"));
+        current.setPsr(findSimpleDecimal(indicadores, "P/S", "P SR", "PSR", "PRICE TO SALES"));
+        current.setPEbit(findSimpleDecimal(indicadores, "P/EBIT", "P EBIT"));
+        current.setRoe(findPercentual(indicadores, "ROE", "RETORNO SOBRE PATRIMONIO", "RETORNO SOBRE PATRIMÔNIO"));
+        current.setMargens(buildCurrentMargins(indicadores));
+        current.setVpa(findSimpleDecimal(indicadores, "VPA", "VALOR PATRIMONIAL POR AÇÃO"));
+        current.setLpa(findSimpleDecimal(indicadores, "LPA", "LUCRO POR AÇÃO"));
+        current.setPatrimonioPorAtivos(findSimpleDecimal(indicadores,
+                "PATRIMONIO/ATIVOS",
+                "PATRIMÔNIO/ATIVOS",
+                "PATRIMONIO ATIVOS",
+                "PATRIMONIO SOBRE ATIVOS"));
         return current;
+    }
+
+    private CurrentMargins buildCurrentMargins(BdrIndicadoresDTO indicadores) {
+        BigDecimal margemBruta = findPercentual(indicadores, "MARGEM BRUTA", "GROSS MARGIN");
+        BigDecimal margemEbit = findPercentual(indicadores, "MARGEM EBIT", "EBIT MARGIN");
+        BigDecimal margemLiquida = findPercentual(indicadores, "MARGEM LIQUIDA", "MARGEM LÍQUIDA", "NET MARGIN");
+
+        if (margemBruta == null && margemEbit == null && margemLiquida == null) {
+            return null;
+        }
+
+        CurrentMargins margens = new CurrentMargins();
+        margens.setMargemBruta(margemBruta);
+        margens.setMargemEbit(margemEbit);
+        margens.setMargemLiquida(margemLiquida);
+        return margens;
     }
 
     private ParidadeBdr mapParidade(IndicadorParser.ParidadeBdrInfo info) {
@@ -223,6 +237,7 @@ public class BdrScraperMapper {
             return List.of();
         }
         Map<Integer, BigDecimal> acumuladoPorAno = new TreeMap<>();
+        Map<Integer, String> currencyPorAno = new HashMap<>();
         for (BdrDividendoItemDTO item : dividendos.dividendos()) {
             if (item == null || item.valor() == null) {
                 continue;
@@ -232,12 +247,16 @@ public class BdrScraperMapper {
                 continue;
             }
             acumuladoPorAno.merge(ano, item.valor(), BigDecimal::add);
+            if (currencyPorAno.get(ano) == null && item.moeda() != null) {
+                currencyPorAno.put(ano, item.moeda());
+            }
         }
         return acumuladoPorAno.entrySet().stream()
                 .map(entry -> {
                     DividendYear year = new DividendYear();
                     year.setAno(entry.getKey());
                     year.setTotalDividendo(entry.getValue().setScale(4, RoundingMode.HALF_UP));
+                    year.setCurrency(currencyPorAno.get(entry.getKey()));
                     return year;
                 })
                 .collect(Collectors.toList());
@@ -255,17 +274,78 @@ public class BdrScraperMapper {
     }
 
     private List<HistoricalIndicator> mapHistoricalIndicators(BdrIndicadoresDTO indicadores) {
-        if (indicadores == null || indicadores.indicadoresSimples() == null || indicadores.indicadoresSimples().isEmpty()) {
+        if (indicadores == null || indicadores.raw() == null) {
             return List.of();
         }
-        return indicadores.indicadoresSimples().entrySet().stream()
-                .map(entry -> {
-                    HistoricalIndicator indicator = new HistoricalIndicator();
-                    indicator.setNomeIndicador(entry.getKey());
-                    indicator.setValor(entry.getValue() == null ? null : BigDecimal.valueOf(entry.getValue()));
-                    indicator.setAno(null); // API não fornece ano explícito
-                    return indicator;
-                })
-                .collect(Collectors.toList());
+        JsonNode historyNode = indicadores.raw().get("history");
+        if (historyNode == null || !historyNode.isArray() || historyNode.isEmpty()) {
+            return List.of();
+        }
+        List<HistoricalIndicator> history = new ArrayList<>();
+        for (JsonNode item : historyNode) {
+            if (item == null || !item.isObject()) {
+                continue;
+            }
+            HistoricalIndicator indicator = new HistoricalIndicator();
+            indicator.setYear(extractYear(item.get("year")));
+            indicator.setPl(asBigDecimal(item.get("pl")));
+            indicator.setPvp(asBigDecimal(item.get("pvp")));
+            indicator.setPsr(asBigDecimal(item.get("psr")));
+            indicator.setPEbit(asBigDecimal(item.get("pEbit")));
+            indicator.setPEbitda(asBigDecimal(item.get("pEbitda")));
+            indicator.setPAtivo(asBigDecimal(item.get("pAtivo")));
+            indicator.setRoe(asBigDecimal(item.get("roe")));
+            indicator.setRoic(asBigDecimal(item.get("roic")));
+            indicator.setRoa(asBigDecimal(item.get("roa")));
+            indicator.setMargemBruta(asBigDecimal(item.get("margemBruta")));
+            indicator.setMargemOperacional(asBigDecimal(item.get("margemOperacional")));
+            indicator.setMargemLiquida(asBigDecimal(item.get("margemLiquida")));
+            indicator.setVpa(asBigDecimal(item.get("vpa")));
+            indicator.setLpa(asBigDecimal(item.get("lpa")));
+            indicator.setPatrimonioPorAtivos(asBigDecimal(item.get("patrimonioPorAtivos")));
+            history.add(indicator);
+        }
+        return history;
+    }
+
+    private Integer extractYear(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isInt()) {
+            return node.intValue();
+        }
+        if (node.isTextual()) {
+            String text = node.asText();
+            if (text == null || text.isBlank()) {
+                return null;
+            }
+            try {
+                return Integer.parseInt(text.trim());
+            } catch (NumberFormatException ignored) {
+                return IndicadorParser.safeParseDouble(text)
+                        .map(Double::intValue)
+                        .orElse(null);
+            }
+        }
+        if (node.canConvertToInt()) {
+            return node.intValue();
+        }
+        return null;
+    }
+
+    private BigDecimal asBigDecimal(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isNumber()) {
+            return node.decimalValue();
+        }
+        if (node.isTextual()) {
+            return IndicadorParser.safeParseDouble(node.asText())
+                    .map(BigDecimal::valueOf)
+                    .orElse(null);
+        }
+        return null;
     }
 }

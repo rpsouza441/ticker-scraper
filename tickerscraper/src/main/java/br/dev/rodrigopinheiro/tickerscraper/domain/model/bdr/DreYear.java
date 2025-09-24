@@ -1,15 +1,17 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.Quality;
+
 import java.math.BigDecimal;
 
 public class DreYear {
 
     private Integer ano;
-    private BigDecimal receitaLiquida;
-    private BigDecimal lucroLiquido;
-    private BigDecimal ebitda;
-    private BigDecimal ebit;
-    private BigDecimal margemLiquida;
+    private Metric receitaTotalUsd;
+    private Metric lucroBrutoUsd;
+    private Metric ebitdaUsd;
+    private Metric ebitUsd;
+    private Metric lucroLiquidoUsd;
 
     public Integer getAno() {
         return ano;
@@ -19,43 +21,74 @@ public class DreYear {
         this.ano = ano;
     }
 
-    public BigDecimal getReceitaLiquida() {
-        return receitaLiquida;
+    public Metric getReceitaTotalUsd() {
+        return receitaTotalUsd;
     }
 
-    public void setReceitaLiquida(BigDecimal receitaLiquida) {
-        this.receitaLiquida = receitaLiquida;
+    public void setReceitaTotalUsd(Metric receitaTotalUsd) {
+        this.receitaTotalUsd = receitaTotalUsd;
     }
 
-    public BigDecimal getLucroLiquido() {
-        return lucroLiquido;
+    public Metric getLucroBrutoUsd() {
+        return lucroBrutoUsd;
     }
 
-    public void setLucroLiquido(BigDecimal lucroLiquido) {
-        this.lucroLiquido = lucroLiquido;
+    public void setLucroBrutoUsd(Metric lucroBrutoUsd) {
+        this.lucroBrutoUsd = lucroBrutoUsd;
     }
 
-    public BigDecimal getEbitda() {
-        return ebitda;
+    public Metric getEbitdaUsd() {
+        return ebitdaUsd;
     }
 
-    public void setEbitda(BigDecimal ebitda) {
-        this.ebitda = ebitda;
+    public void setEbitdaUsd(Metric ebitdaUsd) {
+        this.ebitdaUsd = ebitdaUsd;
     }
 
-    public BigDecimal getEbit() {
-        return ebit;
+    public Metric getEbitUsd() {
+        return ebitUsd;
     }
 
-    public void setEbit(BigDecimal ebit) {
-        this.ebit = ebit;
+    public void setEbitUsd(Metric ebitUsd) {
+        this.ebitUsd = ebitUsd;
     }
 
-    public BigDecimal getMargemLiquida() {
-        return margemLiquida;
+    public Metric getLucroLiquidoUsd() {
+        return lucroLiquidoUsd;
     }
 
-    public void setMargemLiquida(BigDecimal margemLiquida) {
-        this.margemLiquida = margemLiquida;
+    public void setLucroLiquidoUsd(Metric lucroLiquidoUsd) {
+        this.lucroLiquidoUsd = lucroLiquidoUsd;
+    }
+
+    public static class Metric {
+
+        private BigDecimal value;
+        private Quality quality = Quality.UNKNOWN;
+        private String raw;
+
+        public BigDecimal getValue() {
+            return value;
+        }
+
+        public void setValue(BigDecimal value) {
+            this.value = value;
+        }
+
+        public Quality getQuality() {
+            return quality;
+        }
+
+        public void setQuality(Quality quality) {
+            this.quality = quality == null ? Quality.UNKNOWN : quality;
+        }
+
+        public String getRaw() {
+            return raw;
+        }
+
+        public void setRaw(String raw) {
+            this.raw = raw;
+        }
     }
 }

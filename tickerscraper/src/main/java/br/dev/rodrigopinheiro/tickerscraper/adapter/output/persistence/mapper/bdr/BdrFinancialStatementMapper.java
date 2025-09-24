@@ -1,10 +1,12 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.bdr;
 
+
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.AuditedBigDecimalEmbeddable;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrBpYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrDreYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrFcYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.AuditedValue;
+
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.BpYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.DreYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.FcYear;
@@ -20,7 +22,12 @@ public interface BdrFinancialStatementMapper {
 
     @Mappings({
             @Mapping(target = "id", ignore = true),
-            @Mapping(target = "bdr", ignore = true)
+            @Mapping(target = "bdr", ignore = true),
+            @Mapping(source = "receitaTotalUsd", target = "receitaTotalUsd"),
+            @Mapping(source = "lucroBrutoUsd", target = "lucroBrutoUsd"),
+            @Mapping(source = "ebitdaUsd", target = "ebitdaUsd"),
+            @Mapping(source = "ebitUsd", target = "ebitUsd"),
+            @Mapping(source = "lucroLiquidoUsd", target = "lucroLiquidoUsd")
     })
     BdrDreYearEntity toEntity(DreYear year);
 
@@ -60,4 +67,26 @@ public interface BdrFinancialStatementMapper {
     List<BdrFcYearEntity> toFcEntityList(List<FcYear> source);
 
     List<FcYear> toFcDomainList(List<BdrFcYearEntity> source);
+
+    default QualityMetricEmbeddable toEmbeddable(DreYear.Metric metric) {
+        if (metric == null) {
+            return null;
+        }
+        QualityMetricEmbeddable embeddable = new QualityMetricEmbeddable();
+        embeddable.setValue(metric.getValue());
+        embeddable.setQuality(metric.getQuality());
+        embeddable.setRaw(metric.getRaw());
+        return embeddable;
+    }
+
+    default DreYear.Metric toDomain(QualityMetricEmbeddable embeddable) {
+        if (embeddable == null) {
+            return null;
+        }
+        DreYear.Metric metric = new DreYear.Metric();
+        metric.setValue(embeddable.getValue());
+        metric.setQuality(embeddable.getQuality());
+        metric.setRaw(embeddable.getRaw());
+        return metric;
+    }
 }
