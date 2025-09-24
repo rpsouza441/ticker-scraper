@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "bdr_price_series")
@@ -24,7 +24,7 @@ public class BdrPriceSeriesEntity {
     private BdrEntity bdr;
 
     @Column(name = "dt", nullable = false)
-    private LocalDate dt;
+    private OffsetDateTime dt;
 
     @Column(name = "close", precision = 19, scale = 6, nullable = false)
     private BigDecimal close;
