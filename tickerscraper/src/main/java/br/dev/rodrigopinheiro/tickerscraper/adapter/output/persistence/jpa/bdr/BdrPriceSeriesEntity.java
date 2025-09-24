@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "bdr_price_series")
@@ -23,21 +23,9 @@ public class BdrPriceSeriesEntity {
     @JoinColumn(name = "bdr_id")
     private BdrEntity bdr;
 
-    @Column(name = "timestamp")
-    private OffsetDateTime timestamp;
+    @Column(name = "dt", nullable = false)
+    private LocalDate dt;
 
-    @Column(name = "open_price", precision = 19, scale = 6)
-    private BigDecimal openPrice;
-
-    @Column(name = "high_price", precision = 19, scale = 6)
-    private BigDecimal highPrice;
-
-    @Column(name = "low_price", precision = 19, scale = 6)
-    private BigDecimal lowPrice;
-
-    @Column(name = "close_price", precision = 19, scale = 6)
-    private BigDecimal closePrice;
-
-    @Column(name = "volume", precision = 19, scale = 6)
-    private BigDecimal volume;
+    @Column(name = "close", precision = 19, scale = 6, nullable = false)
+    private BigDecimal close;
 }

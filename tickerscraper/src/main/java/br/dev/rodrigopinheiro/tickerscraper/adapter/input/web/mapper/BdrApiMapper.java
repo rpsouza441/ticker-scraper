@@ -51,6 +51,8 @@ public interface BdrApiMapper {
 
     BdrCurrentIndicatorsResponseDTO toCurrentIndicatorsResponse(CurrentIndicators indicators);
 
+    @Mapping(source = "date", target = "dt")
+    @Mapping(source = "close", target = "close")
     BdrPricePointResponseDTO toPricePointResponse(PricePoint pricePoint);
 
 

@@ -9,18 +9,14 @@ import org.mapstruct.Mappings;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = TimeMapper.class)
+@Mapper(componentModel = "spring")
 public interface BdrPriceSeriesMapper {
 
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "bdr", ignore = true),
-            @Mapping(source = "timestamp", target = "timestamp"),
-            @Mapping(source = "openPrice", target = "openPrice"),
-            @Mapping(source = "highPrice", target = "highPrice"),
-            @Mapping(source = "lowPrice", target = "lowPrice"),
-            @Mapping(source = "closePrice", target = "closePrice"),
-            @Mapping(source = "volume", target = "volume")
+            @Mapping(source = "date", target = "dt"),
+            @Mapping(source = "close", target = "close")
     })
     BdrPriceSeriesEntity toEntity(PricePoint point);
 

@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -243,12 +245,19 @@ public class BdrScraperMapper {
                 .filter(Objects::nonNull)
                 .map(point -> {
                     PricePoint domain = new PricePoint();
-                    domain.setTimestamp(point.data());
-                    domain.setClosePrice(point.preco());
+                    domain.setDate(convertToLocalDate(point.data()));
+                    domain.setClose(point.preco());
                     return domain;
                 })
-                .sorted(Comparator.comparing(PricePoint::getTimestamp))
+                .sorted(Comparator.comparing(PricePoint::getDate))
                 .collect(Collectors.toList());
+    }
+
+    private LocalDate convertToLocalDate(Instant instant) {
+        if (instant == null) {
+            return null;
+        }
+        return instant.atZone(ZoneOffset.UTC).toLocalDate();
     }
 
     private List<DividendYear> mapDividendos(BdrDividendosDTO dividendos) {
