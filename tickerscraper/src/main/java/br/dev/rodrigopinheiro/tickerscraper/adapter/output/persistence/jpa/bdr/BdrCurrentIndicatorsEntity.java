@@ -34,8 +34,20 @@ public class BdrCurrentIndicatorsEntity {
     @Column(name = "p_ebit", precision = 19, scale = 6)
     private BigDecimal pEbit;
 
+    @Column(name = "p_ebitda", precision = 19, scale = 6)
+    private BigDecimal pEbitda;
+
+    @Column(name = "p_ativo", precision = 19, scale = 6)
+    private BigDecimal pAtivo;
+
     @Column(name = "roe", precision = 19, scale = 6)
     private BigDecimal roe;
+
+    @Column(name = "roic", precision = 19, scale = 6)
+    private BigDecimal roic;
+
+    @Column(name = "roa", precision = 19, scale = 6)
+    private BigDecimal roa;
 
     @Embedded
     private BdrCurrentMarginsEmbeddable margens;

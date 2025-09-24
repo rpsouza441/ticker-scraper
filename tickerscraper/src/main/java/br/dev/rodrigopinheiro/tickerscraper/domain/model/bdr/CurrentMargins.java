@@ -6,7 +6,7 @@ import java.util.Objects;
 public class CurrentMargins {
 
     private BigDecimal margemBruta;
-    private BigDecimal margemEbit;
+    private BigDecimal margemOperacional;
     private BigDecimal margemLiquida;
 
     public BigDecimal getMargemBruta() {
@@ -17,12 +17,12 @@ public class CurrentMargins {
         this.margemBruta = margemBruta;
     }
 
-    public BigDecimal getMargemEbit() {
-        return margemEbit;
+    public BigDecimal getMargemOperacional() {
+        return margemOperacional;
     }
 
-    public void setMargemEbit(BigDecimal margemEbit) {
-        this.margemEbit = margemEbit;
+    public void setMargemOperacional(BigDecimal margemOperacional) {
+        this.margemOperacional = margemOperacional;
     }
 
     public BigDecimal getMargemLiquida() {
@@ -43,12 +43,12 @@ public class CurrentMargins {
         }
         CurrentMargins that = (CurrentMargins) o;
         return Objects.equals(margemBruta, that.margemBruta)
-                && Objects.equals(margemEbit, that.margemEbit)
+                && Objects.equals(margemOperacional, that.margemOperacional)
                 && Objects.equals(margemLiquida, that.margemLiquida);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(margemBruta, margemEbit, margemLiquida);
+        return Objects.hash(margemBruta, margemOperacional, margemLiquida);
     }
 }

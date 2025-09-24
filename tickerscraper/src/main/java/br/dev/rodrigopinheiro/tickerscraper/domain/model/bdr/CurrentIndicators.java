@@ -9,7 +9,11 @@ public class CurrentIndicators {
     private BigDecimal pvp;
     private BigDecimal psr;
     private BigDecimal pEbit;
+    private BigDecimal pEbitda;
+    private BigDecimal pAtivo;
     private BigDecimal roe;
+    private BigDecimal roic;
+    private BigDecimal roa;
     private CurrentMargins margens;
     private BigDecimal vpa;
     private BigDecimal lpa;
@@ -47,12 +51,44 @@ public class CurrentIndicators {
         this.pEbit = pEbit;
     }
 
+    public BigDecimal getPEbitda() {
+        return pEbitda;
+    }
+
+    public void setPEbitda(BigDecimal pEbitda) {
+        this.pEbitda = pEbitda;
+    }
+
+    public BigDecimal getPAtivo() {
+        return pAtivo;
+    }
+
+    public void setPAtivo(BigDecimal pAtivo) {
+        this.pAtivo = pAtivo;
+    }
+
     public BigDecimal getRoe() {
         return roe;
     }
 
     public void setRoe(BigDecimal roe) {
         this.roe = roe;
+    }
+
+    public BigDecimal getRoic() {
+        return roic;
+    }
+
+    public void setRoic(BigDecimal roic) {
+        this.roic = roic;
+    }
+
+    public BigDecimal getRoa() {
+        return roa;
+    }
+
+    public void setRoa(BigDecimal roa) {
+        this.roa = roa;
     }
 
     public CurrentMargins getMargens() {
@@ -100,7 +136,11 @@ public class CurrentIndicators {
                 && Objects.equals(pvp, that.pvp)
                 && Objects.equals(psr, that.psr)
                 && Objects.equals(pEbit, that.pEbit)
+                && Objects.equals(pEbitda, that.pEbitda)
+                && Objects.equals(pAtivo, that.pAtivo)
                 && Objects.equals(roe, that.roe)
+                && Objects.equals(roic, that.roic)
+                && Objects.equals(roa, that.roa)
                 && Objects.equals(margens, that.margens)
                 && Objects.equals(vpa, that.vpa)
                 && Objects.equals(lpa, that.lpa)
@@ -109,6 +149,6 @@ public class CurrentIndicators {
 
     @Override
     public int hashCode() {
-        return Objects.hash(pl, pvp, psr, pEbit, roe, margens, vpa, lpa, patrimonioPorAtivos);
+        return Objects.hash(pl, pvp, psr, pEbit, pEbitda, pAtivo, roe, roic, roa, margens, vpa, lpa, patrimonioPorAtivos);
     }
 }

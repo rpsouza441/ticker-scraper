@@ -177,7 +177,11 @@ public class BdrScraperMapper {
         current.setPvp(findSimpleDecimal(indicadores, "P/VP", "P VP", "PRICE TO BOOK"));
         current.setPsr(findSimpleDecimal(indicadores, "P/S", "P SR", "PSR", "PRICE TO SALES"));
         current.setPEbit(findSimpleDecimal(indicadores, "P/EBIT", "P EBIT"));
+        current.setPEbitda(findSimpleDecimal(indicadores, "P/EBITDA", "P EBITDA"));
+        current.setPAtivo(findSimpleDecimal(indicadores, "P/ATIVO", "P ATIVO"));
         current.setRoe(findPercentual(indicadores, "ROE", "RETORNO SOBRE PATRIMONIO", "RETORNO SOBRE PATRIMÔNIO"));
+        current.setRoic(findPercentual(indicadores, "ROIC", "RETORNO SOBRE CAPITAL INVESTIDO"));
+        current.setRoa(findPercentual(indicadores, "ROA", "RETORNO SOBRE ATIVOS"));
         current.setMargens(buildCurrentMargins(indicadores));
         current.setVpa(findSimpleDecimal(indicadores, "VPA", "VALOR PATRIMONIAL POR AÇÃO"));
         current.setLpa(findSimpleDecimal(indicadores, "LPA", "LUCRO POR AÇÃO"));
@@ -191,16 +195,20 @@ public class BdrScraperMapper {
 
     private CurrentMargins buildCurrentMargins(BdrIndicadoresDTO indicadores) {
         BigDecimal margemBruta = findPercentual(indicadores, "MARGEM BRUTA", "GROSS MARGIN");
-        BigDecimal margemEbit = findPercentual(indicadores, "MARGEM EBIT", "EBIT MARGIN");
+        BigDecimal margemOperacional = findPercentual(indicadores,
+                "MARGEM OPERACIONAL",
+                "MARGEM EBIT",
+                "OPERATING MARGIN",
+                "EBIT MARGIN");
         BigDecimal margemLiquida = findPercentual(indicadores, "MARGEM LIQUIDA", "MARGEM LÍQUIDA", "NET MARGIN");
 
-        if (margemBruta == null && margemEbit == null && margemLiquida == null) {
+        if (margemBruta == null && margemOperacional == null && margemLiquida == null) {
             return null;
         }
 
         CurrentMargins margens = new CurrentMargins();
         margens.setMargemBruta(margemBruta);
-        margens.setMargemEbit(margemEbit);
+        margens.setMargemOperacional(margemOperacional);
         margens.setMargemLiquida(margemLiquida);
         return margens;
     }

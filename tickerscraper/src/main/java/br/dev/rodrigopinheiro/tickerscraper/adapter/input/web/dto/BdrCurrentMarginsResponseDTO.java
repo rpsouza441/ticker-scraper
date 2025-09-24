@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public record BdrCurrentMarginsResponseDTO(
         BigDecimal margemBruta,
-        BigDecimal margemEbit,
+        BigDecimal margemOperacional,
         BigDecimal margemLiquida
 ) {
 }
