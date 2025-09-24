@@ -9,7 +9,7 @@ import org.mapstruct.Mappings;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = TimeMapper.class)
 public interface BdrPriceSeriesMapper {
 
     @Mappings({

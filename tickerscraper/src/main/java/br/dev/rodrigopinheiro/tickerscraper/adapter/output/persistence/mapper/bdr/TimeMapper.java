@@ -3,6 +3,7 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.b
 import org.mapstruct.Mapper;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -15,5 +16,13 @@ public interface TimeMapper {
 
     default Instant toInstant(OffsetDateTime offsetDateTime) {
         return offsetDateTime == null ? null : offsetDateTime.toInstant();
+    }
+
+    default OffsetDateTime toOffsetDateTime(LocalDate date) {
+        return date == null ? null : date.atStartOfDay().atOffset(ZoneOffset.UTC);
+    }
+
+    default LocalDate toLocalDate(OffsetDateTime offsetDateTime) {
+        return offsetDateTime == null ? null : offsetDateTime.toLocalDate();
     }
 }
