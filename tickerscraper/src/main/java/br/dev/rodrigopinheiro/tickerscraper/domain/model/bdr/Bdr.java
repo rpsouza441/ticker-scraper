@@ -10,27 +10,24 @@ import java.util.Map;
 public class Bdr {
 
     private String ticker;
-    private String nomeEmpresa;
-    private String nomeAcaoOriginal;
-    private String codigoNegociacao;
-    private String mercado;
-    private String paisDeNegociacao;
-    private String moedaDeReferencia;
-    private BigDecimal precoAtual;
-    private BigDecimal variacaoDia;
-    private BigDecimal variacaoMes;
-    private BigDecimal variacaoAno;
-    private BigDecimal dividendYield;
-    private BigDecimal precoAlvo;
+    private String investidorId;
     private TipoAtivo tipoAtivo = TipoAtivo.BDR;
+    private String nomeBdr;
+    private String setor;
+    private String industria;
+    private String priceCurrency;
+    private String financialsCurrency;
+    private BigDecimal cotacao;
+    private BigDecimal variacao12;
+    private MarketCap marketCap;
     private ParidadeBdr paridade;
     private CurrentIndicators currentIndicators;
-    private List<PricePoint> historicoDePrecos;
-    private List<DividendYear> dividendosPorAno;
-    private List<HistoricalIndicator> indicadoresHistoricos;
-    private List<DreYear> dreAnual;
-    private List<BpYear> bpAnual;
-    private List<FcYear> fcAnual;
+    private List<PricePoint> priceSeries;
+    private List<DividendYear> dividendYears;
+    private List<HistoricalIndicator> historicalIndicators;
+    private List<DreYear> dreYears;
+    private List<BpYear> bpYears;
+    private List<FcYear> fcYears;
     private Instant updatedAt;
     private Map<String, Object> rawJson;
     private String rawJsonHash;
@@ -43,100 +40,12 @@ public class Bdr {
         this.ticker = ticker == null ? null : ticker.trim().toUpperCase();
     }
 
-    public String getNomeEmpresa() {
-        return nomeEmpresa;
+    public String getInvestidorId() {
+        return investidorId;
     }
 
-    public void setNomeEmpresa(String nomeEmpresa) {
-        this.nomeEmpresa = nomeEmpresa;
-    }
-
-    public String getNomeAcaoOriginal() {
-        return nomeAcaoOriginal;
-    }
-
-    public void setNomeAcaoOriginal(String nomeAcaoOriginal) {
-        this.nomeAcaoOriginal = nomeAcaoOriginal;
-    }
-
-    public String getCodigoNegociacao() {
-        return codigoNegociacao;
-    }
-
-    public void setCodigoNegociacao(String codigoNegociacao) {
-        this.codigoNegociacao = codigoNegociacao;
-    }
-
-    public String getMercado() {
-        return mercado;
-    }
-
-    public void setMercado(String mercado) {
-        this.mercado = mercado;
-    }
-
-    public String getPaisDeNegociacao() {
-        return paisDeNegociacao;
-    }
-
-    public void setPaisDeNegociacao(String paisDeNegociacao) {
-        this.paisDeNegociacao = paisDeNegociacao;
-    }
-
-    public String getMoedaDeReferencia() {
-        return moedaDeReferencia;
-    }
-
-    public void setMoedaDeReferencia(String moedaDeReferencia) {
-        this.moedaDeReferencia = moedaDeReferencia;
-    }
-
-    public BigDecimal getPrecoAtual() {
-        return precoAtual;
-    }
-
-    public void setPrecoAtual(BigDecimal precoAtual) {
-        this.precoAtual = precoAtual;
-    }
-
-    public BigDecimal getVariacaoDia() {
-        return variacaoDia;
-    }
-
-    public void setVariacaoDia(BigDecimal variacaoDia) {
-        this.variacaoDia = variacaoDia;
-    }
-
-    public BigDecimal getVariacaoMes() {
-        return variacaoMes;
-    }
-
-    public void setVariacaoMes(BigDecimal variacaoMes) {
-        this.variacaoMes = variacaoMes;
-    }
-
-    public BigDecimal getVariacaoAno() {
-        return variacaoAno;
-    }
-
-    public void setVariacaoAno(BigDecimal variacaoAno) {
-        this.variacaoAno = variacaoAno;
-    }
-
-    public BigDecimal getDividendYield() {
-        return dividendYield;
-    }
-
-    public void setDividendYield(BigDecimal dividendYield) {
-        this.dividendYield = dividendYield;
-    }
-
-    public BigDecimal getPrecoAlvo() {
-        return precoAlvo;
-    }
-
-    public void setPrecoAlvo(BigDecimal precoAlvo) {
-        this.precoAlvo = precoAlvo;
+    public void setInvestidorId(String investidorId) {
+        this.investidorId = investidorId;
     }
 
     public TipoAtivo getTipoAtivo() {
@@ -145,6 +54,70 @@ public class Bdr {
 
     public void setTipoAtivo(TipoAtivo tipoAtivo) {
         this.tipoAtivo = tipoAtivo;
+    }
+
+    public String getNomeBdr() {
+        return nomeBdr;
+    }
+
+    public void setNomeBdr(String nomeBdr) {
+        this.nomeBdr = nomeBdr;
+    }
+
+    public String getSetor() {
+        return setor;
+    }
+
+    public void setSetor(String setor) {
+        this.setor = setor;
+    }
+
+    public String getIndustria() {
+        return industria;
+    }
+
+    public void setIndustria(String industria) {
+        this.industria = industria;
+    }
+
+    public String getPriceCurrency() {
+        return priceCurrency;
+    }
+
+    public void setPriceCurrency(String priceCurrency) {
+        this.priceCurrency = normalizeCurrency(priceCurrency);
+    }
+
+    public String getFinancialsCurrency() {
+        return financialsCurrency;
+    }
+
+    public void setFinancialsCurrency(String financialsCurrency) {
+        this.financialsCurrency = normalizeCurrency(financialsCurrency);
+    }
+
+    public BigDecimal getCotacao() {
+        return cotacao;
+    }
+
+    public void setCotacao(BigDecimal cotacao) {
+        this.cotacao = cotacao;
+    }
+
+    public BigDecimal getVariacao12() {
+        return variacao12;
+    }
+
+    public void setVariacao12(BigDecimal variacao12) {
+        this.variacao12 = variacao12;
+    }
+
+    public MarketCap getMarketCap() {
+        return marketCap;
+    }
+
+    public void setMarketCap(MarketCap marketCap) {
+        this.marketCap = marketCap;
     }
 
     public ParidadeBdr getParidade() {
@@ -163,52 +136,52 @@ public class Bdr {
         this.currentIndicators = currentIndicators;
     }
 
-    public List<PricePoint> getHistoricoDePrecos() {
-        return historicoDePrecos;
+    public List<PricePoint> getPriceSeries() {
+        return priceSeries;
     }
 
-    public void setHistoricoDePrecos(List<PricePoint> historicoDePrecos) {
-        this.historicoDePrecos = historicoDePrecos;
+    public void setPriceSeries(List<PricePoint> priceSeries) {
+        this.priceSeries = priceSeries;
     }
 
-    public List<DividendYear> getDividendosPorAno() {
-        return dividendosPorAno;
+    public List<DividendYear> getDividendYears() {
+        return dividendYears;
     }
 
-    public void setDividendosPorAno(List<DividendYear> dividendosPorAno) {
-        this.dividendosPorAno = dividendosPorAno;
+    public void setDividendYears(List<DividendYear> dividendYears) {
+        this.dividendYears = dividendYears;
     }
 
-    public List<HistoricalIndicator> getIndicadoresHistoricos() {
-        return indicadoresHistoricos;
+    public List<HistoricalIndicator> getHistoricalIndicators() {
+        return historicalIndicators;
     }
 
-    public void setIndicadoresHistoricos(List<HistoricalIndicator> indicadoresHistoricos) {
-        this.indicadoresHistoricos = indicadoresHistoricos;
+    public void setHistoricalIndicators(List<HistoricalIndicator> historicalIndicators) {
+        this.historicalIndicators = historicalIndicators;
     }
 
-    public List<DreYear> getDreAnual() {
-        return dreAnual;
+    public List<DreYear> getDreYears() {
+        return dreYears;
     }
 
-    public void setDreAnual(List<DreYear> dreAnual) {
-        this.dreAnual = dreAnual;
+    public void setDreYears(List<DreYear> dreYears) {
+        this.dreYears = dreYears;
     }
 
-    public List<BpYear> getBpAnual() {
-        return bpAnual;
+    public List<BpYear> getBpYears() {
+        return bpYears;
     }
 
-    public void setBpAnual(List<BpYear> bpAnual) {
-        this.bpAnual = bpAnual;
+    public void setBpYears(List<BpYear> bpYears) {
+        this.bpYears = bpYears;
     }
 
-    public List<FcYear> getFcAnual() {
-        return fcAnual;
+    public List<FcYear> getFcYears() {
+        return fcYears;
     }
 
-    public void setFcAnual(List<FcYear> fcAnual) {
-        this.fcAnual = fcAnual;
+    public void setFcYears(List<FcYear> fcYears) {
+        this.fcYears = fcYears;
     }
 
     public Instant getUpdatedAt() {
@@ -233,5 +206,13 @@ public class Bdr {
 
     public void setRawJsonHash(String rawJsonHash) {
         this.rawJsonHash = rawJsonHash;
+    }
+
+    private String normalizeCurrency(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed.toUpperCase();
     }
 }

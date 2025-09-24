@@ -30,34 +30,28 @@ public class BdrScraperMapper {
 
         Bdr bdr = new Bdr();
         bdr.setTicker(normalize(raw.ticker()));
-        bdr.setCodigoNegociacao(normalize(raw.ticker()));
+        bdr.setInvestidorId(normalizeInvestidorId(raw.investidorId()));
         bdr.setTipoAtivo(TipoAtivo.BDR);
 
         // Informações de apresentação
         BdrHtmlMetadataDTO metadata = raw.htmlMetadata();
         if (metadata != null) {
-            bdr.setNomeEmpresa(resolveCompanyName(metadata));
-            bdr.setNomeAcaoOriginal(metadata.descricao());
-            bdr.setMercado(getMetaTag(metadata, "og:site_name"));
+            bdr.setNomeBdr(resolveCompanyName(metadata));
+            bdr.setSetor(getMetaTag(metadata, "og:site_name"));
         }
-        bdr.setMoedaDeReferencia(resolveCurrency(raw));
-        bdr.setPaisDeNegociacao(metadata != null ? getMetaTag(metadata, "og:locale") : null);
+        bdr.setPriceCurrency(resolveCurrency(raw));
+        bdr.setFinancialsCurrency("USD");
 
         // Indicadores principais
         BdrIndicadoresDTO indicadores = raw.indicadores();
         BigDecimal precoAtual = findMonetario(indicadores, "PRECO ATUAL", "PREÇO ATUAL", "ULTIMO PRECO", "ÚLTIMO PREÇO", "PRICE");
+        BigDecimal variacaoAno = findPercentual(indicadores, "VARIACAO ANO", "VAR. ANO", "12M", "ANO");
         BigDecimal variacaoDia = findPercentual(indicadores, "VARIACAO DIA", "VAR. DIA", "DIA");
         BigDecimal variacaoMes = findPercentual(indicadores, "VARIACAO MES", "VAR. MES", "30D", "MÊS");
-        BigDecimal variacaoAno = findPercentual(indicadores, "VARIACAO ANO", "VAR. ANO", "12M", "ANO");
         BigDecimal dividendYield = findPercentual(indicadores, "DIVIDEND YIELD", "DY");
-        BigDecimal precoAlvo = findMonetario(indicadores, "PRECO ALVO", "PREÇO ALVO", "TARGET");
 
-        bdr.setPrecoAtual(precoAtual);
-        bdr.setVariacaoDia(variacaoDia);
-        bdr.setVariacaoMes(variacaoMes);
-        bdr.setVariacaoAno(variacaoAno);
-        bdr.setDividendYield(dividendYield);
-        bdr.setPrecoAlvo(precoAlvo);
+        bdr.setCotacao(precoAtual);
+        bdr.setVariacao12(variacaoAno);
 
         // Indicadores correntes detalhados
         bdr.setCurrentIndicators(buildCurrentIndicators(indicadores, precoAtual, variacaoDia, variacaoMes, variacaoAno, dividendYield));
@@ -66,14 +60,14 @@ public class BdrScraperMapper {
         bdr.setParidade(mapParidade(indicadores.paridade()));
 
         // Séries históricas e dividendos
-        bdr.setHistoricoDePrecos(mapPriceSeries(raw.cotacoes()));
-        bdr.setDividendosPorAno(mapDividendos(raw.dividendos()));
-        bdr.setIndicadoresHistoricos(mapHistoricalIndicators(indicadores));
+        bdr.setPriceSeries(mapPriceSeries(raw.cotacoes()));
+        bdr.setDividendYears(mapDividendos(raw.dividendos()));
+        bdr.setHistoricalIndicators(mapHistoricalIndicators(indicadores));
 
         // Demonstrativos ainda não parseados – armazenados como listas vazias para futuras iterações
-        bdr.setDreAnual(List.of());
-        bdr.setBpAnual(List.of());
-        bdr.setFcAnual(List.of());
+        bdr.setDreYears(List.of());
+        bdr.setBpYears(List.of());
+        bdr.setFcYears(List.of());
 
         // Metadados adicionais
         bdr.setUpdatedAt(Optional.ofNullable(raw.updatedAt()).orElseGet(Instant::now));
@@ -84,6 +78,14 @@ public class BdrScraperMapper {
 
     private String normalize(String value) {
         return value == null ? null : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private String normalizeInvestidorId(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String resolveCompanyName(BdrHtmlMetadataDTO metadata) {

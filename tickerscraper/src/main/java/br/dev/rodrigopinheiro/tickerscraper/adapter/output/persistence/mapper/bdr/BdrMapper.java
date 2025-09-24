@@ -25,40 +25,45 @@ public interface BdrMapper {
             @Mapping(target = "id", ignore = true),
             @Mapping(source = "ticker", target = "ticker"),
             @Mapping(source = "tipoAtivo", target = "tipoAtivo"),
-            @Mapping(source = "nomeEmpresa", target = "nomeEmpresa"),
-            @Mapping(source = "nomeAcaoOriginal", target = "nomeAcaoOriginal"),
-            @Mapping(source = "codigoNegociacao", target = "codigoNegociacao"),
-            @Mapping(source = "mercado", target = "mercado"),
-            @Mapping(source = "paisDeNegociacao", target = "paisDeNegociacao"),
-            @Mapping(source = "moedaDeReferencia", target = "moedaDeReferencia"),
-            @Mapping(source = "precoAtual", target = "precoAtual"),
-            @Mapping(source = "variacaoDia", target = "variacaoDia"),
-            @Mapping(source = "variacaoMes", target = "variacaoMes"),
-            @Mapping(source = "variacaoAno", target = "variacaoAno"),
-            @Mapping(source = "dividendYield", target = "dividendYield"),
-            @Mapping(source = "precoAlvo", target = "precoAlvo"),
-            @Mapping(source = "historicoDePrecos", target = "priceSeries"),
-            @Mapping(source = "dividendosPorAno", target = "dividendYears"),
-            @Mapping(source = "indicadoresHistoricos", target = "historicalIndicators"),
-            @Mapping(source = "dreAnual", target = "dreYears"),
-            @Mapping(source = "bpAnual", target = "bpYears"),
-            @Mapping(source = "fcAnual", target = "fcYears"),
+            @Mapping(source = "nomeBdr", target = "nomeEmpresa"),
+            @Mapping(source = "setor", target = "mercado"),
+            @Mapping(source = "priceCurrency", target = "moedaDeReferencia"),
+            @Mapping(source = "cotacao", target = "precoAtual"),
+            @Mapping(source = "variacao12", target = "variacaoAno"),
+            @Mapping(source = "priceSeries", target = "priceSeries"),
+            @Mapping(source = "dividendYears", target = "dividendYears"),
+            @Mapping(source = "historicalIndicators", target = "historicalIndicators"),
+            @Mapping(source = "dreYears", target = "dreYears"),
+            @Mapping(source = "bpYears", target = "bpYears"),
+            @Mapping(source = "fcYears", target = "fcYears"),
             @Mapping(source = "currentIndicators", target = "currentIndicators"),
             @Mapping(source = "paridade", target = "paridade"),
             @Mapping(source = "updatedAt", target = "updatedAt"),
             @Mapping(source = "rawJson", target = "rawJson", qualifiedByName = "mapToJson"),
-            @Mapping(source = "rawJsonHash", target = "rawJsonHash")
+            @Mapping(source = "rawJsonHash", target = "rawJsonHash"),
+            @Mapping(target = "nomeAcaoOriginal", ignore = true),
+            @Mapping(target = "codigoNegociacao", ignore = true),
+            @Mapping(target = "paisDeNegociacao", ignore = true),
+            @Mapping(target = "variacaoDia", ignore = true),
+            @Mapping(target = "variacaoMes", ignore = true),
+            @Mapping(target = "dividendYield", ignore = true),
+            @Mapping(target = "precoAlvo", ignore = true)
     })
     BdrEntity toEntity(Bdr bdr);
 
     @InheritInverseConfiguration
     @Mappings({
-            @Mapping(source = "priceSeries", target = "historicoDePrecos"),
-            @Mapping(source = "dividendYears", target = "dividendosPorAno"),
-            @Mapping(source = "historicalIndicators", target = "indicadoresHistoricos"),
-            @Mapping(source = "dreYears", target = "dreAnual"),
-            @Mapping(source = "bpYears", target = "bpAnual"),
-            @Mapping(source = "fcYears", target = "fcAnual"),
+            @Mapping(source = "nomeEmpresa", target = "nomeBdr"),
+            @Mapping(source = "mercado", target = "setor"),
+            @Mapping(source = "moedaDeReferencia", target = "priceCurrency"),
+            @Mapping(source = "precoAtual", target = "cotacao"),
+            @Mapping(source = "variacaoAno", target = "variacao12"),
+            @Mapping(source = "priceSeries", target = "priceSeries"),
+            @Mapping(source = "dividendYears", target = "dividendYears"),
+            @Mapping(source = "historicalIndicators", target = "historicalIndicators"),
+            @Mapping(source = "dreYears", target = "dreYears"),
+            @Mapping(source = "bpYears", target = "bpYears"),
+            @Mapping(source = "fcYears", target = "fcYears"),
             @Mapping(source = "rawJson", target = "rawJson", qualifiedByName = "jsonToMap")
     })
     Bdr toDomain(BdrEntity entity);
@@ -96,7 +101,7 @@ public interface BdrMapper {
         } else {
             target.getPriceSeries().clear();
         }
-        List<PricePoint> pricePoints = source.getHistoricoDePrecos();
+        List<PricePoint> pricePoints = source.getPriceSeries();
         if (pricePoints != null) {
             List<BdrPriceSeriesEntity> entities = toPriceSeriesEntities(pricePoints);
             for (BdrPriceSeriesEntity entity : entities) {
@@ -112,7 +117,7 @@ public interface BdrMapper {
         } else {
             target.getDividendYears().clear();
         }
-        List<DividendYear> dividendYears = source.getDividendosPorAno();
+        List<DividendYear> dividendYears = source.getDividendYears();
         if (dividendYears != null) {
             List<BdrDividendYearlyEntity> entities = toDividendYearEntities(dividendYears);
             for (BdrDividendYearlyEntity entity : entities) {
@@ -128,7 +133,7 @@ public interface BdrMapper {
         } else {
             target.getHistoricalIndicators().clear();
         }
-        List<HistoricalIndicator> indicators = source.getIndicadoresHistoricos();
+        List<HistoricalIndicator> indicators = source.getHistoricalIndicators();
         if (indicators != null) {
             List<BdrHistoricalIndicatorEntity> entities = toHistoricalIndicatorEntities(indicators);
             for (BdrHistoricalIndicatorEntity entity : entities) {
@@ -144,7 +149,7 @@ public interface BdrMapper {
         } else {
             target.getDreYears().clear();
         }
-        List<DreYear> dreYears = source.getDreAnual();
+        List<DreYear> dreYears = source.getDreYears();
         if (dreYears != null) {
             List<BdrDreYearEntity> entities = toDreEntities(dreYears);
             for (BdrDreYearEntity entity : entities) {
@@ -160,7 +165,7 @@ public interface BdrMapper {
         } else {
             target.getBpYears().clear();
         }
-        List<BpYear> bpYears = source.getBpAnual();
+        List<BpYear> bpYears = source.getBpYears();
         if (bpYears != null) {
             List<BdrBpYearEntity> entities = toBpEntities(bpYears);
             for (BdrBpYearEntity entity : entities) {
@@ -176,7 +181,7 @@ public interface BdrMapper {
         } else {
             target.getFcYears().clear();
         }
-        List<FcYear> fcYears = source.getFcAnual();
+        List<FcYear> fcYears = source.getFcYears();
         if (fcYears != null) {
             List<BdrFcYearEntity> entities = toFcEntities(fcYears);
             for (BdrFcYearEntity entity : entities) {
