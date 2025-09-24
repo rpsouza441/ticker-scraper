@@ -4,9 +4,6 @@ import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -54,7 +51,7 @@ public class BdrEntity {
     @Column(name = "cotacao", precision = 19, scale = 6)
     private BigDecimal cotacao;
 
-    @Column(name = "variacao_12", precision = 19, scale = 6)
+    @Column(name = "variacao_12m", precision = 19, scale = 6)
     private BigDecimal variacao12;
 
     @OneToMany(
@@ -132,13 +129,6 @@ public class BdrEntity {
             fetch = FetchType.LAZY
     )
     private BdrParidadeEntity paridade;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "raw_json", columnDefinition = "JSONB")
-    private String rawJson;
-
-    @Column(name = "raw_json_hash", length = 128)
-    private String rawJsonHash;
 
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;

@@ -11,7 +11,6 @@ import java.util.List;
 @Mapper(componentModel = "spring",
         uses = {
                 TimeMapper.class,
-                JsonMapMapper.class,
                 BdrPriceSeriesMapper.class,
                 BdrDividendYearMapper.class,
                 BdrHistoricalIndicatorMapper.class,
@@ -41,9 +40,7 @@ public interface BdrMapper {
             @Mapping(source = "fcYears", target = "fcYears"),
             @Mapping(source = "currentIndicators", target = "currentIndicators"),
             @Mapping(source = "paridade", target = "paridade"),
-            @Mapping(source = "updatedAt", target = "updatedAt"),
-            @Mapping(source = "rawJson", target = "rawJson", qualifiedByName = "mapToJson"),
-            @Mapping(source = "rawJsonHash", target = "rawJsonHash")
+            @Mapping(source = "updatedAt", target = "updatedAt")
     })
     BdrEntity toEntity(Bdr bdr);
 
@@ -54,8 +51,7 @@ public interface BdrMapper {
             @Mapping(source = "historicalIndicators", target = "historicalIndicators"),
             @Mapping(source = "dreYears", target = "dreYears"),
             @Mapping(source = "bpYears", target = "bpYears"),
-            @Mapping(source = "fcYears", target = "fcYears"),
-            @Mapping(source = "rawJson", target = "rawJson", qualifiedByName = "jsonToMap")
+            @Mapping(source = "fcYears", target = "fcYears")
     })
     Bdr toDomain(BdrEntity entity);
 
@@ -69,9 +65,7 @@ public interface BdrMapper {
             @Mapping(target = "bpYears", ignore = true),
             @Mapping(target = "fcYears", ignore = true),
             @Mapping(target = "currentIndicators", ignore = true),
-            @Mapping(target = "paridade", ignore = true),
-            @Mapping(target = "rawJson", ignore = true),
-            @Mapping(target = "rawJsonHash", ignore = true)
+            @Mapping(target = "paridade", ignore = true)
     })
     void updateEntity(Bdr source, @MappingTarget BdrEntity target);
 

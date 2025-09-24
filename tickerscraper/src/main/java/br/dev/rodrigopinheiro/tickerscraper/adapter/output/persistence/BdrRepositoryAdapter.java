@@ -3,7 +3,6 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrJpaRepository;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.bdr.BdrMapper;
-import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.bdr.JsonMapMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PagedResult;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.BdrRepositoryPort;
@@ -28,12 +27,9 @@ public class BdrRepositoryAdapter implements BdrRepositoryPort {
 
     private final BdrJpaRepository repository;
     private final BdrMapper mapper;
-    private final JsonMapMapper jsonMapMapper;
-
-    public BdrRepositoryAdapter(BdrJpaRepository repository, BdrMapper mapper, JsonMapMapper jsonMapMapper) {
+    public BdrRepositoryAdapter(BdrJpaRepository repository, BdrMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
-        this.jsonMapMapper = jsonMapMapper;
     }
 
     @Override
@@ -71,7 +67,7 @@ public class BdrRepositoryAdapter implements BdrRepositoryPort {
 
     @Override
     @Transactional
-    public Bdr saveReplacingChildren(Bdr bdr, String rawJsonAudit, String rawJsonHash) {
+    public Bdr saveReplacingChildren(Bdr bdr) {
         logger.debug("Persistindo BDR {} com atualização de coleções", bdr.getTicker());
         BdrEntity entity = repository.findDetailedByTicker(bdr.getTicker())
                 .orElseGet(() -> mapper.toEntity(bdr));
@@ -81,28 +77,10 @@ public class BdrRepositoryAdapter implements BdrRepositoryPort {
         }
 
         mapper.replaceAssociations(bdr, entity);
-
-        if (rawJsonAudit != null) {
-            entity.setRawJson(rawJsonAudit);
-        } else if (bdr.getRawJson() != null) {
-            entity.setRawJson(jsonMapMapper.mapToJson(bdr.getRawJson()));
-        }
-
-        if (rawJsonHash != null) {
-            entity.setRawJsonHash(rawJsonHash);
-        } else if (bdr.getRawJsonHash() != null) {
-            entity.setRawJsonHash(bdr.getRawJsonHash());
-        }
         entity.setUpdatedAt(bdr.getUpdatedAt() == null ? null : bdr.getUpdatedAt().atOffset(ZoneOffset.UTC));
 
         entity = repository.save(entity);
         return mapper.toDomain(entity);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<String> findRawJsonByTicker(String ticker) {
-        return repository.findByTicker(ticker).map(BdrEntity::getRawJson);
     }
 
     @Override

@@ -20,9 +20,7 @@ public interface BdrRepositoryPort {
 
     PagedResult<Bdr> findAll(PageQuery query);
 
-    Bdr saveReplacingChildren(Bdr bdr, String rawJsonAudit, String rawJsonHash);
-
-    Optional<String> findRawJsonByTicker(String ticker);
+    Bdr saveReplacingChildren(Bdr bdr);
 
     List<Bdr> findByTipoAtivo(TipoAtivo tipoAtivo);
 

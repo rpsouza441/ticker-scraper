@@ -5,7 +5,6 @@ import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 public record BdrResponseDTO(
         String ticker,
@@ -30,7 +29,6 @@ public record BdrResponseDTO(
         List<BdrDreYearResponseDTO> dreAnual,
         List<BdrBpYearResponseDTO> balancoPatrimonial,
         List<BdrFcYearResponseDTO> fluxoDeCaixa,
-        Instant atualizadoEm,
-        Map<String, Object> rawJson
+        Instant atualizadoEm
 ) {
 }
