@@ -1,5 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.Quality;
+
 import java.math.BigDecimal;
 
 /**
@@ -7,24 +9,24 @@ import java.math.BigDecimal;
  */
 public class QualityValue {
 
-    private BigDecimal valor;
-    private String quality;
+    private BigDecimal value;
+    private Quality quality = Quality.UNKNOWN;
     private String raw;
 
-    public BigDecimal getValor() {
-        return valor;
+    public BigDecimal getValue() {
+        return value;
     }
 
-    public void setValor(BigDecimal valor) {
-        this.valor = valor;
+    public void setValue(BigDecimal value) {
+        this.value = value;
     }
 
-    public String getQuality() {
+    public Quality getQuality() {
         return quality;
     }
 
-    public void setQuality(String quality) {
-        this.quality = quality;
+    public void setQuality(Quality quality) {
+        this.quality = quality == null ? Quality.UNKNOWN : quality;
     }
 
     public String getRaw() {
