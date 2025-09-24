@@ -4,25 +4,25 @@ import java.math.BigDecimal;
 
 public class DividendYear {
 
-    private Integer ano;
-    private BigDecimal totalDividendo;
+    private Integer year;
+    private BigDecimal valor;
     private BigDecimal dividendYield;
     private String currency;
 
-    public Integer getAno() {
-        return ano;
+    public Integer getYear() {
+        return year;
     }
 
-    public void setAno(Integer ano) {
-        this.ano = ano;
+    public void setYear(Integer year) {
+        this.year = year;
     }
 
-    public BigDecimal getTotalDividendo() {
-        return totalDividendo;
+    public BigDecimal getValor() {
+        return valor;
     }
 
-    public void setTotalDividendo(BigDecimal totalDividendo) {
-        this.totalDividendo = totalDividendo;
+    public void setValor(BigDecimal valor) {
+        this.valor = valor;
     }
 
     public BigDecimal getDividendYield() {
