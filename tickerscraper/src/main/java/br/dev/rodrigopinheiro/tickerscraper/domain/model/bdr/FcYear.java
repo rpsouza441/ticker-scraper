@@ -1,14 +1,11 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr;
 
-import java.math.BigDecimal;
-
 public class FcYear {
 
     private Integer ano;
-    private BigDecimal fluxoCaixaOperacional;
-    private BigDecimal fluxoCaixaInvestimento;
-    private BigDecimal fluxoCaixaFinanciamento;
-    private BigDecimal caixaFinal;
+    private QualityValue fluxoCaixaOperacional;
+    private QualityValue fluxoCaixaInvestimento;
+    private QualityValue fluxoCaixaFinanciamento;
 
     public Integer getAno() {
         return ano;
@@ -18,35 +15,27 @@ public class FcYear {
         this.ano = ano;
     }
 
-    public BigDecimal getFluxoCaixaOperacional() {
+    public QualityValue getFluxoCaixaOperacional() {
         return fluxoCaixaOperacional;
     }
 
-    public void setFluxoCaixaOperacional(BigDecimal fluxoCaixaOperacional) {
+    public void setFluxoCaixaOperacional(QualityValue fluxoCaixaOperacional) {
         this.fluxoCaixaOperacional = fluxoCaixaOperacional;
     }
 
-    public BigDecimal getFluxoCaixaInvestimento() {
+    public QualityValue getFluxoCaixaInvestimento() {
         return fluxoCaixaInvestimento;
     }
 
-    public void setFluxoCaixaInvestimento(BigDecimal fluxoCaixaInvestimento) {
+    public void setFluxoCaixaInvestimento(QualityValue fluxoCaixaInvestimento) {
         this.fluxoCaixaInvestimento = fluxoCaixaInvestimento;
     }
 
-    public BigDecimal getFluxoCaixaFinanciamento() {
+    public QualityValue getFluxoCaixaFinanciamento() {
         return fluxoCaixaFinanciamento;
     }
 
-    public void setFluxoCaixaFinanciamento(BigDecimal fluxoCaixaFinanciamento) {
+    public void setFluxoCaixaFinanciamento(QualityValue fluxoCaixaFinanciamento) {
         this.fluxoCaixaFinanciamento = fluxoCaixaFinanciamento;
-    }
-
-    public BigDecimal getCaixaFinal() {
-        return caixaFinal;
-    }
-
-    public void setCaixaFinal(BigDecimal caixaFinal) {
-        this.caixaFinal = caixaFinal;
     }
 }

@@ -1,56 +1,74 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper;
 
-import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.*;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.*;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrBpYearResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrCurrentIndicatorsResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrDividendYearResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrDreYearResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrFcValueResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrFcYearResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrHistoricalIndicatorResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrParidadeResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrPricePointResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.BdrResponseDTO;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.Bdr;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.BpYear;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.CurrentIndicators;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.DividendYear;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.DreYear;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.FcYear;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.HistoricalIndicator;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.ParidadeBdr;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.PricePoint;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.QualityValue;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 
 @Mapper(componentModel = "spring")
 public interface BdrApiMapper {
 
-    @Mappings({
-            @Mapping(source = "nomeBdr", target = "nomeEmpresa"),
-            @Mapping(source = "setor", target = "mercado"),
-            @Mapping(source = "priceCurrency", target = "moedaDeReferencia"),
-            @Mapping(source = "cotacao", target = "precoAtual"),
-            @Mapping(source = "variacao12", target = "variacaoAno"),
-            @Mapping(source = "priceSeries", target = "historicoDePrecos"),
-            @Mapping(source = "dividendYears", target = "dividendosPorAno"),
-            @Mapping(source = "historicalIndicators", target = "indicadoresHistoricos"),
-            @Mapping(source = "dreYears", target = "dreAnual"),
-            @Mapping(source = "bpYears", target = "balancoPatrimonial"),
-            @Mapping(source = "fcYears", target = "fluxoDeCaixa"),
-            @Mapping(source = "updatedAt", target = "atualizadoEm"),
-            @Mapping(target = "nomeAcaoOriginal", ignore = true),
-            @Mapping(target = "codigoNegociacao", ignore = true),
-            @Mapping(target = "paisDeNegociacao", ignore = true),
-            @Mapping(target = "variacaoDia", ignore = true),
-            @Mapping(target = "variacaoMes", ignore = true),
-            @Mapping(target = "dividendYield", ignore = true),
-            @Mapping(target = "precoAlvo", ignore = true)
-    })
+    @Mapping(source = "nomeBdr", target = "nomeEmpresa")
+    @Mapping(source = "setor", target = "mercado")
+    @Mapping(source = "priceCurrency", target = "moedaDeReferencia")
+    @Mapping(source = "cotacao", target = "precoAtual")
+    @Mapping(source = "variacao12", target = "variacaoAno")
+    @Mapping(source = "priceSeries", target = "historicoDePrecos")
+    @Mapping(source = "dividendYears", target = "dividendosPorAno")
+    @Mapping(source = "historicalIndicators", target = "indicadoresHistoricos")
+    @Mapping(source = "dreYears", target = "dreAnual")
+    @Mapping(source = "bpYears", target = "balancoPatrimonial")
+    @Mapping(source = "fcYears", target = "fluxoDeCaixa")
+    @Mapping(source = "updatedAt", target = "atualizadoEm")
+    @Mapping(target = "nomeAcaoOriginal", ignore = true)
+    @Mapping(target = "codigoNegociacao", ignore = true)
+    @Mapping(target = "paisDeNegociacao", ignore = true)
+    @Mapping(target = "variacaoDia", ignore = true)
+    @Mapping(target = "variacaoMes", ignore = true)
+    @Mapping(target = "dividendYield", ignore = true)
+    @Mapping(target = "precoAlvo", ignore = true)
     BdrResponseDTO toResponse(Bdr domain);
 
-    BdrParidadeResponseDTO toResponse(ParidadeBdr paridade);
+    BdrParidadeResponseDTO toParidadeResponse(ParidadeBdr paridade);
 
-    BdrCurrentIndicatorsResponseDTO toResponse(CurrentIndicators indicators);
+    BdrCurrentIndicatorsResponseDTO toCurrentIndicatorsResponse(CurrentIndicators indicators);
 
-    BdrCurrentMarginsResponseDTO toResponse(CurrentMargins margins);
+    BdrPricePointResponseDTO toPricePointResponse(PricePoint pricePoint);
 
-    BdrPricePointResponseDTO toResponse(PricePoint pricePoint);
 
-    BdrDividendYearResponseDTO toResponse(DividendYear year);
+    BdrDividendYearResponseDTO toDividendYearResponse(DividendYear year);
 
-    BdrHistoricalIndicatorResponseDTO toResponse(HistoricalIndicator indicator);
+    BdrHistoricalIndicatorResponseDTO toHistoricalIndicatorResponse(HistoricalIndicator indicator);
 
-    BdrDreYearResponseDTO toResponse(DreYear year);
+    BdrDreYearResponseDTO toDreYearResponse(DreYear year);
 
-    BdrQualityMetricResponseDTO toResponse(DreYear.Metric metric);
+    BdrBpYearResponseDTO toBpYearResponse(BpYear year);
 
-    BdrBpYearResponseDTO toResponse(BpYear year);
+    BdrFcYearResponseDTO toFcYearResponse(FcYear year);
 
-    BdrFcYearResponseDTO toResponse(FcYear year);
+    default BdrFcValueResponseDTO toFcValueResponse(QualityValue value) {
+        if (value == null) {
+            return null;
+        }
+        return new BdrFcValueResponseDTO(value.getValor(), value.getQuality(), value.getRaw());
+    }
 
-    AuditedValueResponseDTO toResponse(AuditedValue value);
 }

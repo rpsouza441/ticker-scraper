@@ -5,88 +5,76 @@ import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.A
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrBpYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrDreYearEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrFcYearEntity;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.AuditedValue;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.QualityValueEmbeddable;
 
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.BpYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.DreYear;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.FcYear;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.QualityValue;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface BdrFinancialStatementMapper {
 
-    @Mappings({
-            @Mapping(target = "id", ignore = true),
-            @Mapping(target = "bdr", ignore = true),
-            @Mapping(source = "receitaTotalUsd", target = "receitaTotalUsd"),
-            @Mapping(source = "lucroBrutoUsd", target = "lucroBrutoUsd"),
-            @Mapping(source = "ebitdaUsd", target = "ebitdaUsd"),
-            @Mapping(source = "ebitUsd", target = "ebitUsd"),
-            @Mapping(source = "lucroLiquidoUsd", target = "lucroLiquidoUsd")
-    })
-    BdrDreYearEntity toEntity(DreYear year);
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "bdr", ignore = true)
+    BdrDreYearEntity toDreEntity(DreYear year);
 
-    @InheritInverseConfiguration
-    DreYear toDomain(BdrDreYearEntity entity);
+
+    @InheritInverseConfiguration(name = "toDreEntity")
+    DreYear toDreDomain(BdrDreYearEntity entity);
 
     List<BdrDreYearEntity> toDreEntityList(List<DreYear> source);
 
     List<DreYear> toDreDomainList(List<BdrDreYearEntity> source);
 
-    @Mappings({
-            @Mapping(target = "id", ignore = true),
-            @Mapping(target = "bdr", ignore = true)
-    })
-    BdrBpYearEntity toEntity(BpYear year);
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "bdr", ignore = true)
+    BdrBpYearEntity toBpEntity(BpYear year);
 
-    @InheritInverseConfiguration
-    BpYear toDomain(BdrBpYearEntity entity);
+    @InheritInverseConfiguration(name = "toBpEntity")
+    BpYear toBpDomain(BdrBpYearEntity entity);
 
     List<BdrBpYearEntity> toBpEntityList(List<BpYear> source);
 
     List<BpYear> toBpDomainList(List<BdrBpYearEntity> source);
 
-    AuditedBigDecimalEmbeddable toEntity(AuditedValue value);
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "bdr", ignore = true)
+    BdrFcYearEntity toFcEntity(FcYear year);
 
-    AuditedValue toDomain(AuditedBigDecimalEmbeddable embeddable);
 
-    @Mappings({
-            @Mapping(target = "id", ignore = true),
-            @Mapping(target = "bdr", ignore = true)
-    })
-    BdrFcYearEntity toEntity(FcYear year);
-
-    @InheritInverseConfiguration
-    FcYear toDomain(BdrFcYearEntity entity);
+    @InheritInverseConfiguration(name = "toFcEntity")
+    FcYear toFcDomain(BdrFcYearEntity entity);
 
     List<BdrFcYearEntity> toFcEntityList(List<FcYear> source);
 
     List<FcYear> toFcDomainList(List<BdrFcYearEntity> source);
 
-    default QualityMetricEmbeddable toEmbeddable(DreYear.Metric metric) {
-        if (metric == null) {
+    default QualityValueEmbeddable toEmbeddable(QualityValue value) {
+        if (value == null) {
             return null;
         }
-        QualityMetricEmbeddable embeddable = new QualityMetricEmbeddable();
-        embeddable.setValue(metric.getValue());
-        embeddable.setQuality(metric.getQuality());
-        embeddable.setRaw(metric.getRaw());
+        QualityValueEmbeddable embeddable = new QualityValueEmbeddable();
+        embeddable.setValor(value.getValor());
+        embeddable.setQuality(value.getQuality());
+        embeddable.setRaw(value.getRaw());
         return embeddable;
     }
 
-    default DreYear.Metric toDomain(QualityMetricEmbeddable embeddable) {
-        if (embeddable == null) {
+    default QualityValue toDomain(QualityValueEmbeddable value) {
+        if (value == null) {
             return null;
         }
-        DreYear.Metric metric = new DreYear.Metric();
-        metric.setValue(embeddable.getValue());
-        metric.setQuality(embeddable.getQuality());
-        metric.setRaw(embeddable.getRaw());
-        return metric;
+        QualityValue qualityValue = new QualityValue();
+        qualityValue.setValor(value.getValor());
+        qualityValue.setQuality(value.getQuality());
+        qualityValue.setRaw(value.getRaw());
+        return qualityValue;
+
     }
 }
