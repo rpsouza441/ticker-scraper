@@ -2,12 +2,14 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.b
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.bdr.BdrDividendYearlyEntity;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.bdr.DividendYear;
-import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface BdrDividendYearMapper {
@@ -22,10 +24,31 @@ public interface BdrDividendYearMapper {
     })
     BdrDividendYearlyEntity toEntity(DividendYear year);
 
-    @InheritInverseConfiguration
+    @Mappings({
+            @Mapping(source = "year", target = "year"),
+            @Mapping(source = "valor", target = "valor"),
+            @Mapping(source = "dividendYield", target = "dividendYield"),
+            @Mapping(source = "currency", target = "currency")
+    })
     DividendYear toDomain(BdrDividendYearlyEntity entity);
 
-    List<BdrDividendYearlyEntity> toEntityList(List<DividendYear> source);
+    default List<BdrDividendYearlyEntity> toEntityList(List<DividendYear> source) {
+        if (source == null || source.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return source.stream()
+                .filter(Objects::nonNull)
+                .map(this::toEntity)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
 
-    List<DividendYear> toDomainList(List<BdrDividendYearlyEntity> source);
+    default List<DividendYear> toDomainList(List<BdrDividendYearlyEntity> source) {
+        if (source == null || source.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return source.stream()
+                .filter(Objects::nonNull)
+                .map(this::toDomain)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
 }
