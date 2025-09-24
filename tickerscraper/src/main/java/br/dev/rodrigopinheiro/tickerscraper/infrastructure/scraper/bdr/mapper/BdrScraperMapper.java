@@ -282,9 +282,9 @@ public class BdrScraperMapper {
         return acumuladoPorAno.entrySet().stream()
                 .map(entry -> {
                     DividendYear year = new DividendYear();
-                    year.setAno(entry.getKey());
-                    year.setTotalDividendo(entry.getValue().setScale(4, RoundingMode.HALF_UP));
-                    year.setCurrency(currencyPorAno.get(entry.getKey()));
+                    year.setYear(entry.getKey());
+                    year.setValor(entry.getValue().setScale(4, RoundingMode.HALF_UP));
+                    year.setCurrency(currencyPorAno.getOrDefault(entry.getKey(), "USD"));
                     return year;
                 })
                 .collect(Collectors.toList());

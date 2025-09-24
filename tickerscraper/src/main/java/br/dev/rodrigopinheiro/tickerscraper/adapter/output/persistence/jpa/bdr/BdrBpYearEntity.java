@@ -28,6 +28,7 @@ public class BdrBpYearEntity {
             @AttributeOverride(name = "value", column = @Column(name = "ativos_totais_val", precision = 30, scale = 6)),
             @AttributeOverride(name = "quality", column = @Column(name = "ativos_totais_qual", columnDefinition = "quality_enum")),
             @AttributeOverride(name = "raw", column = @Column(name = "ativos_totais_raw", columnDefinition = "TEXT"))
+
     })
     private AuditedBigDecimalEmbeddable ativosTotais;
 
@@ -36,6 +37,7 @@ public class BdrBpYearEntity {
             @AttributeOverride(name = "value", column = @Column(name = "passivos_totais_val", precision = 30, scale = 6)),
             @AttributeOverride(name = "quality", column = @Column(name = "passivos_totais_qual", columnDefinition = "quality_enum")),
             @AttributeOverride(name = "raw", column = @Column(name = "passivos_totais_raw", columnDefinition = "TEXT"))
+
     })
     private AuditedBigDecimalEmbeddable passivosTotais;
 
@@ -44,6 +46,7 @@ public class BdrBpYearEntity {
             @AttributeOverride(name = "value", column = @Column(name = "divida_lp_val", precision = 30, scale = 6)),
             @AttributeOverride(name = "quality", column = @Column(name = "divida_lp_qual", columnDefinition = "quality_enum")),
             @AttributeOverride(name = "raw", column = @Column(name = "divida_lp_raw", columnDefinition = "TEXT"))
+
     })
     private AuditedBigDecimalEmbeddable dividaLongoPrazo;
 
@@ -52,6 +55,7 @@ public class BdrBpYearEntity {
             @AttributeOverride(name = "value", column = @Column(name = "pl_val", precision = 30, scale = 6)),
             @AttributeOverride(name = "quality", column = @Column(name = "pl_qual", columnDefinition = "quality_enum")),
             @AttributeOverride(name = "raw", column = @Column(name = "pl_raw", columnDefinition = "TEXT"))
+
     })
     private AuditedBigDecimalEmbeddable pl;
 }

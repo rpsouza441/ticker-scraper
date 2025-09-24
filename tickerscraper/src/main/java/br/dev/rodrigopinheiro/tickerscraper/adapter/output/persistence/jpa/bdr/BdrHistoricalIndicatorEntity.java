@@ -25,48 +25,48 @@ public class BdrHistoricalIndicatorEntity {
     @Column(name = "year")
     private Integer year;
 
-    @Column(name = "pl", precision = 19, scale = 6)
+    @Column(name = "pl", precision = 18, scale = 6)
     private BigDecimal pl;
 
-    @Column(name = "pvp", precision = 19, scale = 6)
+    @Column(name = "pvp", precision = 18, scale = 6)
     private BigDecimal pvp;
 
-    @Column(name = "psr", precision = 19, scale = 6)
+    @Column(name = "psr", precision = 18, scale = 6)
     private BigDecimal psr;
 
-    @Column(name = "p_ebit", precision = 19, scale = 6)
+    @Column(name = "p_ebit", precision = 18, scale = 6)
     private BigDecimal pEbit;
 
-    @Column(name = "p_ebitda", precision = 19, scale = 6)
+    @Column(name = "p_ebitda", precision = 18, scale = 6)
     private BigDecimal pEbitda;
 
-    @Column(name = "p_ativo", precision = 19, scale = 6)
+    @Column(name = "p_ativo", precision = 18, scale = 6)
     private BigDecimal pAtivo;
 
-    @Column(name = "roe", precision = 19, scale = 6)
+    @Column(name = "roe", precision = 18, scale = 6)
     private BigDecimal roe;
 
-    @Column(name = "roic", precision = 19, scale = 6)
+    @Column(name = "roic", precision = 18, scale = 6)
     private BigDecimal roic;
 
-    @Column(name = "roa", precision = 19, scale = 6)
+    @Column(name = "roa", precision = 18, scale = 6)
     private BigDecimal roa;
 
-    @Column(name = "margem_bruta", precision = 19, scale = 6)
+    @Column(name = "margem_bruta", precision = 18, scale = 6)
     private BigDecimal margemBruta;
 
-    @Column(name = "margem_operacional", precision = 19, scale = 6)
+    @Column(name = "margem_operacional", precision = 18, scale = 6)
     private BigDecimal margemOperacional;
 
-    @Column(name = "margem_liquida", precision = 19, scale = 6)
+    @Column(name = "margem_liquida", precision = 18, scale = 6)
     private BigDecimal margemLiquida;
 
-    @Column(name = "vpa", precision = 19, scale = 6)
+    @Column(name = "vpa", precision = 18, scale = 6)
     private BigDecimal vpa;
 
-    @Column(name = "lpa", precision = 19, scale = 6)
+    @Column(name = "lpa", precision = 18, scale = 6)
     private BigDecimal lpa;
 
-    @Column(name = "patrimonio_por_ativos", precision = 19, scale = 6)
+    @Column(name = "patrimonio_por_ativos", precision = 18, scale = 6)
     private BigDecimal patrimonioPorAtivos;
 }

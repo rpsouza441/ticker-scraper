@@ -70,7 +70,7 @@ public interface BdrApiMapper {
         if (value == null) {
             return null;
         }
-        return new BdrFcValueResponseDTO(value.getValor(), value.getQuality(), value.getRaw());
+        return new BdrFcValueResponseDTO(value.getValue(), value.getQuality(), value.getRaw());
     }
 
 }
