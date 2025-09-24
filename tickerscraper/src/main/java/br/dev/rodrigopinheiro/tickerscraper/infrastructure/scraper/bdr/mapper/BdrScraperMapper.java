@@ -14,6 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * Mapper responsável por converter o agregado de scraping de BDR ({@link BdrDadosFinanceirosDTO})
  * em objetos de domínio prontos para persistência.
@@ -272,17 +274,78 @@ public class BdrScraperMapper {
     }
 
     private List<HistoricalIndicator> mapHistoricalIndicators(BdrIndicadoresDTO indicadores) {
-        if (indicadores == null || indicadores.indicadoresSimples() == null || indicadores.indicadoresSimples().isEmpty()) {
+        if (indicadores == null || indicadores.raw() == null) {
             return List.of();
         }
-        return indicadores.indicadoresSimples().entrySet().stream()
-                .map(entry -> {
-                    HistoricalIndicator indicator = new HistoricalIndicator();
-                    indicator.setNomeIndicador(entry.getKey());
-                    indicator.setValor(entry.getValue() == null ? null : BigDecimal.valueOf(entry.getValue()));
-                    indicator.setAno(null); // API não fornece ano explícito
-                    return indicator;
-                })
-                .collect(Collectors.toList());
+        JsonNode historyNode = indicadores.raw().get("history");
+        if (historyNode == null || !historyNode.isArray() || historyNode.isEmpty()) {
+            return List.of();
+        }
+        List<HistoricalIndicator> history = new ArrayList<>();
+        for (JsonNode item : historyNode) {
+            if (item == null || !item.isObject()) {
+                continue;
+            }
+            HistoricalIndicator indicator = new HistoricalIndicator();
+            indicator.setYear(extractYear(item.get("year")));
+            indicator.setPl(asBigDecimal(item.get("pl")));
+            indicator.setPvp(asBigDecimal(item.get("pvp")));
+            indicator.setPsr(asBigDecimal(item.get("psr")));
+            indicator.setPEbit(asBigDecimal(item.get("pEbit")));
+            indicator.setPEbitda(asBigDecimal(item.get("pEbitda")));
+            indicator.setPAtivo(asBigDecimal(item.get("pAtivo")));
+            indicator.setRoe(asBigDecimal(item.get("roe")));
+            indicator.setRoic(asBigDecimal(item.get("roic")));
+            indicator.setRoa(asBigDecimal(item.get("roa")));
+            indicator.setMargemBruta(asBigDecimal(item.get("margemBruta")));
+            indicator.setMargemOperacional(asBigDecimal(item.get("margemOperacional")));
+            indicator.setMargemLiquida(asBigDecimal(item.get("margemLiquida")));
+            indicator.setVpa(asBigDecimal(item.get("vpa")));
+            indicator.setLpa(asBigDecimal(item.get("lpa")));
+            indicator.setPatrimonioPorAtivos(asBigDecimal(item.get("patrimonioPorAtivos")));
+            history.add(indicator);
+        }
+        return history;
+    }
+
+    private Integer extractYear(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isInt()) {
+            return node.intValue();
+        }
+        if (node.isTextual()) {
+            String text = node.asText();
+            if (text == null || text.isBlank()) {
+                return null;
+            }
+            try {
+                return Integer.parseInt(text.trim());
+            } catch (NumberFormatException ignored) {
+                return IndicadorParser.safeParseDouble(text)
+                        .map(Double::intValue)
+                        .orElse(null);
+            }
+        }
+        if (node.canConvertToInt()) {
+            return node.intValue();
+        }
+        return null;
+    }
+
+    private BigDecimal asBigDecimal(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isNumber()) {
+            return node.decimalValue();
+        }
+        if (node.isTextual()) {
+            return IndicadorParser.safeParseDouble(node.asText())
+                    .map(BigDecimal::valueOf)
+                    .orElse(null);
+        }
+        return null;
     }
 }
