@@ -25,10 +25,10 @@ public class BdrParidadeEntity {
     private BdrEntity bdr;
 
     @Column(name = "value")
-    private Integer ratio;
+    private Integer value;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "method")
+    @Column(name = "method", columnDefinition = "paridade_method_enum")
     private ParidadeMethod method;
 
     @Column(name = "confidence", precision = 4, scale = 3)
