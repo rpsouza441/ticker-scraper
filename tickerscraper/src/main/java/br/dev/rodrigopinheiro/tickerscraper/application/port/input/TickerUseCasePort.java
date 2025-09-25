@@ -1,7 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.port.input;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AtivoResponseDTO;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import reactor.core.publisher.Mono;
 
 public interface TickerUseCasePort {
@@ -18,5 +18,5 @@ public interface TickerUseCasePort {
      * @param ticker Código do ticker
      * @return Tipo classificado
      */
-    Mono<TipoAtivoFinanceiroVariavel> classificarTicker(String ticker);
+    Mono<TipoAtivo> classificarTicker(String ticker);
 }

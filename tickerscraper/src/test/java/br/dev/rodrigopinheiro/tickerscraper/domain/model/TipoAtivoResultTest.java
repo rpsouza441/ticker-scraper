@@ -1,6 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,11 +14,11 @@ class TipoAtivoResultTest {
     @DisplayName("Deve criar resultado encontrado com tipo válido")
     void deveCriarResultadoEncontrado() {
         // When
-        var resultado = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ACAO_ON);
+        var resultado = TipoAtivoResult.encontrado(TipoAtivo.ACAO_ON);
         
         // Then
         assertThat(resultado.isEncontrado()).isTrue();
-        assertThat(resultado.getTipo()).isEqualTo(TipoAtivoFinanceiroVariavel.ACAO_ON);
+        assertThat(resultado.getTipo()).isEqualTo(TipoAtivo.ACAO_ON);
         assertThat(resultado.isDesconhecido()).isFalse();
     }
     
@@ -30,7 +30,7 @@ class TipoAtivoResultTest {
         
         // Then
         assertThat(resultado.isEncontrado()).isFalse();
-        assertThat(resultado.getTipo()).isEqualTo(TipoAtivoFinanceiroVariavel.DESCONHECIDO);
+        assertThat(resultado.getTipo()).isEqualTo(TipoAtivo.DESCONHECIDO);
         assertThat(resultado.isDesconhecido()).isTrue();
     }
     
@@ -47,9 +47,9 @@ class TipoAtivoResultTest {
     @DisplayName("Deve verificar igualdade corretamente")
     void deveVerificarIgualdade() {
         // Given
-        var resultado1 = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.FII);
-        var resultado2 = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.FII);
-        var resultado3 = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ACAO_ON);
+        var resultado1 = TipoAtivoResult.encontrado(TipoAtivo.FII);
+        var resultado2 = TipoAtivoResult.encontrado(TipoAtivo.FII);
+        var resultado3 = TipoAtivoResult.encontrado(TipoAtivo.ACAO_ON);
         var resultado4 = TipoAtivoResult.naoEncontrado();
         
         // Then
@@ -64,8 +64,8 @@ class TipoAtivoResultTest {
     @DisplayName("Deve ter hashCode consistente")
     void deveTerHashCodeConsistente() {
         // Given
-        var resultado1 = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ETF);
-        var resultado2 = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ETF);
+        var resultado1 = TipoAtivoResult.encontrado(TipoAtivo.ETF);
+        var resultado2 = TipoAtivoResult.encontrado(TipoAtivo.ETF);
         
         // Then
         assertThat(resultado1.hashCode()).isEqualTo(resultado2.hashCode());
@@ -75,7 +75,7 @@ class TipoAtivoResultTest {
     @DisplayName("Deve ter toString informativo")
     void deveTerToStringInformativo() {
         // Given
-        var resultadoEncontrado = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.BDR_PATROCINADO);
+        var resultadoEncontrado = TipoAtivoResult.encontrado(TipoAtivo.BDR_PATROCINADO);
         var resultadoNaoEncontrado = TipoAtivoResult.naoEncontrado();
         
         // Then
@@ -92,8 +92,8 @@ class TipoAtivoResultTest {
     @DisplayName("Deve identificar tipos desconhecidos corretamente")
     void deveIdentificarTiposDesconhecidos() {
         // Given
-        var resultadoDesconhecido = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.DESCONHECIDO);
-        var resultadoConhecido = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ACAO_PN);
+        var resultadoDesconhecido = TipoAtivoResult.encontrado(TipoAtivo.DESCONHECIDO);
+        var resultadoConhecido = TipoAtivoResult.encontrado(TipoAtivo.ACAO_PN);
         var resultadoNaoEncontrado = TipoAtivoResult.naoEncontrado();
         
         // Then
@@ -106,7 +106,7 @@ class TipoAtivoResultTest {
     @DisplayName("Deve ser imutável")
     void deveSerImutavel() {
         // Given
-        var resultado = TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.UNIT);
+        var resultado = TipoAtivoResult.encontrado(TipoAtivo.UNIT);
         
         // Then - não deve ter métodos setters públicos
         assertThat(resultado.getClass().getDeclaredMethods())

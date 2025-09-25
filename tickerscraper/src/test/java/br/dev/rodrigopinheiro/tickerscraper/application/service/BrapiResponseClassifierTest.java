@@ -1,6 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.dto.BrapiQuoteResponse;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.dto.BrapiQuoteResult;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +29,7 @@ class BrapiResponseClassifierTest {
         "'Petrobras Unit', 'Certificado de Depósito', UNIT",
         "'Petrobras', 'Empresa de petróleo', ACAO_ON"
     })
-    void deveClassificarCorretamente(String shortName, String longName, TipoAtivoFinanceiroVariavel esperado) {
+    void deveClassificarCorretamente(String shortName, String longName, TipoAtivo esperado) {
         var response = criarBrapiResponse("TEST11", shortName, longName);
         
         var resultado = classifier.classificarPorResposta(response);
@@ -40,7 +40,7 @@ class BrapiResponseClassifierTest {
     @Test
     void deveRetornarDesconhecidoParaRespostaVazia() {
         var resultado = classifier.classificarPorResposta(null);
-        assertThat(resultado).isEqualTo(TipoAtivoFinanceiroVariavel.DESCONHECIDO);
+        assertThat(resultado).isEqualTo(TipoAtivo.DESCONHECIDO);
     }
 
     private BrapiQuoteResponse criarBrapiResponse(String symbol, String shortName, String longName) {

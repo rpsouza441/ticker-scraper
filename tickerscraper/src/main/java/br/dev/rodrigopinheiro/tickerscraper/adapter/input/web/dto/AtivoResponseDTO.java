@@ -1,6 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class AtivoResponseDTO {
 
     private String ticker;
-    private TipoAtivoFinanceiroVariavel tipoAtivo;
+    private TipoAtivo tipoAtivo;
     private String nomeEmpresa;
     private LocalDateTime dataAtualizacao;
     private ClassificacaoInfo classificacao;
@@ -57,7 +57,7 @@ public class AtivoResponseDTO {
     /**
      * Factory method para criar resposta de ação
      */
-    public static AtivoResponseDTO fromAcao(String ticker, TipoAtivoFinanceiroVariavel tipo, AcaoResponseDTO acaoData) {
+    public static AtivoResponseDTO fromAcao(String ticker, TipoAtivo tipo, AcaoResponseDTO acaoData) {
         return AtivoResponseDTO.builder()
                 .ticker(ticker)
                 .tipoAtivo(tipo)
@@ -76,7 +76,7 @@ public class AtivoResponseDTO {
     /**
      * Factory method para criar resposta de FII
      */
-    public static AtivoResponseDTO fromFii(String ticker, TipoAtivoFinanceiroVariavel tipo, FiiResponseDTO fiiData) {
+    public static AtivoResponseDTO fromFii(String ticker, TipoAtivo tipo, FiiResponseDTO fiiData) {
         return AtivoResponseDTO.builder()
                 .ticker(ticker)
                 .tipoAtivo(tipo)
@@ -96,7 +96,7 @@ public class AtivoResponseDTO {
     /**
      * Factory method para criar resposta de ETF
      */
-    public static AtivoResponseDTO fromEtf(String ticker, TipoAtivoFinanceiroVariavel tipo, EtfResponseDTO etfData) {
+    public static AtivoResponseDTO fromEtf(String ticker, TipoAtivo tipo, EtfResponseDTO etfData) {
         return AtivoResponseDTO.builder()
                 .ticker(ticker)
                 .tipoAtivo(tipo)
@@ -115,7 +115,7 @@ public class AtivoResponseDTO {
     /**
      * Factory method para criar resposta da API Brapi
      */
-    public static AtivoResponseDTO fromBrapi(String ticker, TipoAtivoFinanceiroVariavel tipo,
+    public static AtivoResponseDTO fromBrapi(String ticker, TipoAtivo tipo,
                                              String shortName, String longName,
                                              BigDecimal regularMarketPrice, BigDecimal regularMarketChange,
                                              BigDecimal regularMarketChangePercent, Long regularMarketVolume,
@@ -155,7 +155,8 @@ public class AtivoResponseDTO {
                 .build();
     }
 
-    private static String determinarMetodoClassificacao(TipoAtivoFinanceiroVariavel tipo) {
+    @Deprecated
+    private static String determinarMetodoClassificacao(TipoAtivo tipo) {
         // Lógica para determinar como foi classificado
         return switch (tipo) {
             case ACAO_ON, ACAO_PN, ACAO_PNA, ACAO_PNB, ACAO_PNC, ACAO_PND, FII -> "HEURISTICA";

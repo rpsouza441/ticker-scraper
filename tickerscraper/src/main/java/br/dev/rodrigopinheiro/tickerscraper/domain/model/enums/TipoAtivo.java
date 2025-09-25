@@ -8,60 +8,57 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Inclui métodos de classificação heurística baseados em padrões de ticker.
  */
 public enum TipoAtivo {
-    
-    // Ações Específicas
-    ACAO_ON("ACAO_ON", "Ação Ordinária", "Ação que confere ao acionista o direito de voto em assembleias e participação nos resultados da empresa."),
-    ACAO_PN("ACAO_PN", "Ação Preferencial", "Ação que dá prioridade no recebimento de dividendos, porém geralmente sem direito a voto."),
-    ACAO_PNA("ACAO_PNA", "Ação Preferencial Classe A", "Ação preferencial com prioridade sobre outras classes."),
-    ACAO_PNB("ACAO_PNB", "Ação Preferencial Classe B", "Ação preferencial com prioridade inferior à classe A."),
-    ACAO_PNC("ACAO_PNC", "Ação Preferencial Classe C", "Ação preferencial com menor prioridade, mas com garantia de retorno financeiro."),
-    ACAO_PND("ACAO_PND", "Ação Preferencial Classe D", "Ação preferencial com menos direitos que outras classes."),
-    ACAO_UNIT("ACAO_UNIT", "Unit", "Pacote de ativos que combina ações ordinárias e preferenciais de uma empresa."),
-    
-    // Fundos e ETFs
-    FII("FII", "Fundo de Investimento Imobiliário", "Fundo que investe em empreendimentos imobiliários, permitindo que investidores participem do mercado imobiliário sem adquirir imóveis diretamente."),
-    ETF("ETF", "Fundo de Índice", "Fundo que busca replicar o desempenho de um índice de mercado, permitindo diversificação com a compra de uma única cota."),
-    BDR("BDR", "Brazilian Depositary Receipt", "Certificado que representa ações de empresas estrangeiras, permitindo que investidores brasileiros invistam em companhias internacionais."),
-        
-    // Tipo desconhecido
-    DESCONHECIDO("DESCONHECIDO", "Tipo Desconhecido", "Tipo não identificado");
-    
+
+    // ===== AÇÕES =====
+    ACAO_ON             ("ACAO_ON",  "Ação Ordinária",                                  Categoria.ACAO),
+    ACAO_PN             ("ACAO_PN",  "Ação Preferencial",                               Categoria.ACAO),
+    ACAO_PNA            ("ACAO_PNA", "Ação Preferencial Classe A",                      Categoria.ACAO),
+    ACAO_PNB            ("ACAO_PNB", "Ação Preferencial Classe B",                      Categoria.ACAO),
+    ACAO_PNC            ("ACAO_PNC", "Ação Preferencial Classe C",                      Categoria.ACAO),
+    ACAO_PND            ("ACAO_PND", "Ação Preferencial Classe D",                      Categoria.ACAO),
+
+    // ===== RECIBOS DE SUBSCRIÇÃO =====
+    RECIBO_SUBSCRICAO_ON("RECIBO_SUBSCRICAO_ON", "Recibo de Subscrição de Ação Ordinária",    Categoria.RECIBO),
+    RECIBO_SUBSCRICAO_PN("RECIBO_SUBSCRICAO_PN", "Recibo de Subscrição de Ação Preferencial", Categoria.RECIBO),
+
+    // ===== FUNDOS/ETFs/UNIT =====
+    FII                 ("FII",      "Fundo de Investimento Imobiliário",               Categoria.FII),
+    ETF                 ("ETF",      "Fundo de Índice (ETF - Brasil)",                  Categoria.ETF),
+    ETF_BDR             ("ETF_BDR",  "Fundo de Índice (ETF BDR - Estrangeiro)",         Categoria.ETF),
+    UNIT                ("UNIT",     "Unit (Certificado de Depósito de Ações)",         Categoria.UNIT),
+
+    // ===== BDR =====
+    BDR                 ("BDR",      "BDR (Brazilian Depositary Receipt)",              Categoria.BDR),
+    BDR_NAO_PATROCINADO ("BDR_NAO_PATROCINADO", "BDR Não Patrocinado (Nível I)",        Categoria.BDR),
+    BDR_PATROCINADO     ("BDR_PATROCINADO",     "BDR Patrocinado (Nível II/III)",       Categoria.BDR),
+
+    // ===== OUTROS/DESCONHECIDO =====
+    DESCONHECIDO        ("DESCONHECIDO", "Tipo Desconhecido",                           Categoria.OUTRO);
+    // ===== Campos =========
     private final String codigo;
-    private final String nome;
     private final String descricao;
-    
-    TipoAtivo(String codigo, String nome, String descricao) {
+    private final Categoria categoria;
+
+    TipoAtivo(String codigo, String descricao, Categoria categoria) {
         this.codigo = codigo;
-        this.nome = nome;
         this.descricao = descricao;
+        this.categoria = categoria;
     }
-    
+
+    // ===== JSON (compatível com versões anteriores) =====
     @JsonValue
     public String getCodigo() {
         return codigo;
     }
-    
-    public String getNome() {
-        return nome;
-    }
-    
+
     public String getDescricao() {
         return descricao;
     }
-    
-    @JsonCreator
-    public static TipoAtivo fromCodigo(String codigo) {
-        if (codigo == null) {
-            return DESCONHECIDO;
-        }
-        
-        for (TipoAtivo tipo : values()) {
-            if (tipo.codigo.equalsIgnoreCase(codigo)) {
-                return tipo;
-            }
-        }
-        return DESCONHECIDO;
+
+    public Categoria getCategoria() {
+        return categoria;
     }
+
     
     /**
      * Classifica o tipo de ativo baseado em heurística do ticker.
@@ -79,6 +76,7 @@ public enum TipoAtivo {
      * @param ticker o código do ticker (ex: PETR4, HGLG11)
      * @return o tipo classificado ou DESCONHECIDO se não conseguir determinar
      */
+    @Deprecated
     public static TipoAtivo classificarPorHeuristica(String ticker) {
         if (ticker == null || ticker.trim().isEmpty()) {
             return DESCONHECIDO;
@@ -93,34 +91,21 @@ public enum TipoAtivo {
         
         // Extrair sufixo numérico
         String sufixo = tickerLimpo.replaceAll("^[A-Z]{4}", "");
-        
-        switch (sufixo) {
-            case "3":
-                return ACAO_ON;  // Ação Ordinária
-                
-            case "4":
-                return ACAO_PN;  // Ação Preferencial
-                
-            case "5":
-                return ACAO_PNA; // Ação Preferencial Classe A
-                
-            case "6":
-                return ACAO_PNB; // Ação Preferencial Classe B
-                
-            case "7":
-                return ACAO_PNC; // Ação Preferencial Classe C
-                
-            case "8":
-                return ACAO_PND; // Ação Preferencial Classe D
-                
-            case "11":
-                // Ambíguo - pode ser FII, ETF, UNIT ou BDR
-                // Precisa consultar API externa para determinar
-                return DESCONHECIDO;
-                
-            default:
-                return DESCONHECIDO;
-        }
+
+        return switch (sufixo) {
+            case "3" -> ACAO_ON;
+            case "4" -> ACAO_PN;
+            case "5" -> ACAO_PNA;
+            case "6" -> ACAO_PNB;
+            case "7" -> ACAO_PNC;
+            case "8" -> ACAO_PND;
+            case "11" -> DESCONHECIDO; // FII, ETF ou ETF_BDR - força consulta BD/API
+            case "32", "33" -> BDR_PATROCINADO;
+            case "34", "35" -> BDR_NAO_PATROCINADO;
+            case "9" -> RECIBO_SUBSCRICAO_ON;
+            case "10" -> RECIBO_SUBSCRICAO_PN;
+            default -> DESCONHECIDO;
+        };
     }
     
     /**
@@ -129,6 +114,7 @@ public enum TipoAtivo {
      * @param ticker o código do ticker
      * @return true se precisa consultar API externa, false caso contrário
      */
+    @Deprecated
     public static boolean precisaConsultarApi(String ticker) {
         if (ticker == null || ticker.trim().isEmpty()) {
             return false;
@@ -137,51 +123,14 @@ public enum TipoAtivo {
         String tickerLimpo = ticker.trim().toUpperCase();
         return tickerLimpo.matches("^[A-Z]{4}11$");
     }
-    
-    /**
-     * Verifica se é uma ação (qualquer tipo de ação).
-     */
-    public boolean isAcao() {
-        return this == ACAO_ON || this == ACAO_PN || this == ACAO_PNA || 
-               this == ACAO_PNB || this == ACAO_PNC || this == ACAO_PND || 
-               this == ACAO_UNIT;
-    }
-    
-    /**
-     * Verifica se é uma ação ordinária.
-     */
-    public boolean isAcaoOrdinaria() {
-        return this == ACAO_ON;
-    }
-    
-    /**
-     * Verifica se é uma ação preferencial (qualquer classe).
-     */
-    public boolean isAcaoPreferencial() {
-        return this == ACAO_PN || this == ACAO_PNA || this == ACAO_PNB || 
-               this == ACAO_PNC || this == ACAO_PND;
-    }
-    
-    /**
-     * Verifica se é um fundo (FII ou ETF).
-     */
-    public boolean isFundo() {
-        return this == FII || this == ETF;
-    }
-    
-    /**
-     * Verifica se é um BDR.
-     */
-    public boolean isBdr() {
-        return this == BDR;
-    }
-    
-    /**
-     * Verifica se é um tipo conhecido (não DESCONHECIDO).
-     */
-    public boolean isConhecido() {
-        return this != DESCONHECIDO;
-    }
+
+    public boolean isAcao()        { return categoria == Categoria.ACAO; }
+    public boolean isFII()         { return categoria == Categoria.FII; }
+    public boolean isETF()         { return categoria == Categoria.ETF; }
+    public boolean isBDR()         { return categoria == Categoria.BDR; }
+    public boolean isRecibo()      { return categoria == Categoria.RECIBO; }
+    public boolean isUnit()        { return categoria == Categoria.UNIT; }
+    public boolean isConhecido()   { return this != DESCONHECIDO; }
     
     @Override
     public String toString() {

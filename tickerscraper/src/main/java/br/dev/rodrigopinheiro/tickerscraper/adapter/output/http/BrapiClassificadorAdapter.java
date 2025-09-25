@@ -3,7 +3,6 @@ package br.dev.rodrigopinheiro.tickerscraper.adapter.output.http;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.ClassificadorAtivoPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.BrapiHttpClient;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.dto.BrapiQuoteResponse;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.dto.BrapiQuoteResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.Optional;
 
 /**
  * Adaptador que implementa classificação de ativos via API Brapi.
@@ -118,7 +116,7 @@ public class BrapiClassificadorAdapter implements ClassificadorAtivoPort {
         
         if (displayName.contains("UNIT")) {
             log.debug("Classificado como ACAO_UNIT pelo nome: {}", displayName);
-            return TipoAtivo.ACAO_UNIT;
+            return TipoAtivo.UNIT;
         }
         
         // Classificação por padrão do ticker (fallback)

@@ -4,9 +4,9 @@ import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.List;
 
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import org.springframework.stereotype.Component;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.dto.BrapiQuoteResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,10 +38,10 @@ public class BrapiResponseClassifier {
     /**
      * Classifica ativo baseado na resposta da API Brapi
      */
-    public TipoAtivoFinanceiroVariavel classificarPorResposta(BrapiQuoteResponse response) {
+    public TipoAtivo classificarPorResposta(BrapiQuoteResponse response) {
         if (response == null || response.results() == null || response.results().isEmpty()) {
             log.warn("Resposta Brapi vazia ou inválida");
-            return TipoAtivoFinanceiroVariavel.DESCONHECIDO;
+            return TipoAtivo.DESCONHECIDO;
         }
         
         var quote = response.results().get(0);
@@ -55,27 +55,27 @@ public class BrapiResponseClassifier {
         // Ordem específica: ETF BDR primeiro (mais específico)
         if (isETFBdr(textoCompleto)) {
             log.info("Ticker {} classificado como ETF_BDR", quote.symbol());
-            return TipoAtivoFinanceiroVariavel.ETF_BDR;
+            return TipoAtivo.ETF_BDR;
         }
         
         if (isETFNacional(textoCompleto)) {
             log.info("Ticker {} classificado como ETF", quote.symbol());
-            return TipoAtivoFinanceiroVariavel.ETF;
+            return TipoAtivo.ETF;
         }
         
         if (isFII(textoCompleto)) {
             log.info("Ticker {} classificado como FII", quote.symbol());    
-            return TipoAtivoFinanceiroVariavel.FII;
+            return TipoAtivo.FII;
         }
         
         if (isUnit(textoCompleto)) {
             log.info("Ticker {} classificado como UNIT", quote.symbol());
-            return TipoAtivoFinanceiroVariavel.UNIT;
+            return TipoAtivo.UNIT;
         }
         
         // Default para ação ordinária
         log.info("Ticker {} classificado como ACAO_ON (default)", quote.symbol());
-        return TipoAtivoFinanceiroVariavel.ACAO_ON;
+        return TipoAtivo.ACAO_ON;
     }
     
     private boolean isETFBdr(String texto) {

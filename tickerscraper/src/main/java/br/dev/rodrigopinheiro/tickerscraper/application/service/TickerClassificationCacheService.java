@@ -1,6 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import com.github.benmanes.caffeine.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,16 +11,16 @@ import java.util.Optional;
 @Service
 public class TickerClassificationCacheService {
     
-    private final Cache<String, TipoAtivoFinanceiroVariavel> cache;
+    private final Cache<String, TipoAtivo> cache;
     
-    public TickerClassificationCacheService(Cache<String, TipoAtivoFinanceiroVariavel> cache) {
+    public TickerClassificationCacheService(Cache<String, TipoAtivo> cache) {
         this.cache = cache;
     }
     
     /**
      * Busca classificação no cache
      */
-    public Optional<TipoAtivoFinanceiroVariavel> get(String ticker) {
+    public Optional<TipoAtivo> get(String ticker) {
         var resultado = Optional.ofNullable(cache.getIfPresent(ticker.toUpperCase()));
         
         if (resultado.isPresent()) {
@@ -35,7 +35,7 @@ public class TickerClassificationCacheService {
     /**
      * Armazena classificação no cache
      */
-    public void put(String ticker, TipoAtivoFinanceiroVariavel tipo) {
+    public void put(String ticker, TipoAtivo tipo) {
         cache.put(ticker.toUpperCase(), tipo);
         log.debug("Cache STORE: {} -> {}", ticker, tipo);
     }

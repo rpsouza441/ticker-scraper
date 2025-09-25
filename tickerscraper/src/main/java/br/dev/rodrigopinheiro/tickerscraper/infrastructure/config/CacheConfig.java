@@ -1,8 +1,9 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.config;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +19,7 @@ public class CacheConfig {
     private final TickerClassificationProperties properties;
     
     @Bean
-    public Cache<String, TipoAtivoFinanceiroVariavel> tickerClassificationCache() {
+    public Cache<String, TipoAtivo> tickerClassificationCache() {
         var cacheConfig = properties.getCache();
         
         if (!cacheConfig.isEnabled()) {
@@ -27,7 +28,7 @@ public class CacheConfig {
             return Caffeine.newBuilder().maximumSize(0).build();
         }
         
-        Cache<String, TipoAtivoFinanceiroVariavel> cache = Caffeine.newBuilder()
+        Cache<String, TipoAtivo> cache = Caffeine.newBuilder()
             .maximumSize(cacheConfig.getMaxSize())
             .expireAfterWrite(cacheConfig.getTtlHours(), TimeUnit.HOURS)
             .recordStats()

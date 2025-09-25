@@ -1,6 +1,6 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 
 /**
  * Value Object que representa o resultado da classificação de um tipo de ativo.
@@ -14,11 +14,11 @@ import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinancei
 public final class TipoAtivoResult {
     
     private final boolean encontrado;
-    private final TipoAtivoFinanceiroVariavel tipo;
+    private final TipoAtivo tipo;
     
-    private TipoAtivoResult(boolean encontrado, TipoAtivoFinanceiroVariavel tipo) {
+    private TipoAtivoResult(boolean encontrado, TipoAtivo tipo) {
         this.encontrado = encontrado;
-        this.tipo = tipo != null ? tipo : TipoAtivoFinanceiroVariavel.DESCONHECIDO;
+        this.tipo = tipo != null ? tipo : TipoAtivo.DESCONHECIDO;
     }
     
     /**
@@ -28,7 +28,7 @@ public final class TipoAtivoResult {
      * @return resultado com tipo encontrado
      * @throws IllegalArgumentException se tipo for null
      */
-    public static TipoAtivoResult encontrado(TipoAtivoFinanceiroVariavel tipo) {
+    public static TipoAtivoResult encontrado(TipoAtivo tipo) {
         if (tipo == null) {
             throw new IllegalArgumentException("Tipo não pode ser null quando encontrado");
         }
@@ -41,7 +41,7 @@ public final class TipoAtivoResult {
      * @return resultado com tipo DESCONHECIDO
      */
     public static TipoAtivoResult naoEncontrado() {
-        return new TipoAtivoResult(false, TipoAtivoFinanceiroVariavel.DESCONHECIDO);
+        return new TipoAtivoResult(false, TipoAtivo.DESCONHECIDO);
     }
     
     /**
@@ -58,7 +58,7 @@ public final class TipoAtivoResult {
      * 
      * @return o tipo de ativo (nunca null, DESCONHECIDO se não encontrado)
      */
-    public TipoAtivoFinanceiroVariavel getTipo() {
+    public TipoAtivo getTipo() {
         return tipo;
     }
     
@@ -68,7 +68,7 @@ public final class TipoAtivoResult {
      * @return true se o tipo é DESCONHECIDO
      */
     public boolean isDesconhecido() {
-        return tipo == TipoAtivoFinanceiroVariavel.DESCONHECIDO;
+        return tipo == TipoAtivo.DESCONHECIDO;
     }
     
     @Override

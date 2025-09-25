@@ -5,7 +5,7 @@ import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoReposito
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.EtfRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.TipoAtivoResult;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -62,29 +62,29 @@ public class TickerDatabaseStrategy {
 
         // Prioridade: FII > ETF > BDR > Ação
         if (existeFii) {
-            return TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.FII);
+            return TipoAtivoResult.encontrado(TipoAtivo.FII);
         }
 
         if (existeEtf) {
-            return TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ETF);
+            return TipoAtivoResult.encontrado(TipoAtivo.ETF);
         }
 
         if (existeBdr) {
             // Determinar se é patrocinado ou não baseado no sufixo
-            var tipo = TipoAtivoFinanceiroVariavel.classificarPorSufixo(ticker);
-            if (tipo.isBdr()) {
+            TipoAtivo tipo = TipoAtivo.classificarPorHeuristica(ticker);
+            if (tipo.isBDR()) {
                 return TipoAtivoResult.encontrado(tipo);
             }
-            return TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.BDR_NAO_PATROCINADO);
+            return TipoAtivoResult.encontrado(TipoAtivo.BDR_NAO_PATROCINADO);
         }
 
         if (existeAcao) {
             // Determinar tipo específico de ação baseado no sufixo
-            var tipo = TipoAtivoFinanceiroVariavel.classificarPorSufixo(ticker);
+            TipoAtivo tipo = TipoAtivo.classificarPorHeuristica(ticker);
             if (tipo.isAcao()) {
                 return TipoAtivoResult.encontrado(tipo);
             }
-            return TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ACAO_ON);
+            return TipoAtivoResult.encontrado(TipoAtivo.ACAO_ON);
         }
 
         return TipoAtivoResult.naoEncontrado();

@@ -11,7 +11,7 @@ import br.dev.rodrigopinheiro.tickerscraper.application.port.input.FiiUseCasePor
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.TickerUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerClassificationException;
 import br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException;
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.http.brapi.BrapiHttpClient;
 
 import java.util.List;
@@ -53,7 +53,7 @@ public class TickerUseCaseService implements TickerUseCasePort {
     }
 
     @Override
-    public Mono<TipoAtivoFinanceiroVariavel> classificarTicker(String ticker) {
+    public Mono<TipoAtivo> classificarTicker(String ticker) {
         if (ticker == null || ticker.trim().isEmpty()) {
             return Mono.error(new TickerClassificationException(ticker, "Ticker não pode ser vazio"));
         }
@@ -90,7 +90,7 @@ public class TickerUseCaseService implements TickerUseCasePort {
     /**
      * Consulta API Brapi, classifica resposta e faz scraping para salvar no banco
      */
-    private Mono<TipoAtivoFinanceiroVariavel> consultarApiEClassificar(String ticker) {
+    private Mono<TipoAtivo> consultarApiEClassificar(String ticker) {
         log.debug("Consultando API Brapi para classificar ticker: {}", ticker);
 
         return brapiClient.getQuote(ticker)
@@ -114,10 +114,9 @@ public class TickerUseCaseService implements TickerUseCasePort {
     /**
      * Faz scraping dos dados e salva no banco, retornando o tipo
      */
-    private Mono<TipoAtivoFinanceiroVariavel> fazerScrapingERetornarTipo(String ticker, TipoAtivoFinanceiroVariavel tipo) {
+    private Mono<TipoAtivo> fazerScrapingERetornarTipo(String ticker, TipoAtivo tipo) {
         return switch (tipo) {
             case ACAO_ON, ACAO_PN, ACAO_PNA, ACAO_PNB, ACAO_PNC, ACAO_PND, UNIT,
-                 DIREITO_SUBSCRICAO_ON, DIREITO_SUBSCRICAO_PN,
                  RECIBO_SUBSCRICAO_ON, RECIBO_SUBSCRICAO_PN ->
                     acaoUseCase.getTickerData(ticker)
                             .doOnNext(acaoData -> log.info("Dados de ação {} salvos no banco após classificação", ticker))
@@ -149,12 +148,11 @@ public class TickerUseCaseService implements TickerUseCasePort {
     /**
      * Delega para UseCase específico baseado no tipo
      */
-    private Mono<AtivoResponseDTO> delegarParaUseCaseEspecifico(String ticker, TipoAtivoFinanceiroVariavel tipo) {
+    private Mono<AtivoResponseDTO> delegarParaUseCaseEspecifico(String ticker, TipoAtivo tipo) {
         log.debug("Delegando ticker {} para UseCase do tipo: {}", ticker, tipo);
 
         return switch (tipo) {
             case ACAO_ON, ACAO_PN, ACAO_PNA, ACAO_PNB, ACAO_PNC, ACAO_PND, UNIT,
-                 DIREITO_SUBSCRICAO_ON, DIREITO_SUBSCRICAO_PN,
                  RECIBO_SUBSCRICAO_ON, RECIBO_SUBSCRICAO_PN ->
                     acaoUseCase.getTickerData(ticker)
                             .map(acaoData -> AtivoResponseDTO.fromAcao(ticker, tipo, acaoMapper.toResponseDto(acaoData)));
