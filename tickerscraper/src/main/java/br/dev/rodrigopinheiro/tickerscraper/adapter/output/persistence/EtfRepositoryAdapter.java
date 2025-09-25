@@ -36,7 +36,6 @@ public class EtfRepositoryAdapter implements EtfRepositoryPort {
     public boolean existsByTicker(String ticker) {
         return jpa.existsByTicker(ticker);
     }
-
     @Override
     public Etf save(Etf etf, String rawJsonAudit) {
         // upsert por ticker

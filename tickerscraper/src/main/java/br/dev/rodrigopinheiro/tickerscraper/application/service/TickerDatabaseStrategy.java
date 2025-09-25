@@ -2,7 +2,7 @@ package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
 
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoRepositoryPort;
-import br.dev.rodrigopinheiro.tickerscraper.application.port.output.BdrRepositoryPort;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.output.EtfRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiRepositoryPort;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.TipoAtivoResult;
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivoFinanceiroVariavel;
@@ -22,23 +22,23 @@ public class TickerDatabaseStrategy {
 
     private final AcaoRepositoryPort acaoRepository;
     private final FiiRepositoryPort fiiRepository;
-    private final BdrRepositoryPort bdrRepository;
-    
+    private final EtfRepositoryPort etfRepository;
+
     /**
      * Verifica se ticker existe no banco e retorna o tipo
      */
     public Mono<TipoAtivoResult> verificarTickerNoBanco(String ticker) {
         log.debug("Verificando ticker {} no banco de dados", ticker);
-        
+
         // Busca paralela em todas as tabelas
         Mono<Boolean> existeAcao = verificarExistencia(acaoRepository::existsByTicker, ticker);
         Mono<Boolean> existeFii = verificarExistencia(fiiRepository::existsByTicker, ticker);
-        Mono<Boolean> existeEtf = Mono.just(false); // TODO: implementar quando EtfRepository existir
-        Mono<Boolean> existeBdr = verificarExistencia(bdrRepository::existsByTicker, ticker);
-        
+        Mono<Boolean> existeEtf = verificarExistencia(etfRepository::existsByTicker, ticker);
+        Mono<Boolean> existeBdr =  Mono.just(false); // TODO: implementar quando EtfRepository existir
+
         return Mono.zip(existeAcao, existeFii, existeEtf, existeBdr)
             .map(tuple -> determinarTipo(ticker, tuple))
-            .doOnNext(result -> log.info("Ticker {} no BD: encontrado={}, tipo={}", 
+            .doOnNext(result -> log.info("Ticker {} no BD: encontrado={}, tipo={}",
                 ticker, result.isEncontrado(), result.getTipo()));
     }
 
@@ -50,7 +50,7 @@ public class TickerDatabaseStrategy {
             .onErrorReturn(false)
             .subscribeOn(Schedulers.boundedElastic());
     }
-    
+
     /**
      * Determina tipo baseado nos resultados das consultas
      */
@@ -59,16 +59,16 @@ public class TickerDatabaseStrategy {
         boolean existeFii = tuple.getT2();
         boolean existeEtf = tuple.getT3();
         boolean existeBdr = tuple.getT4();
-        
+
         // Prioridade: FII > ETF > BDR > Ação
         if (existeFii) {
             return TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.FII);
         }
-        
+
         if (existeEtf) {
             return TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ETF);
         }
-        
+
         if (existeBdr) {
             // Determinar se é patrocinado ou não baseado no sufixo
             var tipo = TipoAtivoFinanceiroVariavel.classificarPorSufixo(ticker);
@@ -77,7 +77,7 @@ public class TickerDatabaseStrategy {
             }
             return TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.BDR_NAO_PATROCINADO);
         }
-        
+
         if (existeAcao) {
             // Determinar tipo específico de ação baseado no sufixo
             var tipo = TipoAtivoFinanceiroVariavel.classificarPorSufixo(ticker);
@@ -86,7 +86,7 @@ public class TickerDatabaseStrategy {
             }
             return TipoAtivoResult.encontrado(TipoAtivoFinanceiroVariavel.ACAO_ON);
         }
-        
+
         return TipoAtivoResult.naoEncontrado();
     }
 }

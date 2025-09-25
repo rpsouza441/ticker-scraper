@@ -23,14 +23,14 @@ public class AtivoResponseDTO {
     private AcaoResponseDTO dadosAcao;
     private FiiResponseDTO dadosFii;
     private EtfResponseDTO dadosEtf;
-    private BdrResponseDTO dadosBdr;
-    
+    // TODO: Adicionar BdrResponseDTO
+
     // Dados financeiros básicos (sempre preenchidos)
     private BigDecimal cotacao;
     private BigDecimal variacao;
     private BigDecimal variacaoPercentual;
     private Long volume;
-    
+
     // Dados adicionais da Brapi
     private String currency;
     private String logoUrl;
@@ -45,7 +45,7 @@ public class AtivoResponseDTO {
     private BigDecimal fiftyTwoWeekHigh;
     private BigDecimal priceEarnings;
     private BigDecimal earningsPerShare;
-    
+
     @Data
     @Builder
     public static class ClassificacaoInfo {
@@ -53,132 +53,108 @@ public class AtivoResponseDTO {
         private String confianca; // ALTA, MEDIA, BAIXA
         private String observacao;
     }
-    
+
     /**
      * Factory method para criar resposta de ação
      */
     public static AtivoResponseDTO fromAcao(String ticker, TipoAtivoFinanceiroVariavel tipo, AcaoResponseDTO acaoData) {
         return AtivoResponseDTO.builder()
-            .ticker(ticker)
-            .tipoAtivo(tipo)
-            .nomeEmpresa(acaoData.nomeEmpresa())
-            .dataAtualizacao(LocalDateTime.now())
-            .dadosAcao(acaoData)
-            .cotacao(acaoData.precoAtual())
-            .variacao(acaoData.variacao12M())
-            .classificacao(ClassificacaoInfo.builder()
-                .metodo(determinarMetodoClassificacao(tipo))
-                .confianca("ALTA")
-                .build())
-            .build();
+                .ticker(ticker)
+                .tipoAtivo(tipo)
+                .nomeEmpresa(acaoData.nomeEmpresa())
+                .dataAtualizacao(LocalDateTime.now())
+                .dadosAcao(acaoData)
+                .cotacao(acaoData.precoAtual())
+                .variacao(acaoData.variacao12M())
+                .classificacao(ClassificacaoInfo.builder()
+                        .metodo(determinarMetodoClassificacao(tipo))
+                        .confianca("ALTA")
+                        .build())
+                .build();
     }
-    
+
     /**
      * Factory method para criar resposta de FII
      */
     public static AtivoResponseDTO fromFii(String ticker, TipoAtivoFinanceiroVariavel tipo, FiiResponseDTO fiiData) {
         return AtivoResponseDTO.builder()
-            .ticker(ticker)
-            .tipoAtivo(tipo)
-            .nomeEmpresa(fiiData.nomeEmpresa())
-            .dataAtualizacao(fiiData.dataAtualizacao())
-            .dadosFii(fiiData)
-            .cotacao(fiiData.cotacao())
-            .variacao(fiiData.variacao12M())
-            .volume(0L) // FII não tem volume na estrutura atual
-            .classificacao(ClassificacaoInfo.builder()
-                .metodo("BANCO_DADOS")
-                .confianca("ALTA")
-                .build())
-            .build();
+                .ticker(ticker)
+                .tipoAtivo(tipo)
+                .nomeEmpresa(fiiData.nomeEmpresa())
+                .dataAtualizacao(fiiData.dataAtualizacao())
+                .dadosFii(fiiData)
+                .cotacao(fiiData.cotacao())
+                .variacao(fiiData.variacao12M())
+                .volume(0L) // FII não tem volume na estrutura atual
+                .classificacao(ClassificacaoInfo.builder()
+                        .metodo("BANCO_DADOS")
+                        .confianca("ALTA")
+                        .build())
+                .build();
     }
-    
+
     /**
      * Factory method para criar resposta de ETF
      */
     public static AtivoResponseDTO fromEtf(String ticker, TipoAtivoFinanceiroVariavel tipo, EtfResponseDTO etfData) {
         return AtivoResponseDTO.builder()
-            .ticker(ticker)
-            .tipoAtivo(tipo)
-            .nomeEmpresa(etfData.nomeEtf())
-            .dataAtualizacao(etfData.dataAtualizacao())
-            .dadosEtf(etfData)
-            .cotacao(etfData.valorAtual())
-            .variacao(etfData.variacao12M())
-            .classificacao(ClassificacaoInfo.builder()
-                .metodo("BANCO_DADOS")
-                .confianca("ALTA")
-                .build())
-            .build();
+                .ticker(ticker)
+                .tipoAtivo(tipo)
+                .nomeEmpresa(etfData.nomeEtf())
+                .dataAtualizacao(etfData.dataAtualizacao())
+                .dadosEtf(etfData)
+                .cotacao(etfData.valorAtual())
+                .variacao(etfData.variacao12M())
+                .classificacao(ClassificacaoInfo.builder()
+                        .metodo("BANCO_DADOS")
+                        .confianca("ALTA")
+                        .build())
+                .build();
     }
 
     /**
-     * Factory method para criar resposta de BDR.
-     */
-    public static AtivoResponseDTO fromBdr(String ticker, TipoAtivoFinanceiroVariavel tipo, BdrResponseDTO bdrData) {
-        Long volumeMedio = null;
-        if (bdrData.indicadores() != null && bdrData.indicadores().volumeMedio() != null) {
-            volumeMedio = bdrData.indicadores().volumeMedio().longValue();
-        }
-        return AtivoResponseDTO.builder()
-            .ticker(ticker)
-            .tipoAtivo(tipo)
-            .nomeEmpresa(bdrData.nomeEmpresa() != null ? bdrData.nomeEmpresa() : bdrData.nomeAcaoOriginal())
-            .dataAtualizacao(LocalDateTime.now())
-            .dadosBdr(bdrData)
-            .cotacao(bdrData.precoAtual())
-            .variacaoPercentual(bdrData.variacaoDia())
-            .volume(volumeMedio)
-            .classificacao(ClassificacaoInfo.builder()
-                .metodo("BANCO_DADOS")
-                .confianca("ALTA")
-                .build())
-            .build();
-    }
-    
-    /**
      * Factory method para criar resposta da API Brapi
      */
-    public static AtivoResponseDTO fromBrapi(String ticker, TipoAtivoFinanceiroVariavel tipo, 
-                                           String shortName, String longName, 
-                                           BigDecimal regularMarketPrice, BigDecimal regularMarketChange,
-                                           BigDecimal regularMarketChangePercent, Long regularMarketVolume,
-                                           String currency, String logoUrl, BigDecimal marketCap,
-                                           BigDecimal regularMarketDayHigh, BigDecimal regularMarketDayLow,
-                                           String regularMarketDayRange, BigDecimal regularMarketPreviousClose,
-                                           BigDecimal regularMarketOpen, String fiftyTwoWeekRange,
-                                           BigDecimal fiftyTwoWeekLow, BigDecimal fiftyTwoWeekHigh,
-                                           BigDecimal priceEarnings, BigDecimal earningsPerShare) {
+    public static AtivoResponseDTO fromBrapi(String ticker, TipoAtivoFinanceiroVariavel tipo,
+                                             String shortName, String longName,
+                                             BigDecimal regularMarketPrice, BigDecimal regularMarketChange,
+                                             BigDecimal regularMarketChangePercent, Long regularMarketVolume,
+                                             String currency, String logoUrl, BigDecimal marketCap,
+                                             BigDecimal regularMarketDayHigh, BigDecimal regularMarketDayLow,
+                                             String regularMarketDayRange, BigDecimal regularMarketPreviousClose,
+                                             BigDecimal regularMarketOpen, String fiftyTwoWeekRange,
+                                             BigDecimal fiftyTwoWeekLow, BigDecimal fiftyTwoWeekHigh,
+                                             BigDecimal priceEarnings, BigDecimal earningsPerShare) {
         return AtivoResponseDTO.builder()
-            .ticker(ticker)
-            .tipoAtivo(tipo)
-            .nomeEmpresa(shortName != null && !shortName.trim().isEmpty() ? shortName : longName)
-            .dataAtualizacao(LocalDateTime.now())
-            .cotacao(regularMarketPrice)
-            .variacao(regularMarketChange)
-            .variacaoPercentual(regularMarketChangePercent)
-            .volume(regularMarketVolume)
-            .currency(currency)
-            .logoUrl(logoUrl)
-            .marketCap(marketCap)
-            .regularMarketDayHigh(regularMarketDayHigh)
-            .regularMarketDayLow(regularMarketDayLow)
-            .regularMarketDayRange(regularMarketDayRange)
-            .regularMarketPreviousClose(regularMarketPreviousClose)
-            .regularMarketOpen(regularMarketOpen)
-            .fiftyTwoWeekRange(fiftyTwoWeekRange)
-            .fiftyTwoWeekLow(fiftyTwoWeekLow)
-            .fiftyTwoWeekHigh(fiftyTwoWeekHigh)
-            .priceEarnings(priceEarnings)
-            .earningsPerShare(earningsPerShare)
-            .classificacao(ClassificacaoInfo.builder()
-                .metodo("API_BRAPI")
-                .confianca("MEDIA")
-                .observacao("Dados obtidos da API Brapi")
-                .build())
-            .build();
+                .ticker(ticker)
+                .tipoAtivo(tipo)
+                .nomeEmpresa(shortName != null && !shortName.trim().isEmpty() ? shortName : longName)
+                .dataAtualizacao(LocalDateTime.now())
+                .cotacao(regularMarketPrice)
+                .variacao(regularMarketChange)
+                .variacaoPercentual(regularMarketChangePercent)
+                .volume(regularMarketVolume)
+                .currency(currency)
+                .logoUrl(logoUrl)
+                .marketCap(marketCap)
+                .regularMarketDayHigh(regularMarketDayHigh)
+                .regularMarketDayLow(regularMarketDayLow)
+                .regularMarketDayRange(regularMarketDayRange)
+                .regularMarketPreviousClose(regularMarketPreviousClose)
+                .regularMarketOpen(regularMarketOpen)
+                .fiftyTwoWeekRange(fiftyTwoWeekRange)
+                .fiftyTwoWeekLow(fiftyTwoWeekLow)
+                .fiftyTwoWeekHigh(fiftyTwoWeekHigh)
+                .priceEarnings(priceEarnings)
+                .earningsPerShare(earningsPerShare)
+                .classificacao(ClassificacaoInfo.builder()
+                        .metodo("API_BRAPI")
+                        .confianca("MEDIA")
+                        .observacao("Dados obtidos da API Brapi")
+                        .build())
+                .build();
     }
-    
+
     private static String determinarMetodoClassificacao(TipoAtivoFinanceiroVariavel tipo) {
         // Lógica para determinar como foi classificado
         return switch (tipo) {
