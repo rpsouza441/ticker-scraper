@@ -13,4 +13,8 @@ public interface BdrPersistenceMapper {
 
     // Entity -> Domain
     Bdr toDomain(BdrEntity entity);
+
+    // Atualização parcial (ignora nulos do domínio)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntity(Bdr source, @MappingTarget BdrEntity target);
 }
