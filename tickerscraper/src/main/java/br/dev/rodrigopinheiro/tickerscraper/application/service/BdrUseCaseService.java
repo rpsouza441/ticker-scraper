@@ -72,9 +72,18 @@ public class BdrUseCaseService
     @Override
     protected Mono<BdrDadosFinanceirosDTO> readRawFromStore(String ticker) { return Mono.empty(); }
 
-    @Override public Mono<BdrRawDataResponse> getRawTickerData(String ticker) {
-        return super.getRawTickerDataAsResponse(ticker);
+    //TODO retornar ao padrão quando terminar de criar o scraper
+    //    @Override public Mono<BdrRawDataResponse> getRawTickerData(String ticker) {
+    //        return super.getRawTickerDataAsResponse(ticker);
+    //    }
+    @Override
+    public Mono<BdrRawDataResponse> getRawTickerData(String ticker) {
+        final String t = normalize(ticker);
+        return scrape(t) // chama diretamente o scraper (SEM persistir)
+                .map(this::convertToRawResponse)
+                .onErrorReturn(createFailedResponse(t, "SCRAPER", "Falha na coleta de dados"));
     }
+
 
     @Override
     protected BdrRawDataResponse convertToRawResponse(BdrDadosFinanceirosDTO infraDto) {
