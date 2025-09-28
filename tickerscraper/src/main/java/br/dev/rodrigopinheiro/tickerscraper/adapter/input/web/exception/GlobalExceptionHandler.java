@@ -27,7 +27,26 @@ import java.util.regex.Pattern;
 public class GlobalExceptionHandler {
     
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-    
+
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomain(DomainException ex, WebRequest request) {
+        HttpStatus status = switch (ex.getCode()) {
+            case DOMAIN_VALIDATION, DIVIDEND_INVALID -> HttpStatus.UNPROCESSABLE_ENTITY; // 422
+            case INVARIANT_VIOLATION -> HttpStatus.CONFLICT;                             // 409
+            case TICKER_NOT_FOUND -> HttpStatus.NOT_FOUND;                               // 404
+        };
+
+        var error = ErrorResponse.builder()
+                .code(ex.getCode().name())            // "DOMAIN_VALIDATION" etc.
+                .message(ex.getMessage())
+                .retryable(false)
+                .timestamp(LocalDateTime.now())
+                .correlationId(getCorrelationId())
+                .build();
+
+        return ResponseEntity.status(status).body(error);
+    }
+
     @ExceptionHandler(ScrapingTimeoutException.class)
     public ResponseEntity<ErrorResponse> handleScrapingTimeout(ScrapingTimeoutException ex, WebRequest request) {
         logger.warn("[{}] Timeout no scraping: ticker={}, url={}, timeout={}s", 

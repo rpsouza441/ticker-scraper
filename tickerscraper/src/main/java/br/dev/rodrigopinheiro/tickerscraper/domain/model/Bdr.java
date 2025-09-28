@@ -1,26 +1,20 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.ParidadeMethod;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.enums.TipoAtivo;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
-public class Bdr {
-    // Identificação e auditoria
-    private Integer investidorId;              // id interno do Investidor10 (quando conhecido)
-    private Instant updatedAt;                 // instante UTC do snapshot
+public class Bdr extends AtivoFinanceiro {
 
     // Identidade do papel
-    private String ticker;                     // ex.: "AAPL34"
-    private String nomeBdr;                    // ex.: "Apple"
     private String setor;
     private String industria;
 
     // Moedas/cotação
     private String priceCurrency;              // "BRL"
     private String financialsCurrency;         // "USD"
-    private BigDecimal cotacao;                // BRL
-    private Double variacao12;                 // % decimal (12.34 = 12,34%)
 
     // Market cap
     private BigDecimal marketCapValue;
@@ -28,7 +22,6 @@ public class Bdr {
 
     // Paridade
     private BigDecimal paridadeRatio;          // BDRs por 1 ação (ex.: 20.0)
-    private ParidadeMethod paridadeMethod;     // HTML | MANUAL | OUTRO
     private Instant paridadeLastVerifiedAt;
 
     // Indicadores (current)
@@ -68,27 +61,20 @@ public class Bdr {
     private BigDecimal fciUsd;
     private BigDecimal fcfUsd;
 
-    // Dividendos (último ano)
-    private Dividendo dividendo;
 
     public Bdr() {
+        super();
     }
 
-    public Bdr(Integer investidorId, Instant updatedAt, String ticker, String nomeBdr, String setor, String industria, String priceCurrency, String financialsCurrency, BigDecimal cotacao, Double variacao12, BigDecimal marketCapValue, String marketCapCurrency, BigDecimal paridadeRatio, ParidadeMethod paridadeMethod, Instant paridadeLastVerifiedAt, BigDecimal pl, BigDecimal pvp, BigDecimal psr, BigDecimal pEbit, BigDecimal pEbitda, BigDecimal pAtivo, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal margemBruta, BigDecimal margemOperacional, BigDecimal margemLiquida, BigDecimal vpa, BigDecimal lpa, Integer dreYear, BigDecimal receitaTotalUsd, BigDecimal lucroBrutoUsd, BigDecimal ebitdaUsd, BigDecimal ebitUsd, BigDecimal lucroLiquidoUsd, Integer bpYear, BigDecimal ativosTotaisUsd, BigDecimal passivosTotaisUsd, BigDecimal dividaLpUsd, BigDecimal plUsd, Integer fcYear, BigDecimal fcoUsd, BigDecimal fciUsd, BigDecimal fcfUsd, Dividendo dividendo) {
-        this.investidorId = investidorId;
-        this.updatedAt = updatedAt;
-        this.ticker = ticker;
-        this.nomeBdr = nomeBdr;
+    public Bdr(Integer investidorId, String ticker, String nome, BigDecimal precoAtual, BigDecimal variacao12M, BigDecimal dividendYield, Instant dataAtualizacao, TipoAtivo tipoAtivo, List<Dividendo> dividendos, String setor, String industria, String priceCurrency, String financialsCurrency, BigDecimal marketCapValue, String marketCapCurrency, BigDecimal paridadeRatio, Instant paridadeLastVerifiedAt, BigDecimal pl, BigDecimal pvp, BigDecimal psr, BigDecimal pEbit, BigDecimal pEbitda, BigDecimal pAtivo, BigDecimal roe, BigDecimal roic, BigDecimal roa, BigDecimal margemBruta, BigDecimal margemOperacional, BigDecimal margemLiquida, BigDecimal vpa, BigDecimal lpa, Integer dreYear, BigDecimal receitaTotalUsd, BigDecimal lucroBrutoUsd, BigDecimal ebitdaUsd, BigDecimal ebitUsd, BigDecimal lucroLiquidoUsd, Integer bpYear, BigDecimal ativosTotaisUsd, BigDecimal passivosTotaisUsd, BigDecimal dividaLpUsd, BigDecimal plUsd, Integer fcYear, BigDecimal fcoUsd, BigDecimal fciUsd, BigDecimal fcfUsd) {
+        super(investidorId, ticker, nome, precoAtual, variacao12M, dividendYield, dataAtualizacao, tipoAtivo, dividendos);
         this.setor = setor;
         this.industria = industria;
         this.priceCurrency = priceCurrency;
         this.financialsCurrency = financialsCurrency;
-        this.cotacao = cotacao;
-        this.variacao12 = variacao12;
         this.marketCapValue = marketCapValue;
         this.marketCapCurrency = marketCapCurrency;
         this.paridadeRatio = paridadeRatio;
-        this.paridadeMethod = paridadeMethod;
         this.paridadeLastVerifiedAt = paridadeLastVerifiedAt;
         this.pl = pl;
         this.pvp = pvp;
@@ -119,39 +105,6 @@ public class Bdr {
         this.fcoUsd = fcoUsd;
         this.fciUsd = fciUsd;
         this.fcfUsd = fcfUsd;
-        this.dividendo = dividendo;
-    }
-
-    public Integer getInvestidorId() {
-        return investidorId;
-    }
-
-    public void setInvestidorId(Integer investidorId) {
-        this.investidorId = investidorId;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getTicker() {
-        return ticker;
-    }
-
-    public void setTicker(String ticker) {
-        this.ticker = ticker;
-    }
-
-    public String getNomeBdr() {
-        return nomeBdr;
-    }
-
-    public void setNomeBdr(String nomeBdr) {
-        this.nomeBdr = nomeBdr;
     }
 
     public String getSetor() {
@@ -186,22 +139,6 @@ public class Bdr {
         this.financialsCurrency = financialsCurrency;
     }
 
-    public BigDecimal getCotacao() {
-        return cotacao;
-    }
-
-    public void setCotacao(BigDecimal cotacao) {
-        this.cotacao = cotacao;
-    }
-
-    public Double getVariacao12() {
-        return variacao12;
-    }
-
-    public void setVariacao12(Double variacao12) {
-        this.variacao12 = variacao12;
-    }
-
     public BigDecimal getMarketCapValue() {
         return marketCapValue;
     }
@@ -224,14 +161,6 @@ public class Bdr {
 
     public void setParidadeRatio(BigDecimal paridadeRatio) {
         this.paridadeRatio = paridadeRatio;
-    }
-
-    public ParidadeMethod getParidadeMethod() {
-        return paridadeMethod;
-    }
-
-    public void setParidadeMethod(ParidadeMethod paridadeMethod) {
-        this.paridadeMethod = paridadeMethod;
     }
 
     public Instant getParidadeLastVerifiedAt() {
@@ -472,13 +401,5 @@ public class Bdr {
 
     public void setFcfUsd(BigDecimal fcfUsd) {
         this.fcfUsd = fcfUsd;
-    }
-
-    public Dividendo getDividendo() {
-        return dividendo;
-    }
-
-    public void setDividendo(Dividendo dividendo) {
-        this.dividendo = dividendo;
     }
 }

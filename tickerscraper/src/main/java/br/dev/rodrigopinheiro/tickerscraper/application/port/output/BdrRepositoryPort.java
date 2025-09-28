@@ -14,8 +14,14 @@ public interface BdrRepositoryPort {
 
     Optional<Bdr> findByTicker(String ticker);
 
+    /** Retorna com dividendos carregados (fetch join). */
+    Optional<Bdr> findByTickerWithDividendos(String ticker);
+
     boolean existsByTicker(String ticker);
 
-    /** Upsert por ticker: cria se não existir; atualiza campos não-nulos se existir. */
+    /** Upsert por ticker (cria/atualiza campos não-nulos). */
     Bdr save(Bdr bdr);
+
+    /** Opcional: salva substituindo dividendos (delete-all + insert). */
+    Bdr saveReplacingDividends(Bdr bdr);
 }
