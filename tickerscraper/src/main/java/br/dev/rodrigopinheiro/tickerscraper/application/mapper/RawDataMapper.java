@@ -10,9 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Mapper MapStruct para conversão de DTOs entre camadas de infraestrutura e application.
@@ -30,10 +28,10 @@ import java.util.Map;
  *
  * @author Sistema de Scraping
  * @since 1.0
- * @see org.mapstruct.Mapper
- * @see br.dev.rodrigopinheiro.tickerscraper.application.dto.AcaoRawDataResponse
- * @see br.dev.rodrigopinheiro.tickerscraper.application.dto.EtfRawDataResponse
- * @see br.dev.rodrigopinheiro.tickerscraper.application.dto.FiiRawDataResponse
+ * @see Mapper
+ * @see AcaoRawDataResponse
+ * @see EtfRawDataResponse
+ * @see FiiRawDataResponse
  */
 @Mapper(componentModel = "spring")
 public interface RawDataMapper {
@@ -41,7 +39,7 @@ public interface RawDataMapper {
     /**
      * Converte DTO de infraestrutura de Ação para DTO da camada application.
      *
-     * <p>Utiliza mapeamento declarativo do MapStruct com métodos auxiliares qualificados
+     * <p>Utiliza mapeamento declarativo do MapStruct com Methods auxiliares qualificados
      * para lógica de conversão complexa. O mapeamento inclui:</p>
      * <ul>
      *   <li>Extração do ticker do header com valor padrão</li>
@@ -65,7 +63,7 @@ public interface RawDataMapper {
     /**
      * Constrói mapa de dados brutos para Ação a partir do DTO de infraestrutura.
      *
-     * <p>Método auxiliar do MapStruct que extrai e organiza dados de diferentes
+     * <p>Method auxiliar do MapStruct que extrai e organiza dados de diferentes
      * seções do DTO de infraestrutura em um mapa chave-valor estruturado.</p>
      *
      * @param infraDto DTO de infraestrutura da ação
@@ -113,7 +111,7 @@ public interface RawDataMapper {
     /**
      * Determina status de processamento baseado na completude dos dados da Ação.
      *
-     * <p>Método auxiliar do MapStruct que analisa a qualidade e completude
+     * <p>method auxiliar do MapStruct que analisa a qualidade e completude
      * dos dados coletados para determinar o status apropriado.</p>
      *
      * @param infraDto DTO de infraestrutura da ação
@@ -130,7 +128,7 @@ public interface RawDataMapper {
     /**
      * Constrói metadados descritivos sobre os dados coletados da Ação.
      *
-     * <p>Método auxiliar do MapStruct que gera informações estatísticas
+     * <p>Method auxiliar do MapStruct que gera informações estatísticas
      * sobre a completude e qualidade dos dados coletados.</p>
      *
      * @param infraDto DTO de infraestrutura da ação
@@ -154,7 +152,7 @@ public interface RawDataMapper {
 
     /**
      * Converte FiiDadosFinanceirosDTO (infraestrutura) para FiiRawDataResponse (application).
-     * Utiliza MapStruct para mapeamento declarativo com métodos auxiliares para lógica complexa.
+     * Utiliza MapStruct para mapeamento declarativo com Methods auxiliares para lógica complexa.
      *
      * @param infraDto DTO de infraestrutura com dados coletados
      * @param apiUrls URLs das APIs capturadas durante o scraping
@@ -184,7 +182,7 @@ public interface RawDataMapper {
     /**
      * Constrói mapa de dados brutos para FII a partir do DTO de infraestrutura.
      *
-     * <p>Método auxiliar do MapStruct que extrai e organiza dados específicos de FII
+     * <p>Method auxiliar do MapStruct que extrai e organiza dados específicos de FII
      * de diferentes seções do DTO em um mapa chave-valor estruturado. Inclui dados
      * de header, cards, informações sobre o fundo, cotação, histórico e dividendos.</p>
      *
@@ -235,7 +233,7 @@ public interface RawDataMapper {
     /**
      * Determina status de processamento baseado na completude dos dados do FII.
      *
-     * <p>Método auxiliar do MapStruct que analisa a qualidade e completude
+     * <p>Method auxiliar do MapStruct que analisa a qualidade e completude
      * dos dados específicos de FII para determinar o status apropriado.</p>
      *
      * @param infraDto DTO de infraestrutura do FII
@@ -252,7 +250,7 @@ public interface RawDataMapper {
     /**
      * Constrói metadados descritivos sobre os dados coletados do FII.
      *
-     * <p>Método auxiliar do MapStruct que gera informações estatísticas específicas
+     * <p>Method auxiliar do MapStruct que gera informações estatísticas específicas
      * de FII, incluindo contagem de APIs capturadas e completude de seções específicas.</p>
      *
      * @param infraDto DTO de infraestrutura do FII
@@ -281,7 +279,7 @@ public interface RawDataMapper {
     /**
      * Determina status de processamento baseado na análise de completude dos dados.
      *
-     * <p>Método utilitário compartilhado que implementa a lógica de negócio para
+     * <p>Method utilitário compartilhado que implementa a lógica de negócio para
      * determinar se os dados coletados estão completos, parciais ou falharam completamente.
      * Verifica a presença de ticker e dados de valor para classificação.</p>
      *
@@ -309,7 +307,7 @@ public interface RawDataMapper {
     /**
      * Cria resposta de falha padronizada para operações de Ação.
      *
-     * <p>Método de conveniência que encapsula a criação de respostas de erro
+     * <p>Method de conveniência que encapsula a criação de respostas de erro
      * para operações de scraping de ações que falharam completamente.</p>
      *
      * @param ticker Código da ação
@@ -324,7 +322,7 @@ public interface RawDataMapper {
     /**
      * Cria resposta de falha padronizada para operações de FII.
      *
-     * <p>Método de conveniência que encapsula a criação de respostas de erro
+     * <p>Method de conveniência que encapsula a criação de respostas de erro
      * para operações de scraping de FIIs que falharam completamente.</p>
      *
      * @param ticker Código do FII
@@ -338,7 +336,7 @@ public interface RawDataMapper {
 
     /**
      * Converte EtfDadosFinanceirosDTO (infraestrutura) para EtfRawDataResponse (application).
-     * Utiliza MapStruct para mapeamento declarativo com métodos auxiliares para lógica complexa.
+     * Utiliza MapStruct para mapeamento declarativo com Methods auxiliares para lógica complexa.
      *
      * @param infraDto DTO de infraestrutura com dados coletados
      * @return DTO da application estruturado
@@ -366,7 +364,7 @@ public interface RawDataMapper {
     /**
      * Constrói mapa de dados brutos para ETF a partir do DTO de infraestrutura.
      *
-     * <p>Método auxiliar do MapStruct que extrai e organiza dados específicos de ETF
+     * <p>Method auxiliar do MapStruct que extrai e organiza dados específicos de ETF
      * de diferentes seções do DTO em um mapa chave-valor estruturado. Inclui dados
      * de header e cards com informações financeiras do ETF.</p>
      *
@@ -400,7 +398,7 @@ public interface RawDataMapper {
     /**
      * Determina status de processamento baseado na completude dos dados do ETF.
      *
-     * <p>Método auxiliar do MapStruct que analisa a qualidade e completude
+     * <p>Method auxiliar do MapStruct que analisa a qualidade e completude
      * dos dados específicos de ETF para determinar o status apropriado.</p>
      *
      * @param infraDto DTO de infraestrutura do ETF
@@ -417,7 +415,7 @@ public interface RawDataMapper {
     /**
      * Constrói metadados descritivos sobre os dados coletados do ETF.
      *
-     * <p>Método auxiliar do MapStruct que gera informações estatísticas específicas
+     * <p>Method auxiliar do MapStruct que gera informações estatísticas específicas
      * de ETF, incluindo completude de seções específicas.</p>
      *
      * @param infraDto DTO de infraestrutura do ETF
@@ -440,7 +438,7 @@ public interface RawDataMapper {
     /**
      * Cria resposta de falha padronizada para operações de ETF.
      *
-     * <p>Método de conveniência que encapsula a criação de respostas de erro
+     * <p>Method de conveniência que encapsula a criação de respostas de erro
      * para operações de scraping de ETFs que falharam completamente.</p>
      *
      * @param ticker Código do ETF
@@ -454,102 +452,282 @@ public interface RawDataMapper {
 
 
 
-    /** Converte BdrDadosFinanceirosDTO (infra) para BdrRawDataResponse (application). */
-    default BdrRawDataResponse toBdrRawDataResponse(BdrDadosFinanceirosDTO infraDto,
-                                                    Map<String, String> apiUrls) {
+    // Adicionar ao RawDataMapper existente:
+
+    /**
+     * Converte BdrDadosFinanceirosDTO para BdrRawDataResponse.
+     *
+     * @param infraDto DTO de infraestrutura com dados coletados
+     * @param apiUrls URLs das APIs capturadas (pode ser null)
+     * @return DTO da application estruturado
+     */
+    default BdrRawDataResponse toBdrRawDataResponse(
+            BdrDadosFinanceirosDTO infraDto,
+            Map<String, String> apiUrls
+    ) {
         if (infraDto == null) {
-            return createFailedBdrResponse("UNKNOWN", "SCRAPER", "DTO de infraestrutura nulo");
+            return BdrRawDataResponse.failed("UNKNOWN", "SCRAPER", "DTO de infraestrutura nulo");
         }
 
-        String ticker = infraDto.infoHeader() != null ? infraDto.infoHeader().ticker() : "UNKNOWN";
-        Map<String, Object> rawData = buildBdrRawDataMap(infraDto);
-        ProcessingStatus status = determineBdrProcessingStatus(infraDto);
-        Map<String, String> metadata = buildBdrMetadata(infraDto, apiUrls);
+        String ticker = infraDto.infoHeader() != null ?
+                infraDto.infoHeader().ticker() : "UNKNOWN";
 
-        return new BdrRawDataResponse(
-                ticker,
-                rawData,
-                "PLAYWRIGHT_SCRAPER",
-                java.time.LocalDateTime.now(),
-                status,
-                metadata,
-                apiUrls != null ? apiUrls : Map.of()
-        );
+        try {
+            // Build raw data map
+            Map<String, Object> rawData = buildBdrRawDataMap(infraDto);
+
+            // Build metadata
+            Map<String, Object> metadata = buildBdrMetadata(infraDto, apiUrls);
+
+            // Determine processing status
+            ProcessingStatus status = determineBdrProcessingStatus(infraDto);
+
+            // Return appropriate response based on status
+            return switch (status) {
+                case SUCCESS -> BdrRawDataResponse.success(ticker, rawData, "SCRAPER", metadata);
+                case PARTIAL -> {
+                    String reason = determinePartialReason(infraDto);
+                    yield BdrRawDataResponse.partial(ticker, rawData, "SCRAPER", metadata, reason);
+                }
+                case FAILED -> BdrRawDataResponse.failed(ticker, "SCRAPER", "Dados insuficientes");
+                case CACHED -> null;
+                case FALLBACK -> null;
+            };
+
+        } catch (Exception e) {
+            return BdrRawDataResponse.failed(ticker, "SCRAPER", "Erro no mapeamento: " + e.getMessage());
+        }
     }
 
-    /** Monta mapa bruto para BDR (header, cards, indicadores, DRE/BP/FC, dividendos, paridade). */
+
+    /**
+     * Determina a razão específica para status PARTIAL
+     */
+    @Named("determinePartialReason")
+    default String determinePartialReason(BdrDadosFinanceirosDTO infraDto) {
+        List<String> missing = new ArrayList<>();
+
+        if (infraDto.infoHeader() == null || infraDto.infoHeader().ticker() == null) {
+            missing.add("header");
+        }
+        if (infraDto.infoCards() == null || infraDto.infoCards().cotacao() == null) {
+            missing.add("cotacao");
+        }
+        if (infraDto.indicadores() == null || infraDto.indicadores().isEmpty()) {
+            missing.add("indicadores");
+        }
+        if (infraDto.demonstrativos() == null ||
+                ((infraDto.demonstrativos().dre() == null || infraDto.demonstrativos().dre().isEmpty()) &&
+                        (infraDto.demonstrativos().bp() == null || infraDto.demonstrativos().bp().isEmpty()) &&
+                        (infraDto.demonstrativos().fc() == null || infraDto.demonstrativos().fc().isEmpty()))) {
+            missing.add("demonstrativos");
+        }
+
+
+        return missing.isEmpty() ? "Dados incompletos" :
+                "Faltando: " + String.join(", ", missing);
+    }
+    /**
+     * Method auxiliar do MapStruct que extrai e organiza dados específicos de BDR
+     * de diferentes seções do DTO em um mapa chave-valor estruturado. Inclui dados
+     * de header, cards, informações sobre o BDR, indicadores, demonstrativos e dividendos.
+     *
+     * @param infraDto DTO de infraestrutura do BDR
+     * @return Mapa com dados brutos organizados por categoria
+     */
     @Named("buildBdrRawDataMap")
     default Map<String, Object> buildBdrRawDataMap(BdrDadosFinanceirosDTO infraDto) {
-        Map<String, Object> raw = Collections.synchronizedMap(new HashMap<>());
-        if (infraDto == null) return raw;
+        if (infraDto == null) return Collections.emptyMap();
+
+        Map<String, Object> rawData = new HashMap<>();
 
         // Header
         if (infraDto.infoHeader() != null) {
-            raw.put("ticker", infraDto.infoHeader().ticker());
-            raw.put("nomeBdr", infraDto.infoHeader().nomeBdr());
+            Map<String, Object> header = new HashMap<>();
+            header.put("ticker", infraDto.infoHeader().ticker());
+            header.put("nomeBdr", infraDto.infoHeader().nomeBdr());
+            rawData.put("header", header);
         }
 
-        // Cards (cotação/variação)
+        // Cards (cotação, variação)
         if (infraDto.infoCards() != null) {
-            raw.put("cotacao", infraDto.infoCards().cotacao());
-            raw.put("variacao12M", infraDto.infoCards().variacao12M());
+            Map<String, Object> cards = new HashMap<>();
+            cards.put("cotacao", infraDto.infoCards().cotacao());
+            cards.put("variacao12M", infraDto.infoCards().variacao12M());
+            rawData.put("cards", cards);
         }
 
-        // Paridade e market cap / setor / indústria
+        // Info Sobre (setor, indústria, market cap, paridade)
         if (infraDto.infoSobre() != null) {
-            raw.put("paridade", infraDto.infoSobre().paridade());
-            raw.put("marketCap", infraDto.infoSobre().marketCap());
-            raw.put("setor", infraDto.infoSobre().setor());
-            raw.put("industria", infraDto.infoSobre().industria());
+            Map<String, Object> sobre = new HashMap<>();
+            sobre.put("marketCapText", infraDto.infoSobre().marketCapText());
+            sobre.put("setor", infraDto.infoSobre().setor());
+            sobre.put("industria", infraDto.infoSobre().industria());
+            sobre.put("paridadeText", infraDto.infoSobre().paridadeText());
+            rawData.put("sobre", sobre);
         }
 
-        // Indicadores fundamentais (atual)
-        if (infraDto.fundamentalIndicators() != null) {
-            raw.put("indicadores", infraDto.fundamentalIndicators());
+        // Indicadores
+        if (infraDto.indicadores() != null && !infraDto.indicadores().isEmpty()) {
+            rawData.put("indicadores", infraDto.indicadores());
         }
 
-        // Demonstrativos (DRE/BP/FC)
+        // Demonstrativos
         if (infraDto.demonstrativos() != null) {
-            raw.put("dre", infraDto.demonstrativos().dre());
-            raw.put("bp", infraDto.demonstrativos().bp());
-            raw.put("fc", infraDto.demonstrativos().fc());
+            Map<String, Object> demonstrativos = new HashMap<>();
+            if (infraDto.demonstrativos().dre() != null) {
+                demonstrativos.put("dre", infraDto.demonstrativos().dre());
+            }
+            if (infraDto.demonstrativos().bp() != null) {
+                demonstrativos.put("bp", infraDto.demonstrativos().bp());
+            }
+            if (infraDto.demonstrativos().fc() != null) {
+                demonstrativos.put("fc", infraDto.demonstrativos().fc());
+            }
+            if (!demonstrativos.isEmpty()) {
+                rawData.put("demonstrativos", demonstrativos);
+            }
         }
 
-        // Dividendos (anual)
-        if (infraDto.dividendos() != null) {
-            raw.put("dividendos", infraDto.dividendos());
+        // Dividendos
+        if (infraDto.dividendos() != null && !infraDto.dividendos().isEmpty()) {
+            rawData.put("dividendos", infraDto.dividendos());
         }
 
-        return raw;
+        // Timestamp
+        rawData.put("updatedAt", infraDto.updatedAt());
+
+        return rawData;
     }
 
-    /** Determina status de processamento para BDR. */
+    /**
+     * Method auxiliar do MapStruct que analisa a qualidade e completude
+     * dos dados específicos de BDR para determinar o status apropriado.
+     *
+     * @param infraDto DTO de infraestrutura do BDR
+     * @return Status de processamento (SUCCESS, PARTIAL, FAILED)
+     */
+// Coloque este Method dentro de RawDataMapper.java
     @Named("determineBdrProcessingStatus")
     default ProcessingStatus determineBdrProcessingStatus(BdrDadosFinanceirosDTO infraDto) {
-        if (infraDto == null) return ProcessingStatus.FAILED;
-        Map<String, Object> raw = buildBdrRawDataMap(infraDto);
-        return determineProcessingStatus(raw);
+        if (infraDto == null || infraDto.infoHeader() == null) {
+            return ProcessingStatus.FAILED;
+        }
+
+        // Define o que consideramos essencial para ser "SUCCESS"
+        boolean hasHeader = infraDto.infoHeader() != null && infraDto.infoHeader().ticker() != null;
+        boolean hasCards = infraDto.infoCards() != null && infraDto.infoCards().cotacao() != null;
+        boolean hasSobre = infraDto.infoSobre() != null && infraDto.infoSobre().setor() != null;
+        boolean hasIndicadores = infraDto.indicadores() != null && !infraDto.indicadores().isEmpty();
+        boolean hasDemonstrativos = infraDto.demonstrativos() != null && infraDto.demonstrativos().dre() != null;
+        boolean hasDividendos = infraDto.dividendos() != null && !infraDto.dividendos().isEmpty();
+
+        // Se todas as seções principais foram capturadas, é sucesso.
+        if (hasHeader && hasCards && hasSobre && hasIndicadores && hasDemonstrativos && hasDividendos) {
+            return ProcessingStatus.SUCCESS;
+        }
+
+        // Se tivermos pelo menos o cabeçalho e mais alguma coisa, é parcial.
+        if (hasHeader && (hasCards || hasSobre || hasIndicadores)) {
+            return ProcessingStatus.PARTIAL;
+        }
+
+        return ProcessingStatus.FAILED;
     }
 
-    /** Metadados para BDR (completude + APIs capturadas). */
+    /**
+     * Method auxiliar do MapStruct que gera informações estatísticas específicas
+     * de BDR, incluindo contagem de APIs capturadas e completude de seções específicas.
+     *
+     * @param infraDto DTO de infraestrutura do BDR
+     * @param apiUrls URLs das APIs capturadas durante o scraping
+     * @return Mapa com metadados descritivos específicos de BDR
+     */
     @Named("buildBdrMetadata")
-    default Map<String, String> buildBdrMetadata(BdrDadosFinanceirosDTO infraDto, Map<String, String> apiUrls) {
-        if (infraDto == null) return Map.of("total_fields", "0", "apis_captured", "0");
-        Map<String, Object> raw = buildBdrRawDataMap(infraDto);
-        return Map.of(
-                "total_fields", String.valueOf(raw.size()),
-                "apis_captured", String.valueOf(apiUrls != null ? apiUrls.size() : 0),
-                "has_header", String.valueOf(infraDto.infoHeader() != null),
-                "has_cards", String.valueOf(infraDto.infoCards() != null),
-                "has_sobre", String.valueOf(infraDto.infoSobre() != null),
-                "has_indicators", String.valueOf(infraDto.fundamentalIndicators() != null),
-                "has_demonstrativos", String.valueOf(infraDto.demonstrativos() != null),
-                "has_dividendos", String.valueOf(infraDto.dividendos() != null)
-        );
+    default Map<String, Object> buildBdrMetadata(BdrDadosFinanceirosDTO infraDto,
+                                                 Map<String, String> apiUrls) {
+        if (infraDto == null) return Collections.emptyMap();
+
+        Map<String, Object> metadata = new HashMap<>();
+
+        // Informações básicas
+        metadata.put("scrapingTimestamp", LocalDateTime.now());
+        metadata.put("sourceType", "BDR");
+
+        // Completude de seções
+        int sectionsCount = 0;
+        int completeSections = 0;
+
+        if (infraDto.infoHeader() != null) {
+            sectionsCount++;
+            if (infraDto.infoHeader().ticker() != null) completeSections++;
+        }
+
+        if (infraDto.infoCards() != null) {
+            sectionsCount++;
+            if (infraDto.infoCards().cotacao() != null) completeSections++;
+        }
+
+        if (infraDto.infoSobre() != null) {
+            sectionsCount++;
+            if (infraDto.infoSobre().setor() != null ||
+                    infraDto.infoSobre().industria() != null) {
+                completeSections++;
+            }
+        }
+
+        if (infraDto.indicadores() != null && !infraDto.indicadores().isEmpty()) {
+            sectionsCount++;
+            completeSections++;
+        }
+
+        if (infraDto.demonstrativos() != null) {
+            sectionsCount++;
+            if ((infraDto.demonstrativos().dre() != null && !infraDto.demonstrativos().dre().isEmpty()) ||
+                    (infraDto.demonstrativos().bp() != null && !infraDto.demonstrativos().bp().isEmpty()) ||
+                    (infraDto.demonstrativos().fc() != null && !infraDto.demonstrativos().fc().isEmpty())) {
+                completeSections++;
+            }
+        }
+
+        if (infraDto.dividendos() != null && !infraDto.dividendos().isEmpty()) {
+            sectionsCount++;
+            completeSections++;
+        }
+
+        metadata.put("sectionsCount", sectionsCount);
+        metadata.put("completeSections", completeSections);
+        metadata.put("completenessPercentage",
+                sectionsCount > 0 ? (completeSections * 100.0 / sectionsCount) : 0.0);
+
+        // APIs capturadas
+        if (apiUrls != null && !apiUrls.isEmpty()) {
+            metadata.put("apiUrlsCount", apiUrls.size());
+            metadata.put("capturedApis", apiUrls.keySet());
+        }
+
+        // Indicadores específicos de BDR
+        if (infraDto.infoSobre() != null) {
+            metadata.put("hasMarketCap", infraDto.infoSobre().marketCapText() != null);
+            metadata.put("hasParidade", infraDto.infoSobre().paridadeText() != null);
+            metadata.put("hasSetor", infraDto.infoSobre().setor() != null);
+            metadata.put("hasIndustria", infraDto.infoSobre().industria() != null);
+        }
+
+        return metadata;
     }
 
-    /** Resposta de falha padronizada para BDR. */
+    /**
+     * Method de conveniência que encapsula a criação de respostas de erro
+     * para operações de scraping de BDRs que falharam completamente.
+     *
+     * @param ticker Código do BDR
+     * @param source Fonte da operação (ex: "SCRAPER")
+     * @param error Mensagem de erro descritiva
+     * @return Resposta de falha estruturada para BDR
+     */
     default BdrRawDataResponse createFailedBdrResponse(String ticker, String source, String error) {
         return BdrRawDataResponse.failed(ticker, source, error);
     }
+
 }

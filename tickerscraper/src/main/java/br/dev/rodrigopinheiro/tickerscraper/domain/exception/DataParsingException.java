@@ -37,7 +37,8 @@ public class DataParsingException extends ScrapingException {
     public DataParsingException(String ticker, String url, String selector, String expectedData) {
         this(ticker, url, selector, expectedData, null, null);
     }
-    
+
+
     /**
      * Construtor para erro de conversão de tipo.
      */

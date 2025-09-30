@@ -199,7 +199,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 String html = page.content();
                 Document doc = Jsoup.parse(html);
                 
-                // Validar elementos essenciais usando método da classe base
+                // Validar elementos essenciais usando method da classe base
                 validateEssentialElements(doc, ESSENTIAL_SELECTORS, CARDS_SELECTORS, ticker, url);
 
                 // Parsers (compatíveis com Selenium/Playwright)

@@ -3,9 +3,11 @@ package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.dto.AtivoResponseDTO;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.AcaoApiMapper;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.BdrApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.EtfApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.mapper.FiiApiMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.AcaoUseCasePort;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.input.BdrUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.EtfUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.FiiUseCasePort;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.TickerUseCasePort;
@@ -35,11 +37,11 @@ public class TickerUseCaseService implements TickerUseCasePort {
     private final AcaoUseCasePort acaoUseCase;
     private final FiiUseCasePort fiiUseCase;
     private final EtfUseCasePort etfUseCase;
+    private final BdrUseCasePort bdrUseCase;
     private final AcaoApiMapper acaoMapper;
     private final FiiApiMapper fiiMapper;
     private final EtfApiMapper etfMapper;
-
-    // TODO: Adicionar BdrUseCasePort quando criado
+    private final BdrApiMapper bdrMapper;
 
 
     public Mono<AtivoResponseDTO> obterAtivo(String ticker) {
@@ -169,7 +171,8 @@ public class TickerUseCaseService implements TickerUseCasePort {
                     Mono.error(new UnsupportedOperationException("ETF BDR UseCase ainda não implementado"));
 
             case BDR_NAO_PATROCINADO, BDR_PATROCINADO ->
-                    Mono.error(new UnsupportedOperationException("BDR UseCase ainda não implementado"));
+                    bdrUseCase.getTickerData(ticker)
+                            .map(bdrData -> AtivoResponseDTO.fromBdr(ticker, tipo, bdrMapper.toResponse(bdrData)));
 
             default ->
                     Mono.error(new TickerNotFoundException(

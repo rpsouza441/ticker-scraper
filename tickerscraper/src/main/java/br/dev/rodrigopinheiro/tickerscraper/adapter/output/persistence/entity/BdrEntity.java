@@ -1,15 +1,15 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.Dividendo;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 
 @Entity
 @Table(name = "bdr")
@@ -45,40 +45,40 @@ public class BdrEntity extends AtivoFinanceiroEntity {
     @Column(name = "market_cap_currency", length = 3)
     private String marketCapCurrency;
 
-    @Column(name = "paridade_ratio", precision = 19, scale = 6)
+    @Column(name = "paridade_ratio", precision = 28, scale = 6)
     private BigDecimal paridadeRatio;
 
     @Column(name = "paridade_last_verified_at")
     private Instant paridadeLastVerifiedAt;
 
     // --- Indicadores ---
-    @Column(name = "pl", precision = 19, scale = 6)
+    @Column(name = "pl", precision = 28, scale = 6)
     private BigDecimal pl;
-    @Column(name = "pvp", precision = 19, scale = 6)
+    @Column(name = "pvp", precision = 28, scale = 6)
     private BigDecimal pvp;
-    @Column(name = "psr", precision = 19, scale = 6)
+    @Column(name = "psr", precision = 28, scale = 6)
     private BigDecimal psr;
-    @Column(name = "p_ebit", precision = 19, scale = 6)
+    @Column(name = "p_ebit", precision = 28, scale = 6)
     private BigDecimal pEbit;
-    @Column(name = "p_ebitda", precision = 19, scale = 6)
+    @Column(name = "p_ebitda", precision = 28, scale = 6)
     private BigDecimal pEbitda;
-    @Column(name = "p_ativo", precision = 19, scale = 6)
+    @Column(name = "p_ativo", precision = 28, scale = 6)
     private BigDecimal pAtivo;
-    @Column(name = "roe", precision = 19, scale = 6)
+    @Column(name = "roe", precision = 28, scale = 6)
     private BigDecimal roe;
-    @Column(name = "roic", precision = 19, scale = 6)
+    @Column(name = "roic", precision = 28, scale = 6)
     private BigDecimal roic;
-    @Column(name = "roa", precision = 19, scale = 6)
+    @Column(name = "roa", precision = 28, scale = 6)
     private BigDecimal roa;
-    @Column(name = "margem_bruta", precision = 19, scale = 6)
+    @Column(name = "margem_bruta", precision = 28, scale = 6)
     private BigDecimal margemBruta;
-    @Column(name = "margem_operacional", precision = 19, scale = 6)
+    @Column(name = "margem_operacional", precision = 28, scale = 6)
     private BigDecimal margemOperacional;
-    @Column(name = "margem_liquida", precision = 19, scale = 6)
+    @Column(name = "margem_liquida", precision = 28, scale = 6)
     private BigDecimal margemLiquida;
-    @Column(name = "vpa", precision = 19, scale = 6)
+    @Column(name = "vpa", precision = 28, scale = 6)
     private BigDecimal vpa;
-    @Column(name = "lpa", precision = 19, scale = 6)
+    @Column(name = "lpa", precision = 28, scale = 6)
     private BigDecimal lpa;
 
     // --- DRE ---
@@ -116,5 +116,9 @@ public class BdrEntity extends AtivoFinanceiroEntity {
     private BigDecimal fciUsd;
     @Column(name = "fcf_usd", precision = 24, scale = 2)
     private BigDecimal fcfUsd;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "dados_brutos_json", columnDefinition = "JSONB")
+    private String dadosBrutosJson;
 
 }

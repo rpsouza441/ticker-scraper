@@ -49,7 +49,7 @@ public class FiiUseCaseService
     @Override 
     @Transactional(readOnly = true)
     protected Mono<Optional<FundoImobiliario>> findByTicker(String t) {
-        // USE o método com dividendos (fetch join no adapter JPA)
+        // USE o method com dividendos (fetch join no adapter JPA)
         return Mono.fromCallable(() -> repo.findByTickerWithDividendos(t))
                 .subscribeOn(Schedulers.boundedElastic());
     }

@@ -7,37 +7,64 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record BdrRawDataResponse(
         String ticker,
-        Map<String, Object> rawData,
         String source,
         LocalDateTime scrapingTimestamp,
         ProcessingStatus processingStatus,
-        Map<String, String> metadata,
-        Map<String, String> apiUrls
+        Map<String, Object> rawData,
+        Map<String, Object> metadata,
+        String error // Apenas em caso de falha
 ) {
-    public static BdrRawDataResponse success(String ticker, Map<String, Object> rawData,
-                                             String source, Map<String, String> apiUrls) {
+
+    // Factory method para sucesso
+    public static BdrRawDataResponse success(
+            String ticker,
+            Map<String, Object> rawData,
+            String source,
+            Map<String, Object> metadata
+    ) {
         return new BdrRawDataResponse(
-                ticker, rawData, source, LocalDateTime.now(), ProcessingStatus.SUCCESS,
-                Map.of("total_fields", String.valueOf(rawData.size()),
-                        "apis_captured", String.valueOf(apiUrls.size())),
-                apiUrls
+                ticker,
+                source,
+                LocalDateTime.now(),
+                ProcessingStatus.SUCCESS,
+                rawData,
+                metadata,
+                null // sem erro
         );
     }
-    public static BdrRawDataResponse partial(String ticker, Map<String, Object> rawData,
-                                             String source, Map<String, String> apiUrls,
-                                             String failureReason) {
+
+    // Factory method para parcial
+    public static BdrRawDataResponse partial(
+            String ticker,
+            Map<String, Object> rawData,
+            String source,
+            Map<String, Object> metadata,
+            String partialReason
+    ) {
+        Map<String, Object> enhancedMetadata = new java.util.HashMap<>(metadata);
+        enhancedMetadata.put("partial_reason", partialReason);
+
         return new BdrRawDataResponse(
-                ticker, rawData, source, LocalDateTime.now(), ProcessingStatus.PARTIAL,
-                Map.of("total_fields", String.valueOf(rawData.size()),
-                        "apis_captured", String.valueOf(apiUrls.size()),
-                        "failure_reason", failureReason),
-                apiUrls
+                ticker,
+                source,
+                LocalDateTime.now(),
+                ProcessingStatus.PARTIAL,
+                rawData,
+                enhancedMetadata,
+                null // sem erro
         );
     }
+
+    // Factory method para falha
     public static BdrRawDataResponse failed(String ticker, String source, String errorMessage) {
         return new BdrRawDataResponse(
-                ticker, Map.of(), source, LocalDateTime.now(), ProcessingStatus.FAILED,
-                Map.of("error_message", errorMessage), Map.of()
+                ticker,
+                source,
+                LocalDateTime.now(),
+                ProcessingStatus.FAILED,
+                Map.of(), // rawData vazio
+                Map.of("error_timestamp", LocalDateTime.now().toString()),
+                errorMessage
         );
     }
 }

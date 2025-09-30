@@ -52,7 +52,12 @@ public abstract class AbstractTickerUseCaseService<RAW, DOMAIN, RAW_RESPONSE> {
         
         return getRawInfrastructureData(normalizedTicker)
                 .map(this::convertToRawResponse)
-                .onErrorReturn(createFailedResponse(normalizedTicker, "SCRAPER", "Falha na coleta de dados"));
+                .onErrorResume(e ->
+                        Mono.just(createFailedResponse(
+                                normalizedTicker, "SCRAPER",
+                                "Erro no mapeamento: " + e.getClass().getSimpleName() + ": " + String.valueOf(e.getMessage())
+                        ))
+                );
     }
 
     // ---------- core persist (agora retorna DOMAIN) ----------

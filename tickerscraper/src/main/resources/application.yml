@@ -65,7 +65,7 @@ ticker:
 # Configurações da API Brapi
 brapi:
   base-url: ${BRAPI_BASE_URL:https://brapi.dev/api}
-  token: ${BRAPI_TOKEN:}
+  token: ${BRAPI_TOKEN:iteQeqeCUg9u8kW8W7xRXm}
   connect-timeout: ${BRAPI_CONNECT_TIMEOUT:2s}
   read-timeout: ${BRAPI_READ_TIMEOUT:2s}
   retry:

@@ -120,6 +120,12 @@ public abstract class AtivoFinanceiro {
         // padronize a escala se fizer sentido para você (ex.: 6 casas decimais)
         novo.setValor(novo.getValor().stripTrailingZeros()); // ou .setScale(6, RoundingMode.HALF_UP)
 
+        // Garante que a lista seja mutável antes de fazer operações de modificação
+        // Isso evita UnsupportedOperationException quando a lista é uma PersistentBag do Hibernate
+        if (!(dividendos instanceof ArrayList)) {
+            dividendos = new ArrayList<>(dividendos);
+        }
+        
         // upsert pela identidade (mes, tipo, moeda normalizada)
         dividendos.removeIf(d ->
                 d.getMes().equals(novo.getMes()) &&
@@ -134,7 +140,9 @@ public abstract class AtivoFinanceiro {
     }
 
     public void replaceDividendos(List<Dividendo> novos) {
-        dividendos.clear();
+        // Cria uma nova ArrayList ao invés de tentar limpar a lista existente
+        // Isso evita UnsupportedOperationException quando a lista é uma PersistentBag do Hibernate
+        dividendos = new ArrayList<>();
         if (novos != null) novos.forEach(this::upsertDividendo);
     }
 }

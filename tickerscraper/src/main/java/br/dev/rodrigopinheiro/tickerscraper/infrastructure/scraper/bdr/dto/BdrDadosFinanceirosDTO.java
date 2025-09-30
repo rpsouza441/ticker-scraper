@@ -1,20 +1,37 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto;
 
-import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.Instant;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record BdrDadosFinanceirosDTO(
+        @JsonProperty("infoHeader")
         InfoHeader infoHeader,
+
+        @JsonProperty("infoCards")
         InfoCards infoCards,
+
+        @JsonProperty("infoSobre")
         InfoSobre infoSobre,
-        Map<String, Object> fundamentalIndicators,
+
+        @JsonProperty("indicadores")
+        Map<String, Object> indicadores,
+
+        @JsonProperty("demonstrativos")
         Demonstrativos demonstrativos,
-        Map<String, Object> dividendos
+
+        @JsonProperty("dividendos")
+        Map<String, Object> dividendos,
+
+        @JsonProperty("updatedAt")
+        Instant updatedAt
 ) {
-    public record InfoHeader(String ticker, String nomeBdr) {}
-    public record InfoCards(BigDecimal cotacao, Double variacao12M) {}
-    public record InfoSobre(String paridade, String marketCap, String setor, String industria) {}
-    public record Demonstrativos(Map<String, Object> dre,
-                                 Map<String, Object> bp,
-                                 Map<String, Object> fc) {}
+
+
+
+
+
 }

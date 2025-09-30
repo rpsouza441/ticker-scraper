@@ -9,10 +9,15 @@ import java.time.YearMonth;
 
 
 @Entity
-@Table(name = "dividendo", indexes = {
-        @Index(name = "ix_div_mes", columnList = "mes"),
-        @Index(name = "ix_div_tipo", columnList = "tipo_dividendo")
-})
+@Table(name = "dividendo", 
+       indexes = {
+           @Index(name = "ix_div_mes", columnList = "mes"),
+           @Index(name = "ix_div_tipo", columnList = "tipo_dividendo")
+       },
+       uniqueConstraints = {
+           @UniqueConstraint(name = "uk_dividendo_ativo_mes_tipo_moeda", 
+                           columnNames = {"ativo_id", "mes", "tipo_dividendo", "moeda"})
+       })
 @Getter
 @Setter
 @NoArgsConstructor

@@ -24,13 +24,13 @@ import java.util.function.BiFunction;
  * - Apenas diferiam nos seletores específicos e tipo de retorno
  * 
  * ### 2. Técnicas de Refatoração
- * - **Extração de Método**: Lógica comum movida para método genérico
+ * - **Extração de method**: Lógica comum movida para method genérico
  * - **Parametrização**: Seletores CSS passados como parâmetros
  * - **Generics**: Uso de tipos genéricos para flexibilidade de retorno
  * - **Factory Pattern**: Função de criação do DTO como parâmetro
  * 
  * ### 3. Funções Reutilizáveis
- * - `scrapeHeaderInfo()`: Método principal genérico
+ * - `scrapeHeaderInfo()`: method principal genérico
  * - Configuração flexível de seletores por tipo de ativo
  * - Validação centralizada e tratamento de erros
  * 
@@ -82,7 +82,7 @@ public class GenericHeaderScraper {
     );
     
     /**
-     * Método genérico para extração de informações de cabeçalho.
+     * method genérico para extração de informações de cabeçalho.
      * 
      * @param <T> Tipo do DTO que implementa HeaderInfoDTO
      * @param doc Documento HTML da página
@@ -126,7 +126,7 @@ public class GenericHeaderScraper {
     }
     
     /**
-     * Método de conveniência para scraping de ações.
+     * method de conveniência para scraping de ações.
      * Mantém compatibilidade com o AcaoHeaderScraper original.
      */
     public <T extends HeaderInfoDTO> T scrapeAcaoHeader(Document doc, 
@@ -135,7 +135,7 @@ public class GenericHeaderScraper {
     }
     
     /**
-     * Método de conveniência para scraping de FIIs.
+     * method de conveniência para scraping de FIIs.
      * Mantém compatibilidade com o FiiHeaderScraper original.
      */
     public <T extends HeaderInfoDTO> T scrapeFiiHeader(Document doc, 

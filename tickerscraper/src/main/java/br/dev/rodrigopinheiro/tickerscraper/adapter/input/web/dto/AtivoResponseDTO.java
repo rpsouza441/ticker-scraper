@@ -23,7 +23,7 @@ public class AtivoResponseDTO {
     private AcaoResponseDTO dadosAcao;
     private FiiResponseDTO dadosFii;
     private EtfResponseDTO dadosEtf;
-    // TODO: Adicionar BdrResponseDTO
+    private BdrResponseDTO dadosBdr;
 
     // Dados financeiros básicos (sempre preenchidos)
     private BigDecimal cotacao;
@@ -105,6 +105,25 @@ public class AtivoResponseDTO {
                 .dadosEtf(etfData)
                 .cotacao(etfData.valorAtual())
                 .variacao(etfData.variacao12M())
+                .classificacao(ClassificacaoInfo.builder()
+                        .metodo("BANCO_DADOS")
+                        .confianca("ALTA")
+                        .build())
+                .build();
+    }
+
+    /**
+     * Factory method para criar resposta de BDR
+     */
+    public static AtivoResponseDTO fromBdr(String ticker, TipoAtivo tipo, BdrResponseDTO bdrData) {
+        return AtivoResponseDTO.builder()
+                .ticker(ticker)
+                .tipoAtivo(tipo)
+                .nomeEmpresa(bdrData.nome())
+                .dataAtualizacao(bdrData.dataAtualizacao().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime())
+                .dadosBdr(bdrData)
+                .cotacao(bdrData.precoAtual())
+                .variacao(bdrData.variacao12M() != null ? BigDecimal.valueOf(bdrData.variacao12M()) : null)
                 .classificacao(ClassificacaoInfo.builder()
                         .metodo("BANCO_DADOS")
                         .confianca("ALTA")

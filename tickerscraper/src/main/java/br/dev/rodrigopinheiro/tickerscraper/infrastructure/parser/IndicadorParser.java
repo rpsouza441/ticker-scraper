@@ -315,6 +315,7 @@ public class IndicadorParser {
      * @param texto O texto bruto a ser normalizado.
      * @return O texto normalizado.
      */
+    @Named("normalizar")
     public static String normalizar(String texto) {
         if (texto == null) {
             return "";
