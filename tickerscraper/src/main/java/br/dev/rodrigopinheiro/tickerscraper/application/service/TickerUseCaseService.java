@@ -134,8 +134,13 @@ public class TickerUseCaseService implements TickerUseCasePort {
                             .doOnNext(etfData -> log.info("Dados de ETF {} salvos no banco após classificação", ticker))
                             .map(etfData -> tipo);
 
+            case BDR_NAO_PATROCINADO, BDR_PATROCINADO ->
+                    bdrUseCase.getTickerData(ticker)
+                            .doOnNext(bdrData -> log.info("Dados de BDR {} salvos no banco após classificação", ticker))
+                            .map(bdrData -> tipo);
+
             // Para tipos não implementados, apenas retorna o tipo sem scraping
-            case ETF_BDR, BDR_NAO_PATROCINADO, BDR_PATROCINADO -> {
+            case ETF_BDR -> {
                 log.warn("Scraping não implementado para tipo {}, apenas classificação salva", tipo);
                 yield Mono.just(tipo);
             }
