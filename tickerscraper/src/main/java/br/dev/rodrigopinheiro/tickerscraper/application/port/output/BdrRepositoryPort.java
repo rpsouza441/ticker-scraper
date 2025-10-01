@@ -21,6 +21,9 @@ public interface BdrRepositoryPort {
 
     /** Upsert por ticker (cria/atualiza campos não-nulos). */
     Bdr save(Bdr bdr);
+    
+    /** Upsert por ticker preservando histórico de dividendos. */
+    Bdr save(Bdr bdr, String rawJsonAudit);
 
 //    /** Opcional: salva substituindo dividendos (delete-all + insert). */
 //    Bdr saveReplacingDividends(Bdr bdr);

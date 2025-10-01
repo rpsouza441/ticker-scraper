@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,6 +25,12 @@ public interface DividendoJpaRepository extends JpaRepository<DividendoEntity, L
             @Param("tipoDividendo") TipoDividendo tipoDividendo,
             @Param("moeda") String moeda
     );
+
+    /**
+     * Busca todos os dividendos de um ativo específico
+     */
+    @Query("SELECT d FROM DividendoEntity d WHERE d.ativo.id = :ativoId")
+    List<DividendoEntity> findByAtivoId(@Param("ativoId") Long ativoId);
 
     /**
      * Deleta todos os dividendos de um ativo específico

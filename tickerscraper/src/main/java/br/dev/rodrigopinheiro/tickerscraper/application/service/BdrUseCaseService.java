@@ -95,8 +95,8 @@ public class BdrUseCaseService
         }
         
         try {
-            log.info("BdrUseCaseService.saveDomain - Chamando repo.saveReplacingDividends...");
-            Bdr result = repo.saveReplacingDividends(domain, auditJson);
+            log.info("BdrUseCaseService.saveDomain - Chamando repo.save (que agora preserva histórico)...");
+            Bdr result = repo.save(domain, auditJson);
             log.info("BdrUseCaseService.saveDomain - Salvamento concluído com sucesso para ticker: {}", result.getTicker());
             return result;
         } catch (UnsupportedOperationException e) {
