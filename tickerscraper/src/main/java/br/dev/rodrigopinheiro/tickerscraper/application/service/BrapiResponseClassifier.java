@@ -34,6 +34,13 @@ public class BrapiResponseClassifier {
     private static final List<String> UNIT_PATTERNS = Arrays.asList(
         "unit", "certificado de deposito", "units"
     );
+    
+    // Padrões para BDRs
+    private static final List<String> BDR_PATTERNS = Arrays.asList(
+        "bdr", "brazilian depositary receipt", "depositary receipt", 
+        "certificado de deposito de acoes", "deposito de acoes",
+        "american depositary receipt", "adr"
+    );
 
     /**
      * Classifica ativo baseado na resposta da API Brapi
@@ -73,6 +80,11 @@ public class BrapiResponseClassifier {
             return TipoAtivo.UNIT;
         }
         
+        if (isBDR(textoCompleto) || isBDRByTicker(quote.symbol())) {
+            log.info("Ticker {} classificado como BDR_NAO_PATROCINADO", quote.symbol());
+            return TipoAtivo.BDR_NAO_PATROCINADO;
+        }
+        
         // Default para ação ordinária
         log.info("Ticker {} classificado como ACAO_ON (default)", quote.symbol());
         return TipoAtivo.ACAO_ON;
@@ -96,6 +108,23 @@ public class BrapiResponseClassifier {
     private boolean isUnit(String texto) {
         return UNIT_PATTERNS.stream()
             .anyMatch(pattern -> texto.contains(pattern));
+    }
+    
+    private boolean isBDR(String texto) {
+        return BDR_PATTERNS.stream()
+            .anyMatch(pattern -> texto.contains(pattern));
+    }
+    
+    /**
+     * Identifica BDRs pelo padrão do ticker (terminados em 34 ou 35)
+     */
+    private boolean isBDRByTicker(String ticker) {
+        if (ticker == null || ticker.length() < 2) {
+            return false;
+        }
+        
+        String normalizedTicker = ticker.toUpperCase().trim();
+        return normalizedTicker.endsWith("34") || normalizedTicker.endsWith("35");
     }
     
     /**
