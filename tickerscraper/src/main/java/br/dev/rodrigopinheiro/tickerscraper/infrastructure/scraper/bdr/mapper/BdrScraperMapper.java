@@ -26,31 +26,31 @@ public interface BdrScraperMapper {
             // Removido o prefixo "dto." desnecessário
             @Mapping(source = "infoHeader.ticker", target = "ticker", qualifiedByName = "limpezaComUpperCase"),
             @Mapping(source = "infoHeader.nomeBdr", target = "nome", qualifiedByName = "normalizar"),
-            @Mapping(target = "precoAtual", source = "infoCards.cotacao"),
+            @Mapping(target = "precoAtual", expression = "java(getPrecoAtual(dto))"),
             @Mapping(target = "variacao12M", source = "infoCards.variacao12M"),
-            @Mapping(target = "setor", source = "infoSobre.setor"),
-            @Mapping(target = "industria", source = "infoSobre.industria"),
+            @Mapping(target = "setor", expression = "java(getSetor(dto))"),
+            @Mapping(target = "industria", expression = "java(getIndustria(dto))"),
             @Mapping(source = "infoSobre.marketCapText", target = "marketCapValue", qualifiedByName = "paraBigDecimal"),
             @Mapping(target = "marketCapCurrency", expression = "java(extractCurrency(dto.infoSobre().marketCapText()))"),
             @Mapping(target = "paridadeRatio", expression = "java(extractParityRatio(dto.infoSobre().paridadeText()))"),
 
             // === Mapeamentos de API (Indicadores, Demonstrativos, Dividendos) ===
             // Indicadores (extraindo o valor 'Atual')
-            @Mapping(target = "pl", expression = "java(getIndicatorValue(dto.indicadores(), \"P/L\"))"),
-            @Mapping(target = "pvp", expression = "java(getIndicatorValue(dto.indicadores(), \"P/VP\"))"),
-            @Mapping(target = "psr", expression = "java(getIndicatorValue(dto.indicadores(), \"P/RECEITA (PSR)\"))"),
-            @Mapping(target = "pEbit", expression = "java(getIndicatorValue(dto.indicadores(), \"P/EBIT\"))"),
-            @Mapping(target = "pEbitda", expression = "java(getIndicatorValue(dto.indicadores(), \"P/EBITDA\"))"),
-            @Mapping(target = "pAtivo", expression = "java(getIndicatorValue(dto.indicadores(), \"P/ATIVO\"))"),
-            @Mapping(target = "roe", expression = "java(getIndicatorValue(dto.indicadores(), \"ROE\"))"),
-            @Mapping(target = "roic", expression = "java(getIndicatorValue(dto.indicadores(), \"ROIC\"))"),
-            @Mapping(target = "roa", expression = "java(getIndicatorValue(dto.indicadores(), \"ROA\"))"),
-            @Mapping(target = "margemBruta", expression = "java(getIndicatorValue(dto.indicadores(), \"MARGEM BRUTA\"))"),
-            @Mapping(target = "margemOperacional", expression = "java(getIndicatorValue(dto.indicadores(), \"MARGEM OPERACIONAL\"))"),
-            @Mapping(target = "margemLiquida", expression = "java(getIndicatorValue(dto.indicadores(), \"MARGEM LÍQUIDA\"))"),
-            @Mapping(target = "vpa", expression = "java(getIndicatorValue(dto.indicadores(), \"VPA\"))"),
-            @Mapping(target = "lpa", expression = "java(getIndicatorValue(dto.indicadores(), \"LPA\"))"),
-            @Mapping(target = "dividendYield", expression = "java(getIndicatorValue(dto.indicadores(), \"DIVIDEND YIELD (DY)\"))"),
+            @Mapping(target = "pl", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/L\"))"),
+            @Mapping(target = "pvp", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/VP\"))"),
+            @Mapping(target = "psr", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/RECEITA (PSR)\"))"),
+            @Mapping(target = "pEbit", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/EBIT\"))"),
+            @Mapping(target = "pEbitda", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/EBITDA\"))"),
+            @Mapping(target = "pAtivo", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/ATIVO\"))"),
+            @Mapping(target = "roe", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"ROE\"))"),
+            @Mapping(target = "roic", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"ROIC\"))"),
+            @Mapping(target = "roa", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"ROA\"))"),
+            @Mapping(target = "margemBruta", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"MARGEM BRUTA\"))"),
+            @Mapping(target = "margemOperacional", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"MARGEM OPERACIONAL\"))"),
+            @Mapping(target = "margemLiquida", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"MARGEM LÍQUIDA\"))"),
+            @Mapping(target = "vpa", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"VPA\"))"),
+            @Mapping(target = "lpa", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"LPA\"))"),
+            @Mapping(target = "dividendYield", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"DIVIDEND YIELD (DY)\"))"),
 
             // DRE (extraindo o valor de 'ÚLT. 12M')
             @Mapping(target = "receitaTotalUsd", expression = "java(getFinancialStatementValue(dto.demonstrativos().dre(), \"Receita Total - (US$)\"))"),
@@ -125,7 +125,8 @@ public interface BdrScraperMapper {
     // MÉTODOS HELPER
     // =========================================================
 
-    default BigDecimal getIndicatorValue(Map<String, Object> indicators, String key) {
+    // Método para valores decimais (P/L, P/VP, VPA, LPA, etc.)
+    default BigDecimal getIndicatorValueAsDecimal(Map<String, Object> indicators, String key) {
         if (indicators == null || !indicators.containsKey(key) || !(indicators.get(key) instanceof List)) {
             return null;
         }
@@ -135,8 +136,56 @@ public interface BdrScraperMapper {
                 .map(item -> (Map<?, ?>) item)
                 .filter(map -> "Atual".equalsIgnoreCase(String.valueOf(map.get("year"))))
                 .findFirst()
-                .map(map -> IndicadorParser.parseBigdecimal(String.valueOf(map.get("value"))))
+                .map(map -> {
+                    String value = String.valueOf(map.get("value"));
+                    return IndicadorParser.parseBigdecimal(value);
+                })
                 .orElse(null);
+    }
+
+    // Método para valores percentuais (ROE, ROA, ROIC, margens, DY)
+    default BigDecimal getIndicatorValueAsPercent(Map<String, Object> indicators, String key) {
+        if (indicators == null || !indicators.containsKey(key) || !(indicators.get(key) instanceof List)) {
+            return null;
+        }
+        List<?> values = (List<?>) indicators.get(key);
+        return values.stream()
+                .filter(item -> item instanceof Map)
+                .map(item -> (Map<?, ?>) item)
+                .filter(map -> "Atual".equalsIgnoreCase(String.valueOf(map.get("year"))))
+                .findFirst()
+                .map(map -> {
+                    String value = String.valueOf(map.get("value"));
+                    // Para percentuais, o valor já vem como decimal (ex: "91.87" para 91.87%)
+                    // Não precisamos multiplicar por 100
+                    return IndicadorParser.parseBigdecimal(value);
+                })
+                .orElse(null);
+    }
+
+    // Método para obter preço atual (cotação)
+    default BigDecimal getPrecoAtual(BdrDadosFinanceirosDTO dto) {
+        if (dto == null || dto.infoCards() == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal cotacao = dto.infoCards().cotacao();
+        return cotacao != null ? cotacao : BigDecimal.ZERO;
+    }
+
+    // Método para obter setor corretamente
+    default String getSetor(BdrDadosFinanceirosDTO dto) {
+        if (dto == null || dto.infoSobre() == null) {
+            return null;
+        }
+        return dto.infoSobre().setor();
+    }
+
+    // Método para obter indústria corretamente
+    default String getIndustria(BdrDadosFinanceirosDTO dto) {
+        if (dto == null || dto.infoSobre() == null) {
+            return null;
+        }
+        return dto.infoSobre().industria();
     }
 
     default BigDecimal getFinancialStatementValue(Map<String, Object> statementData, String rowLabel) {

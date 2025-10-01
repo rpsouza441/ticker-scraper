@@ -79,9 +79,9 @@ public class IndicadorParser {
     }
 
     /**
-     * Converte uma String (ex: "R$ 4,78", "79,97%", "1.234.567.000", "R$ 10,00 T", "9,78 B") para um BigDecimal.
+     * Converte uma String (ex: "R$ 4,78", "79,97%", "1.234.567.000", "R$ 10,00 T", "9,78 B", "165,22 Bilhões") para um BigDecimal.
      * Este método deve ser usado para TODOS os valores numéricos.
-     * Suporta sufixos de escala: M (milhões), B (bilhões), T (trilhões).
+     * Suporta sufixos de escala: M (milhões), B (bilhões), T (trilhões), Milhões, Bilhões, Trilhões.
      *
      * @param raw A string bruta extraída do HTML.
      * @return O valor como um BigDecimal. Retorna BigDecimal.ZERO se a entrada for nula, vazia ou inválida.
@@ -135,7 +135,7 @@ public class IndicadorParser {
     }
 
     /**
-     * Processa uma string que pode conter sufixos de escala (M, B, T) e retorna o BigDecimal correspondente.
+     * Processa uma string que pode conter sufixos de escala (M, B, T, Milhões, Bilhões, Trilhões) e retorna o BigDecimal correspondente.
      * 
      * @param texto A string a ser processada.
      * @return O valor como BigDecimal com a escala aplicada.
@@ -150,17 +150,26 @@ public class IndicadorParser {
         BigDecimal multiplicador = BigDecimal.ONE;
         String textoParaLimpeza = texto;
         
-        if (textoOriginalUpper.endsWith(" T") || textoOriginalUpper.endsWith("T")) {
+        // Sufixos em português (prioridade maior para evitar conflitos)
+        if (textoOriginalUpper.contains("TRILHÕES") || textoOriginalUpper.contains("TRILHÃO")) {
             multiplicador = TRILHAO;
-            // Remove o sufixo antes de limpar
+            textoParaLimpeza = texto.replaceAll("(?i)\\s*(trilhões|trilhão)\\s*", "").trim();
+        } else if (textoOriginalUpper.contains("BILHÕES") || textoOriginalUpper.contains("BILHÃO")) {
+            multiplicador = BILHAO;
+            textoParaLimpeza = texto.replaceAll("(?i)\\s*(bilhões|bilhão)\\s*", "").trim();
+        } else if (textoOriginalUpper.contains("MILHÕES") || textoOriginalUpper.contains("MILHÃO")) {
+            multiplicador = MILHAO;
+            textoParaLimpeza = texto.replaceAll("(?i)\\s*(milhões|milhão)\\s*", "").trim();
+        }
+        // Sufixos em inglês (mantidos para compatibilidade)
+        else if (textoOriginalUpper.endsWith(" T") || textoOriginalUpper.endsWith("T")) {
+            multiplicador = TRILHAO;
             textoParaLimpeza = texto.replaceAll("(?i)\\s*T\\s*$", "").trim();
         } else if (textoOriginalUpper.endsWith(" B") || textoOriginalUpper.endsWith("B")) {
             multiplicador = BILHAO;
-            // Remove o sufixo antes de limpar
             textoParaLimpeza = texto.replaceAll("(?i)\\s*B\\s*$", "").trim();
         } else if (textoOriginalUpper.endsWith(" M") || textoOriginalUpper.endsWith("M")) {
             multiplicador = MILHAO;
-            // Remove o sufixo antes de limpar
             textoParaLimpeza = texto.replaceAll("(?i)\\s*M\\s*$", "").trim();
         }
         

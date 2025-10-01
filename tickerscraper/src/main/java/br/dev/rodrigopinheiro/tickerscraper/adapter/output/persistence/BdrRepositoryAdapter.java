@@ -1,8 +1,10 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence;
 
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.BdrEntity;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.DividendoEntity;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.AtivoFinanceiroJpaRepository;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.BdrJpaRepository;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.jpa.DividendoJpaRepository;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.BdrPersistenceMapper;
 import br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.mapper.DividendoPersistenceMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.PageQuery;
@@ -28,6 +30,7 @@ public class BdrRepositoryAdapter implements BdrRepositoryPort {
 
     private final BdrJpaRepository bdrJpa;
     private final AtivoFinanceiroJpaRepository ativoJpa;
+    private final DividendoJpaRepository dividendoJpa;
     private final BdrPersistenceMapper mapper;
     private final DividendoPersistenceMapper dividendoMapper;
 
@@ -98,13 +101,32 @@ public class BdrRepositoryAdapter implements BdrRepositoryPort {
         BdrEntity entity = bdrJpa.findByTicker(t).orElse(null);
         boolean isUpdate = (entity != null);
 
+        
+        // Se é uma atualização, carregar os dividendos explicitamente (lazy loading)
+        if (isUpdate && entity != null) {
+            // Força o carregamento dos dividendos lazy
+            int dividendosCount = entity.getDividendos().size();
+        }
+
         if (isUpdate) {
             log.info("BdrRepositoryAdapter.saveReplacingDividends - Atualizando BDR existente com ID: {}", entity.getId());
             // Atualizar dados básicos (sem dividendos)
             mapper.updateEntity(bdr, entity);
             
-            // Atualizar dividendos usando o método simplificado do mapper
-            mapper.updateDividendos(bdr, entity, dividendoMapper);
+            // Estratégia mais robusta: deletar explicitamente os dividendos existentes
+            dividendoJpa.deleteByAtivoId(entity.getId());
+            
+            // Recarregar a entidade para sincronizar com o banco após o delete
+            entity = bdrJpa.findById(entity.getId()).orElseThrow();
+            
+            // Adicionar novos dividendos
+            if (bdr.getDividendos() != null && !bdr.getDividendos().isEmpty()) {
+                for (var dividendoDomain : bdr.getDividendos()) {
+                    DividendoEntity dividendoEntity = dividendoMapper.toEntity(dividendoDomain);
+                    dividendoEntity.setAtivo(entity);
+                    entity.getDividendos().add(dividendoEntity);
+                }
+            }
         } else {
             log.info("BdrRepositoryAdapter.saveReplacingDividends - Criando novo BDR");
             entity = mapper.toEntity(bdr, dividendoMapper);

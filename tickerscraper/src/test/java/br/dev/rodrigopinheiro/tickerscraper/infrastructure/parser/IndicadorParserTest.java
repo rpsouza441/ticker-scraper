@@ -42,6 +42,27 @@ class IndicadorParserTest {
     }
 
     @Test
+    void testParseBigDecimalComSufixosPortugues() {
+        // Testa valores com sufixos em português (como aparecem nos dados do BDR)
+        assertEquals(0, new BigDecimal("165220000000").compareTo(IndicadorParser.parseBigdecimal("165,22 Bilhões")));
+        assertEquals(0, new BigDecimal("86600000000").compareTo(IndicadorParser.parseBigdecimal("86,60 Bilhões")));
+        assertEquals(0, new BigDecimal("140740000000").compareTo(IndicadorParser.parseBigdecimal("140,74 Bilhões")));
+        assertEquals(0, new BigDecimal("8470000000").compareTo(IndicadorParser.parseBigdecimal("8,47 Bilhões")));
+        
+        // Testa milhões em português
+        assertEquals(0, new BigDecimal("500000000").compareTo(IndicadorParser.parseBigdecimal("500 Milhões")));
+        assertEquals(0, new BigDecimal("1500000").compareTo(IndicadorParser.parseBigdecimal("1,5 Milhões")));
+        
+        // Testa trilhões em português
+        assertEquals(0, new BigDecimal("2500000000000").compareTo(IndicadorParser.parseBigdecimal("2,5 Trilhões")));
+        
+        // Testa singular
+        assertEquals(0, new BigDecimal("1000000000").compareTo(IndicadorParser.parseBigdecimal("1 Bilhão")));
+        assertEquals(0, new BigDecimal("1000000").compareTo(IndicadorParser.parseBigdecimal("1 Milhão")));
+        assertEquals(0, new BigDecimal("1000000000000").compareTo(IndicadorParser.parseBigdecimal("1 Trilhão")));
+    }
+
+    @Test
     void testParseBigDecimalValoresInvalidos() {
         // Testa que valores inválidos retornam zero
         assertEquals(0, BigDecimal.ZERO.compareTo(IndicadorParser.parseBigdecimal("")));

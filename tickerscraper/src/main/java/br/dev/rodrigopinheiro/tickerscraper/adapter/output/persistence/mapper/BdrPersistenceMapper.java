@@ -80,19 +80,39 @@ public interface BdrPersistenceMapper {
         return dividendos;
     }
 
-    // Método simplificado para atualizar dividendos usando cascade
+    // Método para atualizar dividendos com lógica de upsert
     default void updateDividendos(Bdr source, @MappingTarget BdrEntity target, @Context DividendoPersistenceMapper divMapper) {
-        // Limpar dividendos existentes (cascade irá deletar do banco)
-        target.getDividendos().clear();
-        
-        // Adicionar novos dividendos
-        if (source.getDividendos() != null && !source.getDividendos().isEmpty()) {
-            List<DividendoEntity> novosDividendos = mapDividendosToEntity(source.getDividendos(), divMapper);
-            
-            // Configurar o relacionamento bidirecional
-            for (DividendoEntity dividendo : novosDividendos) {
-                dividendo.setAtivo(target);
-                target.getDividendos().add(dividendo);
+        if (source.getDividendos() == null || source.getDividendos().isEmpty()) {
+            return;
+        }
+
+
+        // Para cada dividendo do domínio, verificar se já existe na entidade
+        for (Dividendo dividendoDomain : source.getDividendos()) {
+            String mesDomain = dividendoDomain.getMes().toString();
+
+
+            // Buscar dividendo existente pela chave composta
+            DividendoEntity dividendoExistente = target.getDividendos().stream()
+                .filter(d -> {
+                    boolean mesIgual = d.getMes().equals(mesDomain);
+                    boolean tipoIgual = d.getTipoDividendo().equals(dividendoDomain.getTipoDividendo());
+                    boolean moedaIgual = d.getMoeda().equals(dividendoDomain.getMoeda());
+
+                    
+                    return mesIgual && tipoIgual && moedaIgual;
+                })
+                .findFirst()
+                .orElse(null);
+
+            if (dividendoExistente != null) {
+                // Atualizar dividendo existente
+                dividendoExistente.setValor(dividendoDomain.getValor());
+            } else {
+                // Criar novo dividendo
+                DividendoEntity novoDividendo = divMapper.toEntity(dividendoDomain);
+                novoDividendo.setAtivo(target);
+                target.getDividendos().add(novoDividendo);
             }
         }
     }
