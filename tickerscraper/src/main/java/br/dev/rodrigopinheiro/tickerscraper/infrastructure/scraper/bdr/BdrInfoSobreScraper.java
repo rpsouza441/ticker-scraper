@@ -1,6 +1,5 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr;
 
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.InfoSobre;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

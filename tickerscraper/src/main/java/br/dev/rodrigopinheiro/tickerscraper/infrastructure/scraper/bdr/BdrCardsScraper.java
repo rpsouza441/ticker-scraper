@@ -1,6 +1,5 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr;
 
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.InfoCards;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +20,6 @@ public class BdrCardsScraper {
         BigDecimal cotacao = null;
         Double variacao12m = null;
 
-        // 1. Tenta extrair dados do JSON-LD (mais confiável)
         var scripts = doc.select("script[type='application/ld+json']");
         for (var script : scripts) {
             try {
@@ -38,16 +36,13 @@ public class BdrCardsScraper {
             } catch (Exception ignored) {}
         }
 
-        // 2. Se a extração do JSON-LD falhar, usa fallbacks que leem o HTML visível
         if (cotacao == null)     cotacao     = fromVisiblePrice(doc);
         if (variacao12m == null) variacao12m = fromVisiblePercent(doc);
 
         return new InfoCards(cotacao, variacao12m);
     }
 
-    /**
-     * CORREÇÃO: Method de fallback que usa o Document Jsoup para extrair o preço.
-     */
+
     private BigDecimal fromVisiblePrice(Document doc) {
         if (doc == null) return null;
         try {
@@ -71,13 +66,9 @@ public class BdrCardsScraper {
         }
     }
 
-    /**
-     * CORREÇÃO: Method de fallback que usa o Document Jsoup para extrair o percentual.
-     */
     private Double fromVisiblePercent(Document doc) {
         if (doc == null) return null;
         try {
-            // Usa o texto do corpo do documento
             String text = doc.body().text();
             if (text == null) return null;
 
@@ -92,7 +83,6 @@ public class BdrCardsScraper {
         }
     }
 
-    // Methods de parse (sem alterações)
     private static BigDecimal parseMoney(String t) {
         if (t == null) return null;
         Matcher m = RX_MONEY.matcher(t.replace(".", ""));

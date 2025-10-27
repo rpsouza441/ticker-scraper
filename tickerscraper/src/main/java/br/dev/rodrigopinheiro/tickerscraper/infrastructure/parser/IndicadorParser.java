@@ -59,12 +59,43 @@ public class IndicadorParser {
         if (raw == null || raw.isBlank()) {
             return "";
         }
-        return raw
+        
+        String cleaned = raw
                 .replace(SIMBOLO_REAL, "")
-                .replace(".", "")      // Remove o separador de milhar
-                .replace(",", ".")      // Substitui a vírgula decimal por ponto
                 .replace(SIMBOLO_PERCENTUAL, "")
                 .trim();
+        
+        // Detecta o formato do número
+        // Se contém vírgula e ponto, determina qual é o separador decimal
+        if (cleaned.contains(",") && cleaned.contains(".")) {
+            // Formato: 1.234,56 (brasileiro) ou 1,234.56 (americano)
+            int lastCommaIndex = cleaned.lastIndexOf(",");
+            int lastDotIndex = cleaned.lastIndexOf(".");
+            
+            if (lastDotIndex > lastCommaIndex) {
+                // Formato americano: 1,234.56 - remove vírgulas (separador de milhar)
+                cleaned = cleaned.replace(",", "");
+            } else {
+                // Formato brasileiro: 1.234,56 - remove pontos (separador de milhar) e troca vírgula por ponto
+                cleaned = cleaned.replace(".", "").replace(",", ".");
+            }
+        } else if (cleaned.contains(",")) {
+            // Só tem vírgula - pode ser decimal brasileiro (12,34) ou separador de milhar americano (1,234)
+            // Se tem mais de 3 dígitos após a vírgula ou a vírgula não está nos últimos 3 caracteres, é separador de milhar
+            int commaIndex = cleaned.lastIndexOf(",");
+            String afterComma = cleaned.substring(commaIndex + 1);
+            
+            if (afterComma.length() <= 2) {
+                // Provavelmente decimal brasileiro: 12,34
+                cleaned = cleaned.replace(",", ".");
+            } else {
+                // Provavelmente separador de milhar americano: 1,234
+                cleaned = cleaned.replace(",", "");
+            }
+        }
+        // Se só tem ponto, mantém como está (formato americano: 12.34 ou 1234.56)
+        
+        return cleaned;
     }
 
     /**

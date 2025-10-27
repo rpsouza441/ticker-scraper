@@ -195,27 +195,27 @@ public class Bdr extends AtivoFinanceiro {
         this.psr = psr;
     }
 
-    public BigDecimal getpEbit() {
+    public BigDecimal getPEbit() {
         return pEbit;
     }
 
-    public void setpEbit(BigDecimal pEbit) {
+    public void setPEbit(BigDecimal pEbit) {
         this.pEbit = pEbit;
     }
 
-    public BigDecimal getpEbitda() {
+    public BigDecimal getPEbitda() {
         return pEbitda;
     }
 
-    public void setpEbitda(BigDecimal pEbitda) {
+    public void setPEbitda(BigDecimal pEbitda) {
         this.pEbitda = pEbitda;
     }
 
-    public BigDecimal getpAtivo() {
+    public BigDecimal getPAtivo() {
         return pAtivo;
     }
 
-    public void setpAtivo(BigDecimal pAtivo) {
+    public void setPAtivo(BigDecimal pAtivo) {
         this.pAtivo = pAtivo;
     }
 

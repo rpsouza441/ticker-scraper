@@ -1,5 +1,15 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
+import java.time.Duration;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import br.dev.rodrigopinheiro.tickerscraper.application.dto.BdrRawDataResponse;
 import br.dev.rodrigopinheiro.tickerscraper.application.mapper.RawDataMapper;
 import br.dev.rodrigopinheiro.tickerscraper.application.port.input.BdrUseCasePort;
@@ -10,18 +20,9 @@ import br.dev.rodrigopinheiro.tickerscraper.domain.exception.DataParsingExceptio
 import br.dev.rodrigopinheiro.tickerscraper.domain.model.Bdr;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.mapper.BdrScraperMapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -55,8 +56,7 @@ public class BdrUseCaseService
     @Transactional(readOnly = true)
     protected Mono<Optional<Bdr>> findByTicker(String t) {
         final String key = normalize(t);
-        return Mono.fromCallable(() -> repo.findByTickerWithDividendos(key))
-                .subscribeOn(Schedulers.boundedElastic());
+        return Mono.fromCallable(() -> repo.findByTickerWithDividendos(key)).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override

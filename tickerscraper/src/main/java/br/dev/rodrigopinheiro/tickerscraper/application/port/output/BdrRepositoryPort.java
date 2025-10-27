@@ -32,5 +32,10 @@ public interface BdrRepositoryPort {
 
     Optional<String> findRawJsonByTicker(String ticker);
 
+    /** Deleta BDR por ticker. */
+    boolean deleteByTicker(String ticker);
+    
+    /** Conta total de BDRs. */
+    long count();
 
 }

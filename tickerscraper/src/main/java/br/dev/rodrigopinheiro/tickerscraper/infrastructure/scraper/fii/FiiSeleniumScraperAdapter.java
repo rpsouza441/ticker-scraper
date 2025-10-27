@@ -1,13 +1,15 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii;
 
-import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiDataScrapperPort;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.*;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.AbstractScraperAdapter;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.selenium.retry.SeleniumRetryManager;
+import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.COTACAO;
+import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.DIVIDENDOS;
+import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.HISTORICO_INDICADORES;
 
-import static br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.FiiApiConstants.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -17,16 +19,22 @@ import org.openqa.selenium.devtools.v138.network.Network;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import br.dev.rodrigopinheiro.tickerscraper.application.port.output.FiiDataScrapperPort;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.AbstractScraperAdapter;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.CapturedRequest;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiCotacaoDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDadosFinanceirosDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiDividendoDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiIndicadorHistoricoDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiInfoCardsDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiInfoHeaderDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.FiiInfoSobreDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.fii.dto.ScrapeResult;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.selenium.retry.SeleniumRetryManager;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 
 @Component("fiiSeleniumScraper")

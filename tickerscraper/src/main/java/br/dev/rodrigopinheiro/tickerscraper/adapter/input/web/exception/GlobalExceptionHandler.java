@@ -1,8 +1,10 @@
 package br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.exception;
 
-import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.exception.dto.ErrorResponse;
-import br.dev.rodrigopinheiro.tickerscraper.domain.exception.*;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.config.CorrelationIdInterceptor;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +14,20 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import br.dev.rodrigopinheiro.tickerscraper.adapter.input.web.exception.dto.ErrorResponse;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.AntiBotDetectedException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.AsyncRequestTimeoutException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.DataParsingException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.DomainException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.HtmlStructureException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.NetworkCaptureException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.RateLimitExceededException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingTimeoutException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerClassificationException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.WebDriverInitializationException;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.config.CorrelationIdInterceptor;
 
 /**
  * Handler global para tratamento centralizado de exceções da aplicação.

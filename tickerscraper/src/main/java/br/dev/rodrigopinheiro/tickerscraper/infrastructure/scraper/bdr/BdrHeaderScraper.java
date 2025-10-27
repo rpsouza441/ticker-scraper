@@ -1,21 +1,18 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr;
 
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.BdrDadosFinanceirosDTO;
 import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.bdr.dto.InfoHeader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jsoup.nodes.Document; // 1. Mude o import
+import org.jsoup.nodes.Document; 
 import org.springframework.stereotype.Component;
 
 @Component
 public class BdrHeaderScraper {
     private final ObjectMapper json = new ObjectMapper();
 
-    // 2. Altere o parâmetro de Page para Document
     public InfoHeader extract(Document doc, String ticker) {
         String nome = fromJsonLdArticle(doc);
         if (nome == null) {
-            // 3. Use seletores Jsoup
             try {
                 nome = doc.selectFirst("h1, h2").text();
             } catch (Exception ignored) {
@@ -29,7 +26,6 @@ public class BdrHeaderScraper {
     }
 
     private String fromJsonLdArticle(Document doc) {
-        // A lógica de extração do JSON-LD com Jsoup é a mesma
         var scripts = doc.select("script[type='application/ld+json']");
         for (var script : scripts) {
             try {

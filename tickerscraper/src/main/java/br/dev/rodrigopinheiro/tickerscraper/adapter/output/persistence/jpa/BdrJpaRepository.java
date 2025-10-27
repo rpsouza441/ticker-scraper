@@ -34,4 +34,9 @@ public interface BdrJpaRepository extends JpaRepository<BdrEntity, Long> {
     @Modifying
     @Query("delete from br.dev.rodrigopinheiro.tickerscraper.adapter.output.persistence.entity.DividendoEntity d where d.ativo.id = :ativoId")
     void deleteAllDividendosByAtivoId(@Param("ativoId") Long ativoId);
+    
+    // Deleta BDR por ticker
+    @Modifying
+    @Query("delete from BdrEntity b where b.ticker = :ticker")
+    int deleteByTicker(@Param("ticker") String ticker);
 }

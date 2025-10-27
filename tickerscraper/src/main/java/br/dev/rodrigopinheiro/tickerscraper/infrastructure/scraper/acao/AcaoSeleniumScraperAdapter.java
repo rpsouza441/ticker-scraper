@@ -1,25 +1,24 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
-import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoDataScrapperPort;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.*;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.AbstractScraperAdapter;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.selenium.retry.SeleniumRetryManager;
-
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.devtools.DevTools;
-import org.openqa.selenium.devtools.v138.network.Network;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-import java.util.Optional;
+import br.dev.rodrigopinheiro.tickerscraper.application.port.output.AcaoDataScrapperPort;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoDadosFinanceirosDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoIndicadoresFundamentalistasDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoInfoCardsDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoInfoDetailedDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoInfoHeaderDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.AbstractScraperAdapter;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.selenium.retry.SeleniumRetryManager;
+import io.github.bonigarcia.wdm.WebDriverManager;
+import reactor.core.publisher.Mono;
 
 @Component("acaoSeleniumScraper")
 public class AcaoSeleniumScraperAdapter extends AbstractScraperAdapter<AcaoDadosFinanceirosDTO> implements AcaoDataScrapperPort {

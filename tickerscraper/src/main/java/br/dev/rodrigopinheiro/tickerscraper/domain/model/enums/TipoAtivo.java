@@ -1,6 +1,5 @@
 package br.dev.rodrigopinheiro.tickerscraper.domain.model.enums;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**

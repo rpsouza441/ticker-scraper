@@ -1,22 +1,28 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.exception.*;
-import com.microsoft.playwright.*;
-import com.microsoft.playwright.options.WaitUntilState;
-import org.jsoup.Jsoup;
+import java.time.Duration;
+import java.util.Map;
+
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.devtools.DevTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Response;
+import com.microsoft.playwright.TimeoutError;
+import com.microsoft.playwright.options.WaitUntilState;
+
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.AntiBotDetectedException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingTimeoutException;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Classe abstrata base para adapters de scraping que consolida funcionalidades comuns

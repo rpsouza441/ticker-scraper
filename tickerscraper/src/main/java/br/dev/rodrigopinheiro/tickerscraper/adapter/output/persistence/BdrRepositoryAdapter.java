@@ -263,4 +263,17 @@ public class BdrRepositoryAdapter implements BdrRepositoryPort {
         String t = norm(ticker);
         return bdrJpa.findByTicker(t).map(BdrEntity::getDadosBrutosJson);
     }
+
+    @Override
+    @Transactional
+    public boolean deleteByTicker(String ticker) {
+        String t = norm(ticker);
+        int deletedCount = bdrJpa.deleteByTicker(t);
+        return deletedCount > 0;
+    }
+
+    @Override
+    public long count() {
+        return bdrJpa.count();
+    }
 }

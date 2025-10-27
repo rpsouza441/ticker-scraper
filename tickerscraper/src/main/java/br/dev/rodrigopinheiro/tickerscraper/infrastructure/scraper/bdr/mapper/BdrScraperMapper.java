@@ -30,7 +30,7 @@ public interface BdrScraperMapper {
             @Mapping(target = "variacao12M", source = "infoCards.variacao12M"),
             @Mapping(target = "setor", expression = "java(getSetor(dto))"),
             @Mapping(target = "industria", expression = "java(getIndustria(dto))"),
-            @Mapping(source = "infoSobre.marketCapText", target = "marketCapValue", qualifiedByName = "paraBigDecimal"),
+            @Mapping(target = "marketCapValue", expression = "java(extractMarketCapValue(dto.infoSobre().marketCapText()))"),
             @Mapping(target = "marketCapCurrency", expression = "java(extractCurrency(dto.infoSobre().marketCapText()))"),
             @Mapping(target = "paridadeRatio", expression = "java(extractParityRatio(dto.infoSobre().paridadeText()))"),
 
@@ -39,9 +39,9 @@ public interface BdrScraperMapper {
             @Mapping(target = "pl", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/L\"))"),
             @Mapping(target = "pvp", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/VP\"))"),
             @Mapping(target = "psr", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/RECEITA (PSR)\"))"),
-            @Mapping(target = "pEbit", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/EBIT\"))"),
-            @Mapping(target = "pEbitda", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/EBITDA\"))"),
-            @Mapping(target = "pAtivo", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/ATIVO\"))"),
+            @Mapping(target = "PEbit", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/EBIT\"))"),
+            @Mapping(target = "PEbitda", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/EBITDA\"))"),
+            @Mapping(target = "PAtivo", expression = "java(getIndicatorValueAsDecimal(dto.indicadores(), \"P/ATIVO\"))"),
             @Mapping(target = "roe", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"ROE\"))"),
             @Mapping(target = "roic", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"ROIC\"))"),
             @Mapping(target = "roa", expression = "java(getIndicatorValueAsPercent(dto.indicadores(), \"ROA\"))"),
@@ -96,8 +96,8 @@ public interface BdrScraperMapper {
     // Método wrapper com logs de debug
     default Bdr toDomainWithDebug(BdrDadosFinanceirosDTO dto) {
         try {
-            System.out.println("DEBUG: Iniciando mapeamento BDR - ticker: " + 
-                (dto != null && dto.infoHeader() != null ? dto.infoHeader().ticker() : "null"));
+            System.out.println("=== INICIANDO MAPEAMENTO COM DEBUG PARA TICKER: " + 
+                (dto != null && dto.infoHeader() != null ? dto.infoHeader().ticker() : "null") + " ===");
             
             if (dto == null) {
                 System.out.println("DEBUG: DTO é null");
@@ -107,11 +107,12 @@ public interface BdrScraperMapper {
             System.out.println("DEBUG: Chamando toDomain...");
             Bdr result = toDomain(dto);
             
-            System.out.println("DEBUG: Mapeamento concluído com sucesso");
+            System.out.println("=== MAPEAMENTO CONCLUÍDO PARA TICKER: " + 
+                (dto != null && dto.infoHeader() != null ? dto.infoHeader().ticker() : "null") + " ===");
             return result;
             
         } catch (UnsupportedOperationException e) {
-            System.out.println("DEBUG: UnsupportedOperationException capturada no mapeamento: " + e.getMessage());
+            System.out.println("=== ERRO NO MAPEAMENTO: " + e.getMessage() + " ===");
             e.printStackTrace();
             throw e;
         } catch (Exception e) {
@@ -130,6 +131,7 @@ public interface BdrScraperMapper {
         if (indicators == null || !indicators.containsKey(key) || !(indicators.get(key) instanceof List)) {
             return null;
         }
+        
         List<?> values = (List<?>) indicators.get(key);
         return values.stream()
                 .filter(item -> item instanceof Map)
@@ -209,12 +211,28 @@ public interface BdrScraperMapper {
         List<Map<String, Object>> dividendosList = (List<Map<String, Object>>) dividendosData.get("content");
         // Usando ArrayList explicitamente para garantir que a lista seja mutável
         return dividendosList.stream()
-                .map(div -> new Dividendo(
-                        YearMonth.of((Integer) div.get("created_at"), 1),
-                        IndicadorParser.parseBigdecimal(String.valueOf(div.get("price"))),
-                        TipoDividendo.DIVIDENDO,
-                        "USD"
-                ))
+                .map(div -> {
+                    BigDecimal rawPrice = IndicadorParser.parseBigdecimal(String.valueOf(div.get("price")));
+                    
+                    // Lógica inteligente: se o valor é >= 1 e parece ser um inteiro (sem casas decimais significativas),
+                    // provavelmente está em centavos e precisa ser dividido por 100
+                    BigDecimal finalPrice;
+                    if (rawPrice.compareTo(BigDecimal.ONE) >= 0 && 
+                        rawPrice.remainder(BigDecimal.ONE).compareTo(BigDecimal.ZERO) == 0) {
+                        // Valor inteiro >= 1, provavelmente em centavos
+                        finalPrice = rawPrice.divide(new BigDecimal("100"));
+                    } else {
+                        // Valor decimal ou menor que 1, provavelmente já está correto
+                        finalPrice = rawPrice;
+                    }
+                    
+                    return new Dividendo(
+                            YearMonth.of((Integer) div.get("created_at"), 1),
+                            finalPrice,
+                            TipoDividendo.DIVIDENDO,
+                            "USD"
+                    );
+                })
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -226,5 +244,29 @@ public interface BdrScraperMapper {
         return IndicadorParser.parseParidadeBdr(text)
                 .map(IndicadorParser.ParidadeBdrInfo::fatorConversao)
                 .orElse(null);
+    }
+
+    default BigDecimal extractMarketCapValue(String marketCapText) {
+        if (marketCapText == null || marketCapText.trim().isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        // Formato esperado: "US$ 3,80 Trilhões R$ 3.800.147.800.000"
+        // Vamos extrair a parte em BRL (valor após "R$") que é mais precisa
+        String[] parts = marketCapText.split("R\\$");
+        if (parts.length >= 2) {
+            String brlPart = parts[1].trim();
+            return IndicadorParser.parseBigdecimal(brlPart);
+        }
+        
+        // Se não encontrar a parte BRL, tenta extrair a parte USD
+        String[] usdParts = marketCapText.split("US\\$");
+        if (usdParts.length >= 2) {
+            String usdPart = usdParts[1].split("R\\$")[0].trim(); // Remove a parte BRL se existir
+            return IndicadorParser.parseBigdecimal(usdPart);
+        }
+        
+        // Fallback: tenta processar o texto inteiro
+        return IndicadorParser.parseBigdecimal(marketCapText);
     }
 }

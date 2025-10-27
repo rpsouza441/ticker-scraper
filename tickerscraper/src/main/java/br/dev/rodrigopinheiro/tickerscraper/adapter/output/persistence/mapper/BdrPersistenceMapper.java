@@ -22,6 +22,7 @@ public interface BdrPersistenceMapper {
     @InheritConfiguration(name = "mapCommonToEntity")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "dividendos", source = "dividendos", qualifiedByName = "mapDividendosToEntity")
+    @Mapping(target = "dadosBrutosJson", ignore = true)
     BdrEntity toEntity(Bdr source, @Context DividendoPersistenceMapper divMapper);
 
     @AfterMapping
@@ -49,6 +50,7 @@ public interface BdrPersistenceMapper {
     // Update parcial (sem dividendos - eles são gerenciados pelo cascade)
     @InheritConfiguration(name = "updateCommonEntity")
     @Mapping(target = "dividendos", ignore = true)
+    @Mapping(target = "dadosBrutosJson", ignore = true)
     void updateEntity(Bdr source, @MappingTarget BdrEntity target);
 
     // Métodos auxiliares para mapeamento de dividendos

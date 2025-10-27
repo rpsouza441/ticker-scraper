@@ -1,15 +1,14 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.exception.ElementNotFoundException;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoInfoCardsDTO;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.validator.ScraperValidator;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+import br.dev.rodrigopinheiro.tickerscraper.domain.exception.ElementNotFoundException;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.acao.dto.AcaoInfoCardsDTO;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.validator.ScraperValidator;
 
 /**
  * Scraper responsável por extrair informações dos cards de uma ação.

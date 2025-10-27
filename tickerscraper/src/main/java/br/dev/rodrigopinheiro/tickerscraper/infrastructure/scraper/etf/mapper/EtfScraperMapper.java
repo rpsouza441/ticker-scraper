@@ -1,12 +1,11 @@
 package br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.etf.mapper;
 
-import br.dev.rodrigopinheiro.tickerscraper.domain.model.Etf;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
-import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.etf.dto.EtfDadosFinanceirosDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.math.BigDecimal;
+import br.dev.rodrigopinheiro.tickerscraper.domain.model.Etf;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.parser.IndicadorParser;
+import br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.etf.dto.EtfDadosFinanceirosDTO;
 
 /**
  * Mapper para conversão entre DTOs de infraestrutura e entidade de domínio ETF.

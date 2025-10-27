@@ -36,7 +36,7 @@ logging:
   level:
     org.hibernate.SQL: ${LOG_SQL_LEVEL:DEBUG}
     org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_BIND_LEVEL:TRACE}
-    root: ${ROOT_LOG_LEVEL:INFO}
+    root: ${ROOT_LOG_LEVEL:DEBUG}
 
   pattern:
     console: "[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%X{correlationId:-NO-CORRELATION}] [%-5level] %logger{36} - %msg%n"

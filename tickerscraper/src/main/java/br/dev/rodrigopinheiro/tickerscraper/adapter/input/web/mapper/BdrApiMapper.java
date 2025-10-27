@@ -17,6 +17,11 @@ public interface BdrApiMapper {
 
     // Mapeia o objeto de domínio Bdr para o DTO de resposta da API.
     // MapStruct lida com a maioria dos campos automaticamente devido aos nomes iguais.
+    @Mappings({
+            @Mapping(target = "pEbit", source = "PEbit"),
+            @Mapping(target = "pEbitda", source = "PEbitda"),
+            @Mapping(target = "pAtivo", source = "PAtivo")
+    })
     BdrResponseDTO toResponse(Bdr domain);
 
     // Mapeia o objeto de domínio Dividendo para o DTO de resposta, formatando a data.
