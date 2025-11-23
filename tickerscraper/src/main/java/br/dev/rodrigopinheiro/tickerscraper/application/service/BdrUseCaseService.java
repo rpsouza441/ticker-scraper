@@ -1,6 +1,7 @@
 package br.dev.rodrigopinheiro.tickerscraper.application.service;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
@@ -36,10 +37,10 @@ public class BdrUseCaseService
     private final RawDataMapper rawDataMapper;
 
     public BdrUseCaseService(@Qualifier("BdrPlaywrightDirectScraperAdapter") BdrDataScrapperPort scraper,
-                             BdrRepositoryPort repo,
-                             BdrScraperMapper scraperMapper,
-                             RawDataMapper rawDataMapper,
-                             ObjectMapper objectMapper) {
+            BdrRepositoryPort repo,
+            BdrScraperMapper scraperMapper,
+            RawDataMapper rawDataMapper,
+            ObjectMapper objectMapper) {
         super(objectMapper, Duration.ofDays(1), BdrDadosFinanceirosDTO.class);
         this.scraper = scraper;
         this.repo = repo;
@@ -70,8 +71,6 @@ public class BdrUseCaseService
         return ts != null && Duration.between(ts, Instant.now()).compareTo(maxAge) < 0;
     }
 
-
-
     @Override
     protected Bdr toDomain(BdrDadosFinanceirosDTO raw) {
         return scraperMapper.toDomain(raw);
@@ -82,9 +81,11 @@ public class BdrUseCaseService
         System.out.println("=== DEBUG: BdrUseCaseService.saveDomain CHAMADO! Ticker: " + domain.getTicker() + " ===");
         log.info("BdrUseCaseService.saveDomain - Iniciando salvamento para ticker: {}", domain.getTicker());
         log.info("BdrUseCaseService.saveDomain - Domain object class: {}", domain.getClass().getSimpleName());
-        log.info("BdrUseCaseService.saveDomain - Dividendos count: {}", domain.getDividendos() != null ? domain.getDividendos().size() : "null");
-        log.info("BdrUseCaseService.saveDomain - Dividendos list class: {}", domain.getDividendos() != null ? domain.getDividendos().getClass().getSimpleName() : "null");
-        
+        log.info("BdrUseCaseService.saveDomain - Dividendos count: {}",
+                domain.getDividendos() != null ? domain.getDividendos().size() : "null");
+        log.info("BdrUseCaseService.saveDomain - Dividendos list class: {}",
+                domain.getDividendos() != null ? domain.getDividendos().getClass().getSimpleName() : "null");
+
         String auditJson = null;
         try {
             // Serializa o DTO bruto para a string de auditoria
@@ -93,17 +94,20 @@ public class BdrUseCaseService
         } catch (Exception e) {
             log.error("BdrUseCaseService.saveDomain - Erro na serialização do audit JSON", e);
         }
-        
+
         try {
             log.info("BdrUseCaseService.saveDomain - Chamando repo.save (que agora preserva histórico)...");
             Bdr result = repo.save(domain, auditJson);
-            log.info("BdrUseCaseService.saveDomain - Salvamento concluído com sucesso para ticker: {}", result.getTicker());
+            log.info("BdrUseCaseService.saveDomain - Salvamento concluído com sucesso para ticker: {}",
+                    result.getTicker());
             return result;
         } catch (UnsupportedOperationException e) {
-            log.error("BdrUseCaseService.saveDomain - UnsupportedOperationException capturada! Ticker: {}, Message: {}", domain.getTicker(), e.getMessage(), e);
+            log.error("BdrUseCaseService.saveDomain - UnsupportedOperationException capturada! Ticker: {}, Message: {}",
+                    domain.getTicker(), e.getMessage(), e);
             throw e;
         } catch (Exception e) {
-            log.error("BdrUseCaseService.saveDomain - Erro inesperado durante salvamento. Ticker: {}", domain.getTicker(), e);
+            log.error("BdrUseCaseService.saveDomain - Erro inesperado durante salvamento. Ticker: {}",
+                    domain.getTicker(), e);
             throw e;
         }
     }
@@ -118,8 +122,7 @@ public class BdrUseCaseService
                             } catch (Exception e) {
                                 DataParsingException parsingError = new DataParsingException(
                                         ticker, "database", "dadosBrutosJson",
-                                        "JSON de BDR", json.substring(0, Math.min(100, json.length())), e
-                                );
+                                        "JSON de BDR", json.substring(0, Math.min(100, json.length())), e);
                                 return Mono.<BdrDadosFinanceirosDTO>error(parsingError);
                             }
                         })
@@ -131,7 +134,6 @@ public class BdrUseCaseService
     public Mono<BdrRawDataResponse> getRawTickerData(String ticker) {
         return super.getRawTickerDataAsResponse(ticker);
     }
-
 
     @Override
     protected BdrRawDataResponse convertToRawResponse(BdrDadosFinanceirosDTO infraDto) {
