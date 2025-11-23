@@ -167,6 +167,27 @@ java -jar target/tickerscraper-0.0.1-SNAPSHOT.jar
 
 ---
 
+## 🐳 Executando com Docker
+
+1) **Configure o ambiente**
+   - Copie o arquivo de exemplo:
+     ```bash
+     cp docker/.env.example docker/.env
+     ```
+   - (Opcional) Edite o arquivo `docker/.env` com suas configurações.
+
+2) **Execute com Docker Compose**
+   ```bash
+   cd docker
+   docker compose up --build
+   ```
+
+3) **Acesse**
+   - API: `http://localhost:8080`
+   - O banco de dados PostgreSQL estará acessível na porta `5432`.
+
+---
+
 ## 📝 Exemplos de Uso
 
 ### 🎯 Endpoint Unificado (recomendado)
