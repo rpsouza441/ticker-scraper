@@ -9,8 +9,8 @@ services:
     environment:
       - SERVER_PORT=${SERVER_PORT}
       - DB_URL=${DB_URL}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASS=${POSTGRES_PASSWORD}
       - DB_POOL_SIZE=${DB_POOL_SIZE}
       - DB_MIN_IDLE=${DB_MIN_IDLE}
       - DB_CONNECTION_TIMEOUT=${DB_CONNECTION_TIMEOUT}
@@ -43,7 +43,8 @@ services:
       - SELENIUM_RETRY_LOGGING=${SELENIUM_RETRY_LOGGING}
       - SELENIUM_MAX_RETRY_DURATION=${SELENIUM_MAX_RETRY_DURATION}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - tickerscraper-network
 
@@ -51,13 +52,18 @@ services:
     image: postgres:15-alpine
     container_name: tickerscraper-db
     environment:
-      POSTGRES_DB: tickerscraper
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - tickerscraper-network
 
