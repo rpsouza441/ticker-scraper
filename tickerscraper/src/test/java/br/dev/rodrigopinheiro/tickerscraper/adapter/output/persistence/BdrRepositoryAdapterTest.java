@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
@@ -94,20 +95,15 @@ class BdrRepositoryAdapterTest {
         novoDiv1.setMoeda("USD");
 
         bdrDomain.replaceDividendos(Arrays.asList(novoDiv1));
-        when(dividendoMapper.toEntity(novoDiv1)).thenAnswer(call -> {
-            DividendoEntity entity = new DividendoEntity();
-            entity.setMes(novoDiv1.getMes());
-            entity.setValor(novoDiv1.getValor());
-            entity.setTipoDividendo(novoDiv1.getTipoDividendo());
-            entity.setMoeda(novoDiv1.getMoeda());
-            return entity;
-        });
 
-        // Mock setup
+        // Mock setup — o adapter normaliza ticker para uppercase via norm()
         when(bdrJpa.findByTicker("NVDC34")).thenReturn(Optional.of(bdrEntity));
         when(dividendoJpa.findByAtivoId(1L)).thenReturn(dividendosExistentes);
         when(bdrJpa.save(any(BdrEntity.class))).thenReturn(bdrEntity);
         when(mapper.toDomain(any(BdrEntity.class), any(DividendoPersistenceMapper.class))).thenReturn(bdrDomain);
+        // MapStruct chama toEntity(Dividendo) item a item
+        lenient().when(dividendoMapper.toEntity(any(Dividendo.class))).thenReturn(dividendosExistentes.get(0));
+        lenient().when(dividendoMapper.toEntity(anyList())).thenReturn(dividendosExistentes);
 
         // Act
         Bdr resultado = adapter.savePreservingDividendHistory(bdrDomain, null);
@@ -136,11 +132,13 @@ class BdrRepositoryAdapterTest {
 
         bdrDomain.replaceDividendos(Arrays.asList(dividendoAtualizado));
 
-        // Mock setup
+        // Mock setup — o adapter normaliza ticker para uppercase via norm()
         when(bdrJpa.findByTicker("NVDC34")).thenReturn(Optional.of(bdrEntity));
         when(dividendoJpa.findByAtivoId(1L)).thenReturn(dividendosExistentes);
         when(bdrJpa.save(any(BdrEntity.class))).thenReturn(bdrEntity);
         when(mapper.toDomain(any(BdrEntity.class), any(DividendoPersistenceMapper.class))).thenReturn(bdrDomain);
+        lenient().when(dividendoMapper.toEntity(any(Dividendo.class))).thenReturn(dividendosExistentes.get(0));
+        lenient().when(dividendoMapper.toEntity(anyList())).thenReturn(dividendosExistentes);
 
         // Act
         adapter.savePreservingDividendHistory(bdrDomain, null);
@@ -148,7 +146,7 @@ class BdrRepositoryAdapterTest {
         // Assert
         // Verificar que não houve delete (comportamento principal)
         verify(dividendoJpa, never()).deleteByAtivoId(anyLong());
-        
+
         // Verificar que os dividendos existentes foram buscados
         verify(dividendoJpa).findByAtivoId(1L);
     }
@@ -164,11 +162,13 @@ class BdrRepositoryAdapterTest {
 
         bdrDomain.replaceDividendos(Arrays.asList(dividendoIgual));
 
-        // Mock setup
+        // Mock setup — o adapter normaliza ticker para uppercase via norm()
         when(bdrJpa.findByTicker("NVDC34")).thenReturn(Optional.of(bdrEntity));
         when(dividendoJpa.findByAtivoId(1L)).thenReturn(dividendosExistentes);
         when(bdrJpa.save(any(BdrEntity.class))).thenReturn(bdrEntity);
         when(mapper.toDomain(any(BdrEntity.class), any(DividendoPersistenceMapper.class))).thenReturn(bdrDomain);
+        lenient().when(dividendoMapper.toEntity(any(Dividendo.class))).thenReturn(dividendosExistentes.get(0));
+        lenient().when(dividendoMapper.toEntity(anyList())).thenReturn(dividendosExistentes);
 
         // Act
         adapter.savePreservingDividendHistory(bdrDomain, null);
@@ -176,7 +176,7 @@ class BdrRepositoryAdapterTest {
         // Assert
         // Verificar que não houve delete (comportamento principal)
         verify(dividendoJpa, never()).deleteByAtivoId(anyLong());
-        
+
         // Verificar que os dividendos existentes foram buscados
         verify(dividendoJpa).findByAtivoId(1L);
     }

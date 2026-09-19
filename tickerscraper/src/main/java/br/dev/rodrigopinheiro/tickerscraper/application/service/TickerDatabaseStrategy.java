@@ -80,12 +80,11 @@ public class TickerDatabaseStrategy {
 
         if (existeAcao) {
             if (ticker.endsWith("11")) return TipoAtivoResult.encontrado(TipoAtivo.UNIT);
-            // Determinar tipo específico de ação baseado no sufixo
+            // Determinar tipo específico de ação baseado no sufixo.
+            // Se heurística diz BDR (sufixo 34/35) para ticker na tabela ACAO,
+            //trust na heurística — dado no DB pode ter tipo errado (ex: NVDC34 em ACAO table).
             TipoAtivo tipo = TipoAtivo.classificarPorHeuristica(ticker);
-            if (tipo.isAcao()) {
-                return TipoAtivoResult.encontrado(tipo);
-            }
-            return TipoAtivoResult.encontrado(TipoAtivo.ACAO_ON);
+            return TipoAtivoResult.encontrado(tipo);
         }
 
         return TipoAtivoResult.naoEncontrado();

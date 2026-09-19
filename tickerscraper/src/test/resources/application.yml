@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: tickerscraper-test
+
+  # H2 in-memory para testes unitarios
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+# Desabilitar scraping externo nos testes
+scraper:
+  network-capture-timeout-ms: 1000
+
+ticker:
+  classification:
+    cache:
+      enabled: false
+    brapi:
+      fallback-enabled: false
+
+# Brapi desabilitado nos testes
+brapi:
+  base-url: http://localhost:19999
+  token: test-token
+  connect-timeout: 1s
+  read-timeout: 1s
+  retry:
+    max-attempts: 1
+
+logging:
+  level:
+    root: WARN
+    br.dev.rodrigopinheiro: INFO
