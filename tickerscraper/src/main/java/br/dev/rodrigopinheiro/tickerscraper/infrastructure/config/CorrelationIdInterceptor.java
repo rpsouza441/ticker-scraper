@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.AsyncHandlerInterceptor;
 
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
  * Garante rastreabilidade de requisições através de todos os componentes do sistema.
  */
 @Component
-public class CorrelationIdInterceptor implements HandlerInterceptor {
+public class CorrelationIdInterceptor implements AsyncHandlerInterceptor {
     
     public static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
     public static final String CORRELATION_ID_MDC_KEY = "correlationId";
@@ -23,10 +23,12 @@ public class CorrelationIdInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         // Obter correlationId do header ou gerar novo
-        String correlationId = request.getHeader(CORRELATION_ID_HEADER);
+        String correlationId = (String) request.getAttribute(CORRELATION_ID_MDC_KEY);
+        if (correlationId == null) correlationId = request.getHeader(CORRELATION_ID_HEADER);
         if (correlationId == null || correlationId.trim().isEmpty()) {
             correlationId = generateCorrelationId();
         }
+        request.setAttribute(CORRELATION_ID_MDC_KEY, correlationId);
         
         // Adicionar ao MDC para logs
         MDC.put(CORRELATION_ID_MDC_KEY, correlationId);
@@ -41,11 +43,22 @@ public class CorrelationIdInterceptor implements HandlerInterceptor {
         // Retornar correlationId no response header
         response.setHeader(CORRELATION_ID_HEADER, correlationId);
         
+        Object variables = request.getAttribute(org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+        if (variables instanceof java.util.Map<?, ?> map && map.get("ticker") instanceof String ticker
+                && !ticker.matches("(?i)[A-Z]{4}[0-9]{1,2}")) {
+            throw new IllegalArgumentException("Invalid ticker format");
+        }
         return true;
     }
     
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, 
+    public void afterConcurrentHandlingStarted(HttpServletRequest request, HttpServletResponse response,
+                                               Object handler) {
+        MDC.clear();
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                Object handler, Exception ex) {
         // Limpar MDC após processamento da requisição
         MDC.clear();

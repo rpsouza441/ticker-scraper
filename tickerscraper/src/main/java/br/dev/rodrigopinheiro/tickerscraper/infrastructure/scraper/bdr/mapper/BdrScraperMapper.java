@@ -126,13 +126,27 @@ public interface BdrScraperMapper {
     // MÉTODOS HELPER
     // =========================================================
 
+    default Object findIndicator(Map<String, Object> indicators, String key) {
+        if (indicators == null) return null;
+        return indicators.entrySet().stream()
+                .filter(entry -> normalizeIndicator(entry.getKey()).equals(normalizeIndicator(key)))
+                .map(Map.Entry::getValue).findFirst().orElse(null);
+    }
+
+    @org.mapstruct.Named("indicatorKey")
+    default String normalizeIndicator(String name) {
+        return java.text.Normalizer.normalize(name, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").replaceAll("[^A-Za-z0-9]", "").toUpperCase(java.util.Locale.ROOT);
+    }
+
     // Método para valores decimais (P/L, P/VP, VPA, LPA, etc.)
     default BigDecimal getIndicatorValueAsDecimal(Map<String, Object> indicators, String key) {
-        if (indicators == null || !indicators.containsKey(key) || !(indicators.get(key) instanceof List)) {
+        Object indicator = findIndicator(indicators, key);
+        if (!(indicator instanceof List)) {
             return null;
         }
         
-        List<?> values = (List<?>) indicators.get(key);
+        List<?> values = (List<?>) indicator;
         return values.stream()
                 .filter(item -> item instanceof Map)
                 .map(item -> (Map<?, ?>) item)
@@ -147,10 +161,11 @@ public interface BdrScraperMapper {
 
     // Método para valores percentuais (ROE, ROA, ROIC, margens, DY)
     default BigDecimal getIndicatorValueAsPercent(Map<String, Object> indicators, String key) {
-        if (indicators == null || !indicators.containsKey(key) || !(indicators.get(key) instanceof List)) {
+        Object indicator = findIndicator(indicators, key);
+        if (!(indicator instanceof List)) {
             return null;
         }
-        List<?> values = (List<?>) indicators.get(key);
+        List<?> values = (List<?>) indicator;
         return values.stream()
                 .filter(item -> item instanceof Map)
                 .map(item -> (Map<?, ?>) item)
@@ -209,31 +224,24 @@ public interface BdrScraperMapper {
             return new ArrayList<>();
         }
         List<Map<String, Object>> dividendosList = (List<Map<String, Object>>) dividendosData.get("content");
-        // Usando ArrayList explicitamente para garantir que a lista seja mutável
-        return dividendosList.stream()
-                .map(div -> {
-                    BigDecimal rawPrice = IndicadorParser.parseBigdecimal(String.valueOf(div.get("price")));
-                    
-                    // Lógica inteligente: se o valor é >= 1 e parece ser um inteiro (sem casas decimais significativas),
-                    // provavelmente está em centavos e precisa ser dividido por 100
-                    BigDecimal finalPrice;
-                    if (rawPrice.compareTo(BigDecimal.ONE) >= 0 && 
-                        rawPrice.remainder(BigDecimal.ONE).compareTo(BigDecimal.ZERO) == 0) {
-                        // Valor inteiro >= 1, provavelmente em centavos
-                        finalPrice = rawPrice.divide(new BigDecimal("100"));
-                    } else {
-                        // Valor decimal ou menor que 1, provavelmente já está correto
-                        finalPrice = rawPrice;
-                    }
-                    
-                    return new Dividendo(
-                            YearMonth.of((Integer) div.get("created_at"), 1),
-                            finalPrice,
-                            TipoDividendo.DIVIDENDO,
-                            "USD"
-                    );
-                })
-                .collect(Collectors.toCollection(ArrayList::new));
+        List<Dividendo> result = new ArrayList<>();
+        for (Map<String, Object> div : dividendosList) {
+            String period = String.valueOf(div.get("created_at")).trim();
+            // The chart includes a rolling aggregate, not an additional payment.
+            if (period.equalsIgnoreCase("Últ. 12M") || period.equalsIgnoreCase("Ult. 12M")) continue;
+            if (!period.matches("[0-9]{4}")) {
+                throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.DataParsingException(
+                        null, "dividendos", "created_at", "ano YYYY", period, null);
+            }
+            BigDecimal price = IndicadorParser.parseBigdecimal(String.valueOf(div.get("price")));
+            if (price == null) {
+                throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.DataParsingException(
+                        null, "dividendos", "price", "valor decimal", String.valueOf(div.get("price")), null);
+            }
+            result.add(new Dividendo(YearMonth.of(Integer.parseInt(period), 1),
+                    price, TipoDividendo.DIVIDENDO, "BRL"));
+        }
+        return result;
     }
 
     default String extractCurrency(String text) {

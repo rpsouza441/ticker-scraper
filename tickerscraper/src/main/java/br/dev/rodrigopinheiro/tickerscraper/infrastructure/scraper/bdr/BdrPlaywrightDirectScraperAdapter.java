@@ -56,10 +56,9 @@ public class BdrPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Bd
     }
 
     @Override
-    @Retry(name = "bdrScraper")
-    @CircuitBreaker(name = "bdrScraper")
     public Mono<BdrDadosFinanceirosDTO> scrape(String ticker) {
         final String url = buildUrl(ticker);
+        return Mono.defer(() -> {
         AtomicReference<BrowserContext> ctxRef = new AtomicReference<>();
         AtomicReference<Page> pageRef = new AtomicReference<>();
 
@@ -84,6 +83,12 @@ public class BdrPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Bd
 
                 navigateAndValidate(page, url, ticker);
 
+                try {
+                    page.waitForCondition(() -> requests.keySet().containsAll(TODAS_AS_CHAVES),
+                            new Page.WaitForConditionOptions().setTimeout(5_000));
+                } catch (TimeoutError expected) {
+                    log.debug("Captura parcial de APIs para {}", ticker);
+                }
                 String html = page.content();
                 Document doc = Jsoup.parse(html);
                 validateEssentialElements(doc, getEssentialSelectors(), getCardsSelectors(), ticker, url);
@@ -120,23 +125,15 @@ public class BdrPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Bd
                 // --- TRADUÇÃO DE ERROS TÉCNICOS PARA EXCEÇÕES DE DOMÍNIO ---
             } catch (TimeoutError e) {
                 throw new ScrapingTimeoutException(ticker, url, Duration.ofMillis(DEFAULT_TIMEOUT_MS), "PLAYWRIGHT_OPERATION");
+            } catch (ScrapingException e) {
+                throw e;
             } catch (PlaywrightException e) {
-                if (e.getMessage().contains("net::ERR_NAME_NOT_RESOLVED") || e.getMessage().contains("404")) {
-                    throw new TickerNotFoundException(ticker, url);
-                }
-                throw new AntiBotDetectedException(ticker, url, "Erro inesperado do Playwright: " + e.getMessage(), "Playwright");
-            } catch (Exception e) {
-                // Captura qualquer outra exceção e a envolve em uma exceção de scraping
-                throw new ScrapingException("Erro não esperado durante o scraping de BDR", ticker, url, "UNKNOWN", e) {
-                    @Override
-                    public String getErrorCode() {
-                        return "BDR_SCRAPE_FAILED";
-                    }
-                };
+                throw new IllegalStateException("Falha no navegador para " + ticker, e);
             }
             // --- FIM DO BLOCO TRY-CATCH ---
 
         }, ticker, () -> closePlaywrightResources(pageRef.get(), ctxRef.get()));
+        });
     }
 
     @Override

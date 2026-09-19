@@ -162,8 +162,7 @@ public abstract class AbstractScraperAdapter<T> {
                 throw new TickerNotFoundException(ticker, url);
             }
             
-            // Se não há elementos essenciais, assumir ticker inexistente
-            throw new TickerNotFoundException(ticker, url);
+            throw br.dev.rodrigopinheiro.tickerscraper.domain.exception.HtmlStructureException.forMissingElement(ticker, url, "header/cards");
         }
         
         if (!hasEssentialElements) {
@@ -209,24 +208,16 @@ public abstract class AbstractScraperAdapter<T> {
      * @return true se algum elemento for encontrado
      */
     protected boolean waitForAnySelector(Page page, String[] selectors, int timeoutMs, String ticker, String url) {
-        for (String selector : selectors) {
-            try {
-                page.waitForSelector(selector, new Page.WaitForSelectorOptions().setTimeout(timeoutMs));
-                logger.debug("Elemento encontrado com seletor: {} para ticker: {}", selector, ticker);
-                return true;
-            } catch (TimeoutError e) {
-                // Continua tentando os próximos seletores
-                continue;
-            } catch (Exception e) {
-                // Outros erros podem indicar anti-bot
-                if (e.getMessage().contains("blocked") || e.getMessage().contains("captcha")) {
-                    throw new AntiBotDetectedException(ticker, url, e.getMessage(), "Playwright");
-                }
-                // Para outros erros, continua tentando
-                continue;
-            }
+        if (selectors == null || selectors.length == 0) return false;
+        try {
+            // Parsing consumes the DOM, including responsive elements hidden by CSS.
+            page.waitForSelector(String.join(", ", selectors), new Page.WaitForSelectorOptions()
+                    .setState(com.microsoft.playwright.options.WaitForSelectorState.ATTACHED)
+                    .setTimeout(timeoutMs));
+            return true;
+        } catch (TimeoutError ex) {
+            return false;
         }
-        return false; // Nenhum seletor foi encontrado
     }
     
     /**
@@ -279,11 +270,7 @@ public abstract class AbstractScraperAdapter<T> {
      */
     protected Mono<T> createReactiveStructure(java.util.concurrent.Callable<T> scrapingLogic, 
                                              String ticker, Runnable cleanupAction) {
-        return Mono.fromCallable(scrapingLogic)
-                .doOnError(e -> logger.error("Falha no scraping para {}: {}", ticker, e.toString()))
-                .doOnCancel(cleanupAction)
-                .doFinally(sig -> cleanupAction.run())
-                .subscribeOn(Schedulers.boundedElastic());
+        return ScraperExecution.bounded(ScraperExecution.execute(scrapingLogic, cleanupAction), ticker);
     }
     
     /**
@@ -296,12 +283,10 @@ public abstract class AbstractScraperAdapter<T> {
      */
     protected Mono<T> createReactiveStructureForMono(java.util.concurrent.Callable<Mono<T>> scrapingLogic, 
                                                     String ticker, Runnable cleanupAction) {
-        return Mono.fromCallable(scrapingLogic)
-                .flatMap(mono -> mono)
-                .doOnError(e -> logger.error("Falha no scraping para {}: {}", ticker, e.toString()))
-                .doOnCancel(cleanupAction)
-                .doFinally(sig -> cleanupAction.run())
-                .subscribeOn(Schedulers.boundedElastic());
+        // Returned API publishers no longer use the browser; close on its owner
+        // before subscribing to HTTP work, whose completion may run elsewhere.
+        return ScraperExecution.bounded(ScraperExecution.execute(scrapingLogic, cleanupAction)
+                .flatMap(mono -> mono), ticker);
     }
     
     /**

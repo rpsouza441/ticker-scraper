@@ -33,6 +33,7 @@ public class BdrController {
         log.info("GET /bdr/get-{}", ticker);
         return useCase.getTickerData(ticker)
                 .map(apiMapper::toResponse)
+                .timeout(java.time.Duration.ofSeconds(28))
                 .map(ResponseEntity::ok)
                 // CORREÇÃO: Use sua exceção de domínio
                 .onErrorResume(TickerNotFoundException.class, e -> Mono.just(ResponseEntity.notFound().build()));
@@ -42,6 +43,7 @@ public class BdrController {
     public Mono<ResponseEntity<BdrRawDataResponse>> getRaw(@PathVariable String ticker) {
         log.info("GET /bdr/get-{}/raw", ticker);
         return useCase.getRawTickerData(ticker)
+                .timeout(java.time.Duration.ofSeconds(28))
                 .map(ResponseEntity::ok)
                 // CORREÇÃO: Use sua exceção de domínio
                 .onErrorResume(TickerNotFoundException.class, e -> Mono.just(ResponseEntity.notFound().build()));

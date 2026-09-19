@@ -94,9 +94,17 @@ class BdrRepositoryAdapterTest {
         novoDiv1.setMoeda("USD");
 
         bdrDomain.replaceDividendos(Arrays.asList(novoDiv1));
+        when(dividendoMapper.toEntity(novoDiv1)).thenAnswer(call -> {
+            DividendoEntity entity = new DividendoEntity();
+            entity.setMes(novoDiv1.getMes());
+            entity.setValor(novoDiv1.getValor());
+            entity.setTipoDividendo(novoDiv1.getTipoDividendo());
+            entity.setMoeda(novoDiv1.getMoeda());
+            return entity;
+        });
 
         // Mock setup
-        when(bdrJpa.findByTicker("nvdc34")).thenReturn(Optional.of(bdrEntity));
+        when(bdrJpa.findByTicker("NVDC34")).thenReturn(Optional.of(bdrEntity));
         when(dividendoJpa.findByAtivoId(1L)).thenReturn(dividendosExistentes);
         when(bdrJpa.save(any(BdrEntity.class))).thenReturn(bdrEntity);
         when(mapper.toDomain(any(BdrEntity.class), any(DividendoPersistenceMapper.class))).thenReturn(bdrDomain);
@@ -129,7 +137,7 @@ class BdrRepositoryAdapterTest {
         bdrDomain.replaceDividendos(Arrays.asList(dividendoAtualizado));
 
         // Mock setup
-        when(bdrJpa.findByTicker("nvdc34")).thenReturn(Optional.of(bdrEntity));
+        when(bdrJpa.findByTicker("NVDC34")).thenReturn(Optional.of(bdrEntity));
         when(dividendoJpa.findByAtivoId(1L)).thenReturn(dividendosExistentes);
         when(bdrJpa.save(any(BdrEntity.class))).thenReturn(bdrEntity);
         when(mapper.toDomain(any(BdrEntity.class), any(DividendoPersistenceMapper.class))).thenReturn(bdrDomain);
@@ -157,7 +165,7 @@ class BdrRepositoryAdapterTest {
         bdrDomain.replaceDividendos(Arrays.asList(dividendoIgual));
 
         // Mock setup
-        when(bdrJpa.findByTicker("nvdc34")).thenReturn(Optional.of(bdrEntity));
+        when(bdrJpa.findByTicker("NVDC34")).thenReturn(Optional.of(bdrEntity));
         when(dividendoJpa.findByAtivoId(1L)).thenReturn(dividendosExistentes);
         when(bdrJpa.save(any(BdrEntity.class))).thenReturn(bdrEntity);
         when(mapper.toDomain(any(BdrEntity.class), any(DividendoPersistenceMapper.class))).thenReturn(bdrDomain);

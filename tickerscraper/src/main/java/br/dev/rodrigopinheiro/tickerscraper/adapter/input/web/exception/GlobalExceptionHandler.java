@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = createDomainErrorResponse(ex,
                 "Timeout durante o scraping. Tente novamente em alguns minutos.", details);
 
-        return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body(error);
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body(error);
     }
 
     @ExceptionHandler(AntiBotDetectedException.class)
@@ -239,7 +239,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = createDomainErrorResponse(ex,
                 "Operação assíncrona excedeu o tempo limite. Tente novamente em alguns minutos.", details);
 
-        return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
                 .header("Retry-After", String.valueOf(ex.getRecommendedRetryDelay().getSeconds()))
                 .body(error);
     }
@@ -255,6 +255,25 @@ public class GlobalExceptionHandler {
                 false).build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler({org.springframework.web.context.request.async.AsyncRequestTimeoutException.class,
+            java.util.concurrent.TimeoutException.class})
+    public ResponseEntity<ErrorResponse> handleFrameworkTimeout(Exception ex, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body(
+                createBaseErrorResponse("SCRAPING_TIMEOUT", "Tempo limite de processamento excedido.", null, true).build());
+    }
+
+    @ExceptionHandler(java.util.concurrent.RejectedExecutionException.class)
+    public ResponseEntity<ErrorResponse> handleBusy(Exception ex, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).header("Retry-After", "5").body(
+                createBaseErrorResponse("SCRAPER_BUSY", "Scraper ocupado. Tente novamente.", null, true).build());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidInput(IllegalArgumentException ex, WebRequest request) {
+        return ResponseEntity.badRequest().body(
+                createBaseErrorResponse("INVALID_TICKER", "Código de ticker inválido.", null, false).build());
     }
 
     @ExceptionHandler(Exception.class)

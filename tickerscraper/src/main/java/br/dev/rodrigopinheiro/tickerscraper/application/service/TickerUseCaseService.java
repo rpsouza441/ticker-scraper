@@ -101,11 +101,6 @@ public class TickerUseCaseService implements TickerUseCasePort {
                     classificationCache.put(ticker, tipo);
                     log.info("Ticker {} classificado via API Brapi: {}", ticker, tipo);
                 })
-                .flatMap(tipo -> {
-                    // Após classificar, fazer scraping para salvar os dados no banco
-                    log.debug("Fazendo scraping de {} para salvar no banco após classificação", ticker);
-                    return fazerScrapingERetornarTipo(ticker, tipo);
-                })
                 .onErrorMap(TickerNotFoundException.class, ex -> {
                     log.warn("Ticker {} não encontrado na API Brapi: {}", ticker, ex.getMessage());
                     return new TickerNotFoundException(ticker, "API_BRAPI", ticker,

@@ -30,6 +30,7 @@ public class EtfController {
         log.info("GET /etf/get-{}", ticker);
         return useCase.getTickerData(ticker)          // Mono<Etf>
                 .map(etfApiMapper::toResponseDto)         // Domain -> DTO
+                .timeout(java.time.Duration.ofSeconds(28))
                 .map(ResponseEntity::ok)
                 .onErrorResume(NotFoundException.class,
                         e -> Mono.just(ResponseEntity.notFound().build()));
@@ -39,6 +40,7 @@ public class EtfController {
     public Mono<ResponseEntity<EtfRawDataResponse>> getRawData(@PathVariable String ticker) {
         log.info("GET /etf/get-{}/raw", ticker);
         return useCase.getRawTickerData(ticker)       // Mono<EtfRawDataResponse>
+                .timeout(java.time.Duration.ofSeconds(28))
                 .map(ResponseEntity::ok)
                 .onErrorResume(NotFoundException.class,
                         e -> Mono.just(ResponseEntity.notFound().build()));

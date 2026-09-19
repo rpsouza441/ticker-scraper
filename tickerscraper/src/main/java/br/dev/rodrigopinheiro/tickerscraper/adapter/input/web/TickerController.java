@@ -25,7 +25,8 @@ public class TickerController {
         log.info("Requisição para ticker: {}", ticker);
         
         return tickerUseCase.obterAtivo(ticker)
-            .map(ResponseEntity::ok);
+            .timeout(java.time.Duration.ofSeconds(28))
+                .map(ResponseEntity::ok);
     }
 
     /**
@@ -36,6 +37,7 @@ public class TickerController {
         log.info("Requisição de classificação para ticker: {}", ticker);
         
         return tickerUseCase.classificarTicker(ticker)
+            .timeout(java.time.Duration.ofSeconds(28))
             .map(tipo -> ResponseEntity.ok(new ClassificacaoResponse(ticker, tipo)));
     }
     

@@ -11,7 +11,8 @@ public class BdrHeaderScraper {
     private final ObjectMapper json = new ObjectMapper();
 
     public InfoHeader extract(Document doc, String ticker) {
-        String nome = fromJsonLdArticle(doc);
+        var company = doc.selectFirst(".name-company");
+        String nome = company == null ? fromJsonLdArticle(doc) : company.text();
         if (nome == null) {
             try {
                 nome = doc.selectFirst("h1, h2").text();

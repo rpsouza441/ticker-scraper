@@ -91,7 +91,9 @@ public interface AcaoScraperMapper {
         if (dados == null || dados.fundamentalIndicators() == null || dados.fundamentalIndicators().indicadores() == null) {
             return BigDecimal.ZERO;
         }
-        AcaoIndicadorFundamentalistaDTO indicador = dados.fundamentalIndicators().indicadores().get(nomeIndicador);
+        AcaoIndicadorFundamentalistaDTO indicador = dados.fundamentalIndicators().indicadores().entrySet().stream()
+                .filter(entry -> normalizeIndicator(entry.getKey()).equals(normalizeIndicator(nomeIndicador)))
+                .map(java.util.Map.Entry::getValue).findFirst().orElse(null);
 
         // VERIFICAÇÃO E LOG
         if (indicador == null) {
@@ -106,11 +108,19 @@ public interface AcaoScraperMapper {
         return IndicadorParser.parseBigdecimal(indicador.valor());
     }
 
+    @org.mapstruct.Named("indicatorKey")
+    default String normalizeIndicator(String name) {
+        return java.text.Normalizer.normalize(name, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").replaceAll("[^A-Za-z0-9]", "").toUpperCase(java.util.Locale.ROOT);
+    }
+
     @Named("classificarTipoAtivo")
     default TipoAtivo classificarTipoAtivo(String ticker) {
         if (ticker == null || ticker.trim().isEmpty()) {
             return TipoAtivo.DESCONHECIDO;
         }
+        // This mapper only receives a validated /acoes page, resolving suffix 11.
+        if (ticker.trim().endsWith("11")) return TipoAtivo.UNIT;
         return TipoAtivo.classificarPorHeuristica(ticker.trim().toUpperCase());
     }
 

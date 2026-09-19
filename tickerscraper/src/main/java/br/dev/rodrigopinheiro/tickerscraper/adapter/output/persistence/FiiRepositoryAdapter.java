@@ -99,8 +99,8 @@ public class FiiRepositoryAdapter implements FiiRepositoryPort {
         
         // Limpar dividendos existentes antes de adicionar novos (evita constraint violation)
         logger.debug("Removendo dividendos existentes para fundo ID: {}", entity.getId());
-        jpa.deleteAllDividendosByFundoId(entity.getId());
-        jpa.flush(); // Força a execução do DELETE antes do INSERT
+        entity.getFiiDividendos().clear();
+        jpa.flush(); // orphanRemoval synchronizes both the database and managed collection.
         logger.debug("Dividendos existentes removidos para fundo ID: {}", entity.getId());
         
         // dividendos (12 meses, FK/back-ref)

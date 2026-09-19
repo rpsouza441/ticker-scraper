@@ -79,6 +79,7 @@ public class TickerDatabaseStrategy {
         }
 
         if (existeAcao) {
+            if (ticker.endsWith("11")) return TipoAtivoResult.encontrado(TipoAtivo.UNIT);
             // Determinar tipo específico de ação baseado no sufixo
             TipoAtivo tipo = TipoAtivo.classificarPorHeuristica(ticker);
             if (tipo.isAcao()) {

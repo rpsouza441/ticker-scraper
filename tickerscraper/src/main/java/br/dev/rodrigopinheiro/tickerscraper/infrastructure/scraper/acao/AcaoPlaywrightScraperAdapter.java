@@ -54,8 +54,6 @@ public class AcaoPlaywrightScraperAdapter extends AbstractScraperAdapter<AcaoDad
     }
 
     @Override
-    @CircuitBreaker(name = "scraper", fallbackMethod = "fallbackToSelenium")
-    @Retry(name = "scraper")
     public Mono<AcaoDadosFinanceirosDTO> scrape(String ticker) {
         final String url = buildUrl(ticker);
         return executarComPlaywright(ticker, url);
@@ -72,6 +70,7 @@ public class AcaoPlaywrightScraperAdapter extends AbstractScraperAdapter<AcaoDad
     }
 
     private Mono<AcaoDadosFinanceirosDTO> executarComPlaywright(String ticker, String url) {
+        return Mono.defer(() -> {
         AtomicReference<BrowserContext> ctxRef = new AtomicReference<>();
         AtomicReference<Page> pageRef = new AtomicReference<>();
 
@@ -90,37 +89,12 @@ public class AcaoPlaywrightScraperAdapter extends AbstractScraperAdapter<AcaoDad
             navigateAndValidate(page, url, ticker);
 
             // Esperar seletores essenciais com fallbacks
-            boolean hasEssentialElements = waitForAnySelector(page, ESSENTIAL_SELECTORS, 10_000, ticker, url);
-            boolean hasCardsElements = waitForAnySelector(page, CARDS_SELECTORS, 10_000, ticker, url);
-            boolean hasIndicatorsElements = waitForAnySelector(page, INDICATORS_SELECTORS, 10_000, ticker, url);
+            boolean hasEssentialElements = waitForAnySelector(page, ESSENTIAL_SELECTORS, 2_000, ticker, url);
+            boolean hasCardsElements = waitForAnySelector(page, CARDS_SELECTORS, 2_000, ticker, url);
+            boolean hasIndicatorsElements = waitForAnySelector(page, INDICATORS_SELECTORS, 2_000, ticker, url);
             
-            // Validar elementos essenciais usando métod da classe base
-            if (!hasEssentialElements && !hasCardsElements && !hasIndicatorsElements) {
-                logger.error("Nenhum elemento essencial encontrado para ticker {} - possível ticker inexistente", ticker);
-                
-                // Verificar se a página contém indicadores de erro ou ticker não encontrado
-                String html = page.content();
-                if (html.contains("410 Gone") || html.contains("Not Found") || 
-                    html.contains("Página não encontrada") || html.contains("Ticker não encontrado")) {
-                    throw new TickerNotFoundException(ticker, url);
-                }
-                
-                throw new TickerNotFoundException(ticker, url);
-            }
-            
-            if (!hasEssentialElements) {
-                logger.warn("Nenhum elemento essencial encontrado para ticker {} com seletores: {}", 
-                           ticker, java.util.Arrays.toString(ESSENTIAL_SELECTORS));
-            }
-            
-            if (!hasCardsElements) {
-                logger.warn("Nenhum elemento de cards encontrado para ticker {} com seletores: {}", 
-                           ticker, java.util.Arrays.toString(CARDS_SELECTORS));
-            }
-            
-            if (!hasIndicatorsElements) {
-                logger.warn("Nenhum elemento de indicadores encontrado para ticker {} com seletores: {}", 
-                           ticker, java.util.Arrays.toString(INDICATORS_SELECTORS));
+            if (!hasEssentialElements || !hasCardsElements) {
+                throw HtmlStructureException.forMissingElement(ticker, page.url(), "header/cards");
             }
 
             // HTML final e execução do scraping específico
@@ -129,6 +103,7 @@ public class AcaoPlaywrightScraperAdapter extends AbstractScraperAdapter<AcaoDad
             
             return executeSpecificScraping(doc, ticker);
         }, ticker, () -> closePlaywrightResources(pageRef.get(), ctxRef.get()));
+        });
     }
 
     // Template methods implementation

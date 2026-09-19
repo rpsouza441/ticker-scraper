@@ -29,6 +29,7 @@ public class AcaoController {
         log.info("GET /acao/get-{}", ticker);
         return useCase.getTickerData(ticker)          // Mono<Acao>
                 .map(acaoApiMapper::toResponseDto)        // Domain -> DTO
+                .timeout(java.time.Duration.ofSeconds(28))
                 .map(ResponseEntity::ok)
                 .onErrorResume(NotFoundException.class,
                         e -> Mono.just(ResponseEntity.notFound().build()));
@@ -38,6 +39,7 @@ public class AcaoController {
     public Mono<ResponseEntity<AcaoRawDataResponse>> getRawData(@PathVariable String ticker) {
         log.info("GET /acao/get-{}/raw", ticker);
         return useCase.getRawTickerData(ticker)       // Mono<AcaoRawDataResponse>
+                .timeout(java.time.Duration.ofSeconds(28))
                 .map(ResponseEntity::ok)
                 .onErrorResume(NotFoundException.class,
                         e -> Mono.just(ResponseEntity.notFound().build()));

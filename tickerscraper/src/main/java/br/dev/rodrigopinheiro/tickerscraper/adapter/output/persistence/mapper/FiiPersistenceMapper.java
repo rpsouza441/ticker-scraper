@@ -111,7 +111,7 @@ public interface FiiPersistenceMapper {
         if (target.getFiiDividendos() == null) {
             target.setFiiDividendos(new ArrayList<>());
         }
-        // Não faz clear() pois pode causar orphan deletion error
+        target.getFiiDividendos().clear(); // Replace, never append a second copy.
         
         // Adiciona os novos dividendos
         if (source.getFiiDividendos() != null) {

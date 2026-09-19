@@ -26,9 +26,9 @@ public class AcaoIndicatorsScraper {
     
     // Constantes para seletores CSS com fallbacks
     private static final String[] INDICATORS_TABLE_SELECTORS = {"#table-indicators", ".indicators-table", "table.indicators"};
-    private static final String[] CELL_SELECTORS = {".cell", ".indicator-cell", ".indicator-item"};
-    private static final String[] TITLE_SELECTORS = {"span", ".title", ".indicator-title"};
-    private static final String[] VALUE_SELECTORS = {"div.value > span", ".indicator-value", ".value span"};
+    private static final String[] CELL_SELECTORS = {".indicator-card", ".cell", ".indicator-cell", ".indicator-item"};
+    private static final String[] TITLE_SELECTORS = {".indicator-card-title", ".title", ".indicator-title", "span"};
+    private static final String[] VALUE_SELECTORS = {".indicator-card-value > span", "div.value > span", ".indicator-value", ".value span"};
 
     /**
      * Extrai os indicadores fundamentalistas da página de uma ação.
@@ -62,7 +62,7 @@ public class AcaoIndicatorsScraper {
                             .map(cell -> {
                                 // Extrai o título do indicador com fallbacks
                                 String titulo = ScraperValidator.findElementWithFallbacks(cell, TITLE_SELECTORS)
-                                        .flatMap(element -> ScraperValidator.extractTextWithValidation(element, "ownText"))
+                                        .flatMap(element -> ScraperValidator.extractTextWithValidation(element))
                                         .map(String::trim)
                                         .map(t -> t.replace(" - " + ticker.toUpperCase(), "").trim())
                                         .orElse("");

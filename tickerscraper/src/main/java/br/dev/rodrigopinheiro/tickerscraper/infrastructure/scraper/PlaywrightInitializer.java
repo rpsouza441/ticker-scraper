@@ -18,7 +18,6 @@ public class PlaywrightInitializer {
     private Playwright playwright;
     private Browser browser;
 
-    @PostConstruct
     public void init() {
         boolean headless = !"false".equalsIgnoreCase(System.getenv("PW_HEADLESS")); // default true
         String userDataDir = System.getenv("PW_USER_DATA_DIR"); // opcional
@@ -51,14 +50,14 @@ public class PlaywrightInitializer {
         playwright = Playwright.create();
 
         BrowserType.LaunchOptions opts = new BrowserType.LaunchOptions()
-                .setHeadless(headless)
+                .setHeadless(headless).setTimeout(5000)
                 .setArgs(args);
 
         if (userDataDir != null && !userDataDir.isBlank()) {
             // Contexto persistente → abre com perfil (cookies/cache). Útil se você quiser “amolecer” anti-bot
             browser = playwright.chromium().launchPersistentContext(
                     Path.of(userDataDir), new BrowserType.LaunchPersistentContextOptions()
-                            .setHeadless(headless)
+                            .setHeadless(headless).setTimeout(5000)
                             .setArgs(args)
             ).browser();
             log.info("Playwright inicializado (persistente) headless={} userDataDir={}", headless, userDataDir);
@@ -69,13 +68,17 @@ public class PlaywrightInitializer {
     }
 
     public Browser getBrowser() {
+        if (browser == null) init();
         return browser;
     }
 
     @PreDestroy
     public void shutdown() {
-        try { if (browser != null) browser.close(); } catch (Exception ignored) {}
-        try { if (playwright != null) playwright.close(); } catch (Exception ignored) {}
+        br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.ScraperExecution.execute(() -> {
+            try { if (browser != null) browser.close(); } catch (Exception ignored) {}
+            try { if (playwright != null) playwright.close(); } catch (Exception ignored) {}
+            return true;
+        }, () -> {}).block(java.time.Duration.ofSeconds(30));
         log.info("Playwright finalizado.");
     }
 }

@@ -83,37 +83,11 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
     }
 
     @Override
-    @CircuitBreaker(name = "scraper", fallbackMethod = "fallbackToSelenium")
-    @Retry(name = "scraper")
     public Mono<FiiDadosFinanceirosDTO> scrape(String ticker) {
         logger.info("Iniciando scraping FII com APIs assíncronas para: {}", ticker);
         
         // Tenta scraping completo com APIs primeiro
-        return scrapeWithAsyncApis(ticker)
-                .onErrorResume(ex -> {
-                    logger.warn("Falha no scraping com APIs para {}: {}. Tentando scraping básico.", 
-                               ticker, ex.getMessage());
-                    
-                    // Fallback para scraping básico usando a classe base
-                    final String url = buildUrl(ticker);
-                    return createReactiveStructure(() -> {
-                        // Usa implementação da classe base para scraping simples
-                        Browser browser = pwInit.getBrowser();
-                        BrowserContext ctx = createPlaywrightContext(browser);
-                        Page page = createPlaywrightPage(ctx);
-                        
-                        try {
-                            navigateAndValidate(page, url, ticker);
-                            String html = page.content();
-                            Document doc = Jsoup.parse(html);
-                            validateEssentialElements(doc, ESSENTIAL_SELECTORS, CARDS_SELECTORS, ticker, url);
-                            
-                            return executeSpecificScraping(doc, ticker);
-                        } finally {
-                            closePlaywrightResources(page, ctx);
-                        }
-                    }, ticker, () -> {});
-                });
+        return scrapeWithAsyncApis(ticker);
     }
     
     /**
@@ -136,7 +110,8 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
     }
 
     private Mono<FiiDadosFinanceirosDTO> executarComPlaywright(String ticker, String url) {
-        // refs para fechar com segurança em cancel/erro/sucesso
+        return Mono.defer(() -> {
+        // Resources belong to this subscription.
         AtomicReference<BrowserContext> ctxRef = new AtomicReference<>();
         AtomicReference<Page> pageRef = new AtomicReference<>();
         
@@ -177,30 +152,13 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 // Navegar e validar usando método da classe base
                 navigateAndValidate(page, url, ticker);
 
-                // Captura paralela de APIs para reduzir tempo de 30s para ~10s (60% de redução)
-                logger.info("Iniciando captura paralela de APIs para {} ", ticker);
-                
-                    CompletableFuture<Void> historicoFuture = CompletableFuture.runAsync(() ->
-                    waitForKeyWithTimeout(requestsMapeadas, HISTORICO_INDICADORES, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
-
-                CompletableFuture<Void> dividendosFuture = CompletableFuture.runAsync(() ->
-                    waitForKeyWithTimeout(requestsMapeadas, DIVIDENDOS, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
-
-                CompletableFuture<Void> cotacaoFuture = CompletableFuture.runAsync(() ->
-                    waitForKeyWithTimeout(requestsMapeadas, COTACAO, NETWORK_CAPTURE_TIMEOUT_MS, ticker, correlationId));
-                
+                // Dispatch browser events while waiting; sleeping worker threads
+                // cannot advance Playwright's synchronous message loop.
                 try {
-                    // Espera todas as APIs simultaneamente com timeout máximo
-                    CompletableFuture.allOf(historicoFuture, dividendosFuture, cotacaoFuture)
-                        .get(NETWORK_CAPTURE_TIMEOUT_MS + 2000, java.util.concurrent.TimeUnit.MILLISECONDS);
-                    
-                    logger.info("Captura paralela concluída para {} ", ticker);
-                } catch (java.util.concurrent.TimeoutException e) {
-                    logger.warn("Timeout na captura paralela para {} após {}ms ", 
-                               ticker, NETWORK_CAPTURE_TIMEOUT_MS + 2000);
-                } catch (Exception e) {
-                    logger.warn("Erro na captura paralela para {}: {} ", 
-                               ticker, e.getMessage());
+                    page.waitForCondition(() -> requestsMapeadas.keySet().containsAll(TODAS_AS_CHAVES),
+                            new Page.WaitForConditionOptions().setTimeout(5_000));
+                } catch (com.microsoft.playwright.TimeoutError expected) {
+                    logger.debug("Captura parcial de APIs para {}", ticker);
                 }
 
                 // HTML para parsers existentes
@@ -265,6 +223,7 @@ public class FiiPlaywrightDirectScraperAdapter extends AbstractScraperAdapter<Fi
                 throw ex;
             }
         }, ticker, () -> closePlaywrightResources(pageRef.get(), ctxRef.get()));
+        });
     }
 
     /** Espera passiva (polling leve) até uma chave aparecer no mapa, com timeout em ms. */

@@ -93,7 +93,10 @@ public class IndicadorParser {
                 cleaned = cleaned.replace(",", "");
             }
         }
-        // Se só tem ponto, mantém como está (formato americano: 12.34 ou 1234.56)
+        // Repeated groups of three are thousands, not decimal points.
+        if (cleaned.matches("[+-]?[0-9]{1,3}(\\.[0-9]{3}){2,}")) {
+            cleaned = cleaned.replace(".", "");
+        }
         
         return cleaned;
     }

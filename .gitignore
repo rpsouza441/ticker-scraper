@@ -73,3 +73,10 @@ lombok.config
 
 # Tests output
 test-output/
+
+# Artefatos locais de correção e acompanhamento GSD
+/.work/
+/.planning/
+/prompts/
+/docs/
+/specs/

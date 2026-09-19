@@ -29,6 +29,7 @@ public class FiiController {
         log.info("GET /fii/get-{}", ticker);
         return useCase.getTickerData(ticker)          // Mono<FundoImobiliario>
                 .map(fiiApiMapper::toResponse)            // Domain -> DTO
+                .timeout(java.time.Duration.ofSeconds(28))
                 .map(ResponseEntity::ok)
                 .onErrorResume(NotFoundException.class,
                         e -> Mono.just(ResponseEntity.notFound().build()));
@@ -38,6 +39,7 @@ public class FiiController {
     public Mono<ResponseEntity<FiiRawDataResponse>> getRaw(@PathVariable String ticker) {
         log.info("GET /fii/get-{}/raw", ticker);
         return useCase.getRawTickerData(ticker)       // Mono<FiiRawDataResponse>
+                .timeout(java.time.Duration.ofSeconds(28))
                 .map(ResponseEntity::ok)
                 .onErrorResume(NotFoundException.class,
                         e -> Mono.just(ResponseEntity.notFound().build()));

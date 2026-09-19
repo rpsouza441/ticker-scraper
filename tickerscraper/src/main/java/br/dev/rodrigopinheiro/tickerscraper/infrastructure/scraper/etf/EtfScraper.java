@@ -37,18 +37,26 @@ public class EtfScraper implements EtfScraperPort {
 
     @Override
     public Mono<EtfDadosFinanceirosDTO> scrapeEtfData(String ticker) {
-        return Mono.fromCallable(() -> {
+        return br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.ScraperExecution.bounded(
+                br.dev.rodrigopinheiro.tickerscraper.infrastructure.scraper.base.ScraperExecution.execute(() -> {
             logger.info("Iniciando scraping para ETF: {}", ticker);
             
             try (Playwright playwright = Playwright.create()) {
-                Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+                Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true).setTimeout(5000));
                 Page page = browser.newPage();
                 
                 String url = BASE_URL + ticker.toLowerCase();
                 logger.debug("Acessando URL: {}", url);
                 
-                page.navigate(url);
-                page.waitForLoadState();
+                page.setDefaultTimeout(3000);
+                var response = page.navigate(url, new Page.NavigateOptions().setTimeout(15000)
+                        .setWaitUntil(com.microsoft.playwright.options.WaitUntilState.DOMCONTENTLOADED));
+                if (response != null && (response.status() == 404 || response.status() == 410)) {
+                    throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.TickerNotFoundException(ticker, url);
+                }
+                if (response != null && response.status() >= 400) {
+                    throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.HtmlStructureException(ticker, url, "Origem HTTP " + response.status());
+                }
                 
                 // Extrai dados do header
                 EtfInfoHeaderDTO headerData = extractHeaderData(page, ticker);
@@ -61,11 +69,15 @@ public class EtfScraper implements EtfScraperPort {
                 logger.info("Scraping concluído com sucesso para ETF: {}", ticker);
                 return result;
                 
+            } catch (br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingException e) {
+                throw e;
+            } catch (com.microsoft.playwright.TimeoutError e) {
+                throw new br.dev.rodrigopinheiro.tickerscraper.domain.exception.ScrapingTimeoutException(ticker, BASE_URL, java.time.Duration.ofSeconds(15), "ETF_SCRAPING");
             } catch (Exception e) {
                 logger.error("Erro durante scraping do ETF {}: {}", ticker, e.getMessage(), e);
                 throw new RuntimeException("Falha no scraping do ETF: " + ticker, e);
             }
-        });
+        }, () -> {}), ticker);
     }
 
     /**
